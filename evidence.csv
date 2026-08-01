@@ -1,0 +1,4 @@
+时间,链,资产,类型,规模,路径,屏幕价差bps,真实成本bps,净收益bps,延迟秒,成败原因,可复现
+2026-08-01T07:46:26+00:00,ARB→BAS,USDC→WETH,跨链·往返,1000 USDC,stargateV2 → across,,29.41,,26,,
+2026-08-01T07:46:26+00:00,ARB→BAS,USDC→WETH,跨链·往返,10000 USDC,stargateV2 → across,,36.11,,26,,
+2026-08-01T07:46:26+00:00,ARB→BAS,USDC→WETH,跨链·往返,100000 USDC,stargateV2 → near,,153.34,,1859,,
