@@ -132,6 +132,28 @@ OpenRouter 是个"模型中转站"，注册一个账号拿一个 key，就能调
 
    这是个交互式菜单，用方向键选 `openrouter`，然后挑具体模型。做研究和写代码的话选个强的。
 
+
+**补充: 线路C**
+
+使用 DeepSeek:
+
+配置DeepSeek:
+```bash
+hermes setup
+```
+依次选择:
+```bash
+Quick Setup
+→ DeepSeek
+→ 输入 DeepSeek API Key
+→ Base URL: https://api.deepseek.com
+→ 默认模型: deepseek-v4-flash
+```
+再设置备用模型：
+```bash
+hermes fallback add
+```
+操作同上
 ---
 
 **配完加一层保险**——主模型偶尔会因为限流或者过载报错，配个备用模型让它自动切换，不然长任务跑一半就断了：
@@ -161,7 +183,7 @@ hermes status
 1. 去 https://tavily.com 注册，拿一个 key，形如 `tvly-xxxxx`
 
 2. ```bash
-   echo 'TAVILY_API_KEY=tvly-把你的key粘这里' >> ~/.hermes/.env
+   echo 'TAVILY_API_KEY=key' >> ~/.hermes/.env
    ```
 
 **验证**：
@@ -183,7 +205,7 @@ hermes doctor
 3. 复制生成的 token（形如 `ghp_xxxxx`，**只显示一次，关掉就没了**）
 
 ```bash
-echo 'GITHUB_TOKEN=ghp_把你的token粘这里' >> ~/.hermes/.env
+echo 'GITHUB_TOKEN=token' >> ~/.hermes/.env
 ```
 
 顺手初始化一下技能库：
