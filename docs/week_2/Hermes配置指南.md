@@ -149,18 +149,13 @@ Quick Setup
 → Base URL: https://api.deepseek.com
 → 默认模型: deepseek-v4-flash
 ```
-再设置备用模型：
+再设置备用模型(操作同上)：
+
 ```bash
 hermes fallback add
 ```
-操作同上
 ---
 
-**配完加一层保险**——主模型偶尔会因为限流或者过载报错，配个备用模型让它自动切换，不然长任务跑一半就断了：
-
-```bash
-hermes fallback
-```
 
 **验证**：
 

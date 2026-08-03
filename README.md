@@ -143,15 +143,57 @@ python3 cost_probe.py --from-chain ARB --to-chain BAS --token USDC \
 
 ```
 cost_probe.py           通用成本探针(主工具)
+watch_probe.py          持续监控:定期跑探针、落 JSONL、门槛变化告警
 li_fi_cost_probe.py     Day-0 原版,保留不动 —— 和上面的 diff 就是学习证明
+lib/chainkit.py         采集骨架(复用自 onChainListen):checkpoint / 去重 / 循环容错
+hermes/skills/          三个 Hermes 技能,装到 ~/.hermes/skills/mev-lifi/
 evidence.csv            证据记录表(--csv 生成)
+watch/*.jsonl           门槛历史(watch_probe 生成)
 共学.md                 21 天作战手册:路线图 / 成本模型 / 打卡模板
 docs/week_1/
   ├── 机会结构.md              七类套利机会:价差从哪来、谁在抢、天然成本
   ├── 深度如何决定最优规模.md    AMM 定价 / 流动性深度 / 价格冲击 / 区块确认
   ├── LIFI系统端点.md          六个端点分别给你什么原始数据
   └── 通用成本探针.md          本脚本的四个坑 + 实测结论
+docs/week_2/
+  ├── Hermes配置指南.md        从"能启动"配到"能干活"
+  ├── 研究工作流.md            五环节工作流 + onChainListen 复用了什么
+  └── Agent工作流教学.md       复用判断 / 监控工程 / 告警设计 / 给 Agent 立纪律
 ```
+
+## 持续监控
+
+```bash
+# 跑一次(给 hermes cron 用);退出码 10 = 有告警
+python3 watch_probe.py --from-chain ARB --to-chain BAS --token USDC \
+    --amounts 1000,10000 --alert-below 20
+
+# 前台每 10 分钟一轮
+python3 watch_probe.py --from-chain ARB --to-chain BAS --token USDC \
+    --amounts 1000 --interval 600
+
+# 历史统计(不发新请求)
+python3 watch_probe.py --from-chain ARB --to-chain BAS --token USDC --history
+```
+
+一次报价只是一个采样点,连续采样才能区分**可复现的机会**和**一次性噪声**(铁律 3)。
+
+## Hermes 技能
+
+```bash
+cp -r hermes/skills/* ~/.hermes/skills/mev-lifi/   # 安装
+hermes skills list | grep mev                      # 验证
+```
+
+| 技能 | 干什么 |
+|---|---|
+| `mev-cost-probe` | 算任意路径的真实 bps 门槛 |
+| `mev-spread-watch` | 持续监控 + 历史统计 |
+| `mev-evidence-log` | 按证据表 schema 存档 |
+
+技能文件里最值钱的不是命令,是**约束 Agent 别犯错**的纪律 —— 比如「永远不要引用
+`fromAmountUSD` 得出成本结论」「没有历史数据不要填『可复现』列」。
+你踩过的每个坑,都该变成技能里的一行约束。
 
 ---
 
