@@ -3,3 +3,4 @@ docs/week_2/配置文件.txt
 watch/.*.ckpt.json
 __pycache__/
 *.pyc
+logs/

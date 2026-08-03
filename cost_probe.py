@@ -498,7 +498,9 @@ def write_csv(path, args, results, from_meta):
                 f"{args.from_chain}→{args.to_chain}",
                 f"{args.from_token}→{args.to_token}",
                 kind,
-                f"{fmt_size(r.size)} {sym}",
+                # 规模不加千分位:这一列是 make_evidence.py 合并时的 key,
+                # "1,000 USDC" 和 "1000 USDC" 会被当成两条不同的记录
+                f"{r.size:g} {sym}",
                 r.tools,
                 "",                                  # 屏幕价差:你自己观察后填
                 f"{r.total_bps:.2f}",

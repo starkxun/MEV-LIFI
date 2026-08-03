@@ -144,6 +144,7 @@ python3 cost_probe.py --from-chain ARB --to-chain BAS --token USDC \
 ```
 cost_probe.py           通用成本探针(主工具)
 watch_probe.py          持续监控:定期跑探针、落 JSONL、门槛变化告警
+make_evidence.py        监控历史 → 证据记录表(自动列刷新,人工判断保留)
 li_fi_cost_probe.py     Day-0 原版,保留不动 —— 和上面的 diff 就是学习证明
 lib/chainkit.py         采集骨架(复用自 onChainListen):checkpoint / 去重 / 循环容错
 hermes/skills/          三个 Hermes 技能,装到 ~/.hermes/skills/mev-lifi/
@@ -158,7 +159,9 @@ docs/week_1/
 docs/week_2/
   ├── Hermes配置指南.md        从"能启动"配到"能干活"
   ├── 研究工作流.md            五环节工作流 + onChainListen 复用了什么
-  └── Agent工作流教学.md       复用判断 / 监控工程 / 告警设计 / 给 Agent 立纪律
+  ├── Agent工作流教学.md       复用判断 / 监控工程 / 告警设计 / 给 Agent 立纪律
+  ├── 证据记录表教学.md         三类列 / 分布不填单点 / 「可复现」问的是什么
+  └── 服务器拉取数据.md         tmux 长跑攒观测:参数取值理由 / 查看 / 限制
 ```
 
 ## 持续监控
