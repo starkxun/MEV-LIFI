@@ -116,6 +116,31 @@ python3 cost_probe.py --from-chain ARB --to-chain BAS --token USDC \
 
 ---
 
+## The Graph 历史数据
+
+`cost_probe.py` 只能告诉你**当前**一条路径的真实成本门槛;要判断价差是否可复现,还需要把过去一段时间的池子价格拉出来。这个项目用 [`lib/graph.py`](lib/graph.py) 封装 The Graph 查询,给 `price_history.py` 和 `lp_backtest.py` 复用。
+
+[`lib/graph.py`](lib/graph.py) 主要做三件事:
+
+- 自动读取 `THE_GRAPH_KEY`(环境变量优先,其次项目根 `.env`)。
+- 统一处理 The Graph gateway 的 GraphQL 请求、认证、超时和重试。
+- 维护一个已验证的 subgraph 注册表 `SUBGRAPHS`,用 `ARB` / `BAS` / `ETH` 这样的项目链名映射到真实 subgraph ID。
+
+这里的“注册表”不是链上合约,也不是系统注册表,只是本仓库里的一张可信数据源清单。每个 ID 都要确认能查通、schema 匹配、同步健康,并且价格和 RPC 直读交叉验证一致。原因很现实:The Graph 上同名 Uniswap V3 subgraph 很多,有的用 Messari schema(`liquidityPool`),有的缺 `poolHourDatas` 时序实体,ID 不能靠猜。
+
+```bash
+# 准备 API key
+echo 'THE_GRAPH_KEY=你的key' >> .env
+
+# 验证注册表里的 subgraph 是否可用
+python3 lib/graph.py
+
+# 从 The Graph 网络 subgraph 里搜索当前可用 ID
+python3 lib/graph.py discover uniswap
+```
+
+---
+
 ## 已有结论
 
 2026-08-01 实测快照:
@@ -147,6 +172,7 @@ watch_probe.py          持续监控:定期跑探针、落 JSONL、门槛变化�
 make_evidence.py        监控历史 → 证据记录表(自动列刷新,人工判断保留)
 li_fi_cost_probe.py     Day-0 原版,保留不动 —— 和上面的 diff 就是学习证明
 lib/chainkit.py         采集骨架(复用自 onChainListen):checkpoint / 去重 / 循环容错
+lib/graph.py            The Graph 查询客户端 + 已验证 subgraph 注册表
 hermes/skills/          三个 Hermes 技能,装到 ~/.hermes/skills/mev-lifi/
 evidence.csv            证据记录表(--csv 生成)
 watch/*.jsonl           门槛历史(watch_probe 生成)
