@@ -17,23 +17,23 @@ Day-0 探针的升级版。Day-0 只能跑写死的 ARB→BAS USDC;
     pip install requests
 
     # 单程同资产(最经典的稳定币搬砖)
-    python cost_probe.py --from-chain ARB --to-chain BAS --token USDC \\
+    python3 cost_probe.py --from-chain ARB --to-chain BAS --token USDC \\
         --amounts 100,1000,10000,100000
 
     # 跨资产 —— 会自动提示你用往返模式
-    python cost_probe.py --from-chain ARB --to-chain BAS \\
+    python3 cost_probe.py --from-chain ARB --to-chain BAS \\
         --from-token USDC --to-token WETH --amounts 10000
 
     # 往返闭环(跨资产路径的唯一诚实算法)
-    python cost_probe.py --from-chain ARB --to-chain BAS \\
+    python3 cost_probe.py --from-chain ARB --to-chain BAS \\
         --from-token USDC --to-token WETH --amounts 1000,10000 --roundtrip
 
     # 同链三角/DEX 交易也能跑(from-chain == to-chain)
-    python cost_probe.py --from-chain ARB --to-chain ARB \\
+    python3 cost_probe.py --from-chain ARB --to-chain ARB \\
         --from-token USDC --to-token WETH --amounts 10000 --roundtrip
 
     # 导出证据记录表(第 4 节 schema)
-    python cost_probe.py --from-chain ARB --to-chain BAS --token USDC \\
+    python3 cost_probe.py --from-chain ARB --to-chain BAS --token USDC \\
         --amounts 1000,10000 --csv evidence.csv
 
 LI.FI 报价接口只读、免 key,不需要钱包里有钱。
