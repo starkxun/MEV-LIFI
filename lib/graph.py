@@ -113,10 +113,25 @@ class GraphClient:
                 if r.status_code == 200 and r.text.strip():
                     d = r.json()
                     if "errors" in d:
-                        # GraphQL 层的错误通常是查询写错了,重试没用,直接抛
-                        raise RuntimeError(f"GraphQL 错误: {d['errors']}")
-                    return d["data"]
-                last = f"HTTP {r.status_code} 空响应/异常"
+                        msg = str(d["errors"])
+                        # 200 + errors 有两种完全不同的情况,不能一概而论:
+                        #   · 查询写错(字段不存在等)  → 重试一万次也一样,直接抛
+                        #   · 网关/索引器临时不可用    → 是瞬时故障,必须重试
+                        # 实测踩过:{"message": "bad indexers: ... Unavailable
+                        # (no status: indexer not available)"} —— 这类当成
+                        # 查询错误抛出去,会把一次网络抖动误判成"这个池查不了"。
+                        transient = any(k in msg for k in (
+                            "bad indexers", "Unavailable", "indexer not available",
+                            "BadResponse", "timeout", "Timeout",
+                            "no indexer", "overloaded"))
+                        if not transient:
+                            raise RuntimeError(f"GraphQL 错误: {d['errors']}")
+                        last = f"网关临时故障: {msg[:120]}"
+                    else:
+                        return d["data"]
+                    # 落到这里 = 瞬时故障,走下面的退避重试
+                else:
+                    last = f"HTTP {r.status_code} 空响应/异常"
             except (requests.RequestException, ValueError) as e:
                 last = f"{type(e).__name__}: {e}"
             # 空响应和网络错都当瞬时故障重试 —— 实测网关确实会抽
