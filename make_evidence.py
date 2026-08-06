@@ -24,12 +24,16 @@ Week 2 任务二。核心不是"格式转换",是**换一个统计口径**:
     python3 make_evidence.py --fetch-screen   # 顺便抓同资产路径的标价价差
     python3 make_evidence.py --dry-run        # 只看不写
     python3 make_evidence.py --min-obs 5      # 只输出观测数 ≥5 的路径
+
+    # 切掉正式监控开始前的本地调试数据(强烈建议加上)
+    python3 make_evidence.py --since 2026-08-03T08:34:00Z
 """
 
 import argparse
 import csv
 import statistics
 import sys
+from datetime import datetime, timezone
 from collections import defaultdict
 from pathlib import Path
 
@@ -58,9 +62,22 @@ def norm_key(values):
                  for v in values)
 
 
-def load_watch(paths):
-    """读所有监控历史,按 (路径, 规模) 摊平成观测点。"""
+def load_watch(paths, since=None):
+    """
+    读所有监控历史,按 (路径, 规模) 摊平成观测点。
+
+    since 用来切掉正式监控开始之前的数据。
+
+    **为什么需要这个**:调试脚本时在本地随手跑的那几轮,和服务器上定时跑的
+    正式观测混在同一个 JSONL 里。前者往往是极端值 —— 实测跨资产往返那条路,
+    本地测试那次报 22.59 bps,而服务器 98 次观测的区间是 [51.90, 73.31]。
+    不切掉的话,一个调试残留就把区间下沿拉低了 29 bps,
+    让人误以为"这条路有时候能到 22 bps"。
+
+    调试数据不是观测数据。混在一起统计,等于把噪声当信号。
+    """
     buckets = defaultdict(list)
+    dropped = 0
     for p in paths:
         for line in p.read_text(encoding="utf-8").splitlines():
             line = line.strip()
@@ -72,6 +89,9 @@ def load_watch(paths):
                 continue
             if not rec.get("all_sizes"):
                 continue  # 那一轮全军覆没,没有可用观测
+            if since and rec.get("ts", "") < since:
+                dropped += 1
+                continue
 
             kind = "跨链" if rec["from_chain"] != rec["to_chain"] else "同链"
             if rec.get("roundtrip"):
@@ -91,7 +111,7 @@ def load_watch(paths):
                     "duration": s.get("duration_s", 0),
                     "warned": bool(rec.get("warnings")),
                 })
-    return buckets
+    return buckets, dropped
 
 
 def summarise(key, obs):
@@ -176,6 +196,9 @@ def main():
     p.add_argument("--min-obs", type=int, default=1, help="观测数下限")
     p.add_argument("--fetch-screen", action="store_true",
                    help="为同资产路径抓一次标价价差(仅作参考,会标注)")
+    p.add_argument("--since",
+                   help="只统计这个时刻之后的观测,ISO8601,如 2026-08-03T08:34:00Z。"
+                        "用来切掉正式监控开始前的本地调试数据")
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()
 
@@ -185,10 +208,25 @@ def main():
               file=sys.stderr)
         return 1
 
-    buckets = load_watch(files)
+    since = None
+    if args.since:
+        # 统一成和 JSONL 里 ts 一致的格式(+00:00 结尾),这样字符串比较就是时间比较
+        raw = args.since.strip().replace("Z", "+00:00")
+        try:
+            since = datetime.fromisoformat(raw).astimezone(
+                timezone.utc).isoformat(timespec="seconds")
+        except ValueError:
+            p.error(f"--since 解析失败: {args.since}(用 2026-08-03T08:34:00Z 这种格式)")
+
+    buckets, dropped = load_watch(files, since)
     if not buckets:
-        print("监控历史里没有可用观测。", file=sys.stderr)
+        print("监控历史里没有可用观测"
+              + (f"(--since 之后)。放宽 --since 再试。" if since else "。"),
+              file=sys.stderr)
         return 1
+    if dropped:
+        print(f"已排除 {dropped} 条 {since} 之前的观测(正式监控前的调试数据)",
+              file=sys.stderr)
 
     out_path = Path(args.out)
     manual, existing_raw = load_existing(out_path)

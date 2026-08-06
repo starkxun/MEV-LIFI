@@ -1,8 +1,8 @@
 时间,链,资产,类型,规模,路径,观测次数,屏幕价差bps,真实成本bps,净收益bps,延迟秒,成败原因,可复现
-2026-08-03T01:55:37+00:00 ~ 2026-08-03T03:15:06+00:00,ARB→BAS,USDC→USDC,跨链,1000 USDC,eco×5,5,"-1.86 ~ +9.70(标价,两次观测)",25.23,,7,"25bps 是 LI.FI 固定费率(非市场撮合,不随规模/时段变);而两链 USDC 标价差实测在 -1.86 ~ +9.70 bps 间摆动且跨零。门槛是价差波动幅度的 2-3 倍,净收益结构性为负 —— 不是'今天没机会',是'这条路没有机会'","可复现地不成立(5次观测,成本极差0.00bps;标价差虽波动但从未接近25bps)"
-2026-08-03T01:55:37+00:00 ~ 2026-08-03T03:15:06+00:00,ARB→BAS,USDC→USDC,跨链,10000 USDC,eco×3,3,"-1.86 ~ +9.70(标价,两次观测)",25.02,,7,"25bps 是 LI.FI 固定费率(非市场撮合,不随规模/时段变);而两链 USDC 标价差实测在 -1.86 ~ +9.70 bps 间摆动且跨零。门槛是价差波动幅度的 2-3 倍,净收益结构性为负 —— 不是'今天没机会',是'这条路没有机会'","可复现地不成立(5次观测,成本极差0.00bps;标价差虽波动但从未接近25bps)"
-2026-08-03T01:56:13+00:00,ARB→BAS,USDC→WETH,跨链·往返,1000 USDC,stargateV2 → across×1,1,,22.59,,27,,
-2026-08-01T07:46:26+00:00,ARB→BAS,USDC→WETH,跨链·往返,10000 USDC,stargateV2 → across,,,36.11,,26,,
+2026-08-03T08:34:41+00:00 ~ 2026-08-05T09:04:49+00:00,ARB→BAS,USDC→USDC,跨链,1000 USDC,"eco×94, polymerStandard×4",98,"-1.86 ~ +9.70(标价,两次观测)",25.23 [25.23~25.29],,7,"25bps 是 LI.FI 固定费率(非市场撮合,不随规模/时段变);而两链 USDC 标价差实测在 -1.86 ~ +9.70 bps 间摆动且跨零。门槛是价差波动幅度的 2-3 倍,净收益结构性为负 —— 不是'今天没机会',是'这条路没有机会'","可复现地不成立(5次观测,成本极差0.00bps;标价差虽波动但从未接近25bps)"
+2026-08-03T08:34:41+00:00 ~ 2026-08-05T09:04:49+00:00,ARB→BAS,USDC→USDC,跨链,10000 USDC,"eco×95, polymerStandard×3",98,"-1.86 ~ +9.70(标价,两次观测)",25.02 [25.02~25.03],,7,"25bps 是 LI.FI 固定费率(非市场撮合,不随规模/时段变);而两链 USDC 标价差实测在 -1.86 ~ +9.70 bps 间摆动且跨零。门槛是价差波动幅度的 2-3 倍,净收益结构性为负 —— 不是'今天没机会',是'这条路没有机会'","可复现地不成立(5次观测,成本极差0.00bps;标价差虽波动但从未接近25bps)"
+2026-08-03T08:34:57+00:00 ~ 2026-08-05T09:05:08+00:00,ARB→BAS,USDC→WETH,跨链·往返,1000 USDC,"stargateV2 → relaydepository×26, stargateV2 → layerswap×25, mayanFastMCTP → relaydepository×20, mayanFastMCTP → layerswap×13, stargateV2 → mayan×5, mayanFastMCTP → mayan×4, relaydepository → mayan×2, relaydepository → across×1, relaydepository → layerswap×1, stargateV2 → near×1",98,,60.45 [51.90~73.31],,37,,
+2026-08-03T08:34:57+00:00 ~ 2026-08-05T09:05:08+00:00,ARB→BAS,USDC→WETH,跨链·往返,10000 USDC,"stargateV2 → relaydepository×41, mayanFastMCTP → relaydepository×22, stargateV2 → layerswap×14, stargateV2 → mayan×7, mayanFastMCTP → layerswap×6, mayanFastMCTP → mayan×5, mayanFastMCTP → across×1, relaydepository → layerswap×1, relaydepository → relaydepository×1",98,,60.84 [44.89~70.52],,36,,
 2026-08-01T07:46:26+00:00,ARB→BAS,USDC→WETH,跨链·往返,100000 USDC,stargateV2 → near,,,153.34,,1859,,
 2026-08-03T03:10:03+00:00,ARB→BAS,USDC→USDC,跨链,100 USDC,eco,,,27.32,,7,,
 2026-08-03T03:10:03+00:00,ARB→BAS,USDC→USDC,跨链,"100,000 USDC",eco,,,25.00,,7,,
