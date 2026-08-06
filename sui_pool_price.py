@@ -32,6 +32,7 @@ sui_pool_price.py —— Sui 上多个 DEX 的可成交价对比 + 成本地板
 
 import argparse
 import json
+import os
 import statistics
 import sys
 import time
@@ -40,10 +41,30 @@ from pathlib import Path
 import requests
 
 # 实测可用(2026-08-06)。官方 fullnode 的 JSON-RPC 已废弃,别用。
-ENDPOINTS = [
+# 这两个是免费公共端点:跑单次快照够用,长期挂着采样会有静默缺口。
+PUBLIC_ENDPOINTS = [
     "https://sui-mainnet-endpoint.blockvision.org",
     "https://rpc-mainnet.suiscan.xyz",
 ]
+
+
+def _endpoints():
+    """
+    自有付费端点优先,公共端点兜底。
+
+    用环境变量传,**不要写死在代码里** —— Ankr 那种 URL 自带 API key,
+    写进文件就等于提交到 git。
+
+        export SUI_RPC=https://rpc.ankr.com/sui/<你的KEY>
+
+    多个用逗号分隔,按顺序轮换。注意付费端点也不是 100% 可用,
+    所以公共的永远留在队尾:少一个数据点,不如慢一点但拿到。
+    """
+    mine = [u.strip() for u in os.environ.get("SUI_RPC", "").split(",") if u.strip()]
+    return mine + PUBLIC_ENDPOINTS
+
+
+ENDPOINTS = _endpoints()
 
 # 常见币的类型标识。Sui 上同一个符号可能有多个发行方,这里只登记验证过的。
 KNOWN = {
