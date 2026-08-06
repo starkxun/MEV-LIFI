@@ -276,6 +276,22 @@ def main():
             stab = "极稳" if spread < 1 else ("较稳" if spread < 5 else "波动大")
             hint = (f"[{key[0]} {key[1]} {key[3]}] {n} 次观测,"
                     f"成本极差 {spread:.2f} bps({stab})")
+            if not row["屏幕价差bps"]:
+                hint += ",但**缺**屏幕价差,净收益未知 → 还判不了"
+                notes.append(hint)
+                if s["_warned"]:
+                    notes.append(f"  ⚠ 其中 {s['_warned']} 次伴随上游数据异常,该行结论打折扣")
+                continue
+            if not row["净收益bps"]:
+                # 屏幕价差填了但不是单个数(比如填成区间 "-1.86 ~ +9.70"),
+                # 算不出净收益。这和"没填"是两回事,提示要说清楚,
+                # 否则你会以为自己漏填了而去重填一遍。
+                hint += (f",屏幕价差已填但非单值({row['屏幕价差bps'][:24]}),"
+                         f"净收益需人工判断")
+                notes.append(hint)
+                if s["_warned"]:
+                    notes.append(f"  ⚠ 其中 {s['_warned']} 次伴随上游数据异常,该行结论打折扣")
+                continue
             if row["净收益bps"]:
                 sign = "负" if float(row["净收益bps"]) < 0 else "正"
                 hint += f",净收益为{sign} → 可考虑填「可复现地{'不成立' if sign=='负' else '成立'}」"
