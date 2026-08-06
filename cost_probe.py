@@ -52,7 +52,12 @@ import requests
 
 BASE = "https://li.quest/v1"
 
-# 未认证限速实测:100 次 / 60 秒窗口。留足余量,别把自己打挂。
+# 限速:**不同端点差一个数量级,别用一个数字概括**(这条是踩过的)
+#   /chains /tokens /token /tools  → 100 次 / 60 秒(响应里有 ratelimit-* 头)
+#   /quote  /advanced/routes       → **75 次 / 2 小时**(响应里没有限速头)
+# 早期版本按 100/60s 设的节流,那是从便宜端点的头错误外推来的。
+# 对 /quote 来说真正的约束是**两小时的总次数**,不是每秒速率 ——
+# 所以节流只防突发,真正要控的是"一天跑几轮"。
 PACE_SECONDS = 0.35
 MAX_RETRY = 4
 

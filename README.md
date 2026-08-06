@@ -116,6 +116,30 @@ python3 cost_probe.py --from-chain ARB --to-chain BAS --token USDC \
 
 ---
 
+## 比较候选路径:成本 vs 延迟
+
+`cost_probe.py` 走 `/quote`,它只返回**它认为最好的一条**,判据基本只有到手金额 ——
+**它不给延迟定价**。而对套利来说延迟就是成本(资金在途时价差可能消失)。
+
+`route_compare.py` 走 `/advanced/routes`,把全部候选摊开:
+
+```bash
+python3 route_compare.py --from-chain ARB --to-chain BAS --token USDC --amount 10000
+python3 route_compare.py ... --window 3     # 我的价差窗口只有 3 秒
+```
+
+实测同一条路 15 条候选,**11 条被严格支配**(到手不更多、还更慢),剩下的构成真实取舍:
+
+```
+Eco        9,975.00     7s   ← 最便宜
+Relay      9,974.03     3s   ← 多付 0.97 bps,快 4 秒
+AcrossV4   9,974.00     1s   ← 多付 1.00 bps,快 6 秒
+Polymer    9,975.00  1,080s  ← 到手和 Eco 一样,慢 154 倍 → 被支配
+```
+
+**延迟溢价约 0.17~0.38 bps/秒。** 你的价差窗口越短,越值得多付这几个 bps ——
+而 `/quote` 不知道你的窗口有多长,所以这个决定它替你做不了。
+
 ## The Graph 历史数据
 
 `cost_probe.py` 只能告诉你**当前**一条路径的真实成本门槛;要判断价差是否可复现,还需要把过去一段时间的池子价格拉出来。这个项目用 [`lib/graph.py`](lib/graph.py) 封装 The Graph 查询,给 `price_history.py` 和 `lp_backtest.py` 复用。
@@ -171,6 +195,38 @@ python3 lib/graph.py discover uniswap
 
 **"不成立"本身就是有价值的结论** —— 它把时间从红海里省下来。
 
+> ### ⚠️ 结论的适用范围:那 25 bps 是 LI.FI 的服务费,不是物理成本
+>
+> 2026-08-06 查了费用明细,ARB→BAS 的 10,000 USDC:
+>
+> ```
+> feeCosts:  LIFI Fixed Fee   25.00 USDC   pct=0.0025   included=true
+>            (没有别的费用项)
+> gasCosts:  $0.0296
+> ```
+>
+> **桥本身收费接近 0,25 bps 一分不少全是 LI.FI 抽的服务费。** 所以准确的结论是:
+>
+> - ✅ **通过 LI.FI** 搬 USDC,门槛 25 bps → 这条路不成立
+> - ❌ 跨链搬 USDC 的**物理成本**是 25 bps ← **不能这么推广**
+>
+> 三个直接后果:
+>
+> 1. **门槛可议价。** 发起人文章明说「默认新用户抽点 25 bps,会根据调用量提供优惠」,
+>    并且在推套利场景的专属费率。抽点降到 5 bps,整个可行性判断就翻转。
+>
+>    > **但这个逃生口已经被外部数据堵上了**(2026-08-06,**非本人测量**):
+>    > 群内一份 120 轮实测把费率**扣到 0** 重算,WETH 中位 −1.2 bps、
+>    > USDT 中位 +6.4 bps,**120 轮里一轮都没到 +10 bps**。
+>    > 即"即使不抽也不成立"。
+>    > 适用范围:平静行情、2 小时窗口、3 条 L2、$1,000 规模、基于报价非成交。
+>    > 详见 [外部结论存档](docs/week_2/外部结论-零费率实测.md)。
+> 2. **绕开聚合器直接调桥,这 25 bps 根本不存在。** 本项目的成本模型量的是
+>    「走 LI.FI 的成本」,不是「跨链的成本」。
+> 3. **但方法论没白做** —— 正因为坚持 token 口径分栏,才能一眼看出这 25 bps 是
+>    **纯比例费、完全不随规模摊薄**,从而判断它是费率而非市场成本。
+>    美元口径混算是看不出这一点的。
+
 三个观察上的坑,细节见 [通用成本探针笔记](docs/week_1/通用成本探针.md):
 
 - **`feeCosts[].included`**:`true` 表示已从 `toAmount` 扣掉,再加一次就多算 25 bps,正好把门槛翻倍。
@@ -184,6 +240,7 @@ python3 lib/graph.py discover uniswap
 ```
 cost_probe.py           通用成本探针(主工具)
 watch_probe.py          持续监控:定期跑探针、落 JSONL、门槛变化告警
+route_compare.py        比较 /advanced/routes 全部候选:成本 vs 延迟、支配关系、延迟溢价
 make_evidence.py        监控历史 → 证据记录表(自动列刷新,人工判断保留)
 li_fi_cost_probe.py     Day-0 原版,保留不动 —— 和上面的 diff 就是学习证明
 lib/chainkit.py         采集骨架(复用自 onChainListen):checkpoint / 去重 / 循环容错
@@ -206,6 +263,7 @@ docs/week_2/
   ├── 收费站套利法-问答补充.md  V3 LP / 费率档 / 刷量 / 回测输出的追问整理
   ├── 收费站套利法-验证.md      LP 收费站回测:LVR / 区间扫描 / 为什么不成立
   ├── 接针是什么.md             针与接针概念 / 深针频率与回弹率扫描
+  ├── 外部结论-零费率实测.md    群内 120 轮实测存档:零费率仍无机会 / fly 报价污染 / 成本地板准则
   └── 服务器拉取数据.md         tmux 长跑攒观测:参数取值理由 / 查看 / 限制
 ```
 
