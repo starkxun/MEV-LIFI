@@ -31,6 +31,8 @@ sui_pool_price.py —— Sui 上多个 DEX 的可成交价对比 + 成本地板
 """
 
 import argparse
+import contextlib
+import io
 import json
 import os
 import statistics
@@ -39,6 +41,9 @@ import time
 from pathlib import Path
 
 import requests
+
+sys.path.insert(0, str(Path(__file__).parent))
+from lib.chainkit import append_jsonl, eprint, read_jsonl, run_loop, utcnow
 
 # 实测可用(2026-08-06)。官方 fullnode 的 JSON-RPC 已废弃,别用。
 # 这两个是免费公共端点:跑单次快照够用,长期挂着采样会有静默缺口。
@@ -124,10 +129,21 @@ def load_registry(repo, want_a, want_b):
     格式:  dex|pool_id|[{token_type,decimals},…]|{额外信息}
     只要**恰好两种币且正是目标对**的池 —— 多资产池(aftermath)定价方式不同。
     """
-    data_dir = Path(repo) / "crates" / "dex-indexer" / "data"
-    if not data_dir.exists():
-        raise RuntimeError(f"找不到池子清单目录: {data_dir}\n"
-                           f"用 --repo 指向 sui-mev 仓库根目录")
+    # 优先用项目内副本(已从 sui-mev 拷过来),这样**不依赖那个仓库也能跑**,
+    # 可以直接扔到服务器上。--repo 指向 sui-mev 时才用它自带的。
+    candidates = [Path(repo) if repo else None,
+                  Path(__file__).parent / "data" / "sui_pools"]
+    data_dir = None
+    for c in candidates:
+        if c is None:
+            continue
+        d = c / "crates" / "dex-indexer" / "data" if (c / "crates").exists() else c
+        if d.exists() and any(d.glob("*_pools.txt")):
+            data_dir = d
+            break
+    if data_dir is None:
+        raise RuntimeError("找不到池子清单。要么放到 data/sui_pools/,"
+                           "要么用 --repo 指向 sui-mev 仓库根目录")
     out = []
     for f in sorted(data_dir.glob("*_pools.txt")):
         dex = f.stem.replace("_pools", "")
@@ -224,26 +240,129 @@ def price_from_pool(p, fields, base_type, quote_type):
     return px, tvl
 
 
+def summarise(rows, live, bad, base, quote, med_px):
+    """压成一条可落盘的观测记录。和 watch_probe.py 的 JSONL 同构。"""
+    rec = {"ts": utcnow(), "base": base, "quote": quote,
+           "n_pools": len(rows), "n_live": len(live), "n_bad": len(bad),
+           "median_price": round(med_px, 8)}
+    if len(live) < 2:
+        rec["ok"] = False
+        return rec
+    v = [r["price"] for r in live]
+    lo = min(live, key=lambda r: r["price"])
+    hi = max(live, key=lambda r: r["price"])
+    disp = (max(v) - min(v)) / min(v) * 10_000
+    rec.update({"ok": True, "spread_bps": round(disp, 2),
+                "buy_dex": lo["dex"], "sell_dex": hi["dex"],
+                "buy_fee_bps": lo["fee_bps"], "sell_fee_bps": hi["fee_bps"]})
+    if lo["fee_bps"] is not None and hi["fee_bps"] is not None:
+        floor = lo["fee_bps"] + hi["fee_bps"]
+        rec["floor_bps"] = round(floor, 2)
+        rec["net_bps"] = round(disp - floor, 2)
+    # 扣完费率后最优的一对(不一定是价差最大那对)
+    best = None
+    for a in live:
+        for b in live:
+            if a is b or a["fee_bps"] is None or b["fee_bps"] is None:
+                continue
+            sp = (b["price"] - a["price"]) / a["price"] * 10_000
+            n = sp - a["fee_bps"] - b["fee_bps"]
+            if best is None or n > best[0]:
+                best = (n, a["dex"], b["dex"], sp)
+    if best:
+        rec.update({"best_net_bps": round(best[0], 2), "best_buy": best[1],
+                    "best_sell": best[2], "best_spread_bps": round(best[3], 2)})
+    rec["pools"] = [{"dex": r["dex"], "price": round(r["price"], 8),
+                     "fee_bps": r["fee_bps"], "tvl": round(r["tvl"] or 0, 2)}
+                    for r in live]
+    return rec
+
+
 def main():
     p = argparse.ArgumentParser(description="Sui 多 DEX 可成交价 + 成本地板")
-    p.add_argument("--repo", default=str(Path.home() / "sui-mev"),
-                   help="sui-mev 仓库路径(用它自带的池子清单)")
+    p.add_argument("--repo", default=None,
+                   help="sui-mev 仓库路径。默认用项目内 data/sui_pools/ 副本,不需要这个参数")
     p.add_argument("--base", default="USDC", help="计价币")
     p.add_argument("--quote", default="SUI", help="标的币")
     p.add_argument("--min-tvl", type=float, default=1000,
                    help="TVL 下限(base 计价),挡掉僵尸池")
     p.add_argument("--outlier-x", type=float, default=10.0,
                    help="价格偏离中位数超过这个倍数即判为坏数据(未初始化的池)")
-    p.add_argument("--json", help="导出结果")
+    p.add_argument("--json", help="导出单次结果")
+    p.add_argument("--interval", type=int, default=0,
+                   help=">0 则每 N 秒跑一轮;省略=跑一次退出(给 cron 用)")
+    p.add_argument("--max-rounds", type=int, default=0, help="最多几轮,0=无限")
+    p.add_argument("--jsonl", default="watch/sui_{base}_{quote}.jsonl",
+                   help="观测历史落盘路径")
+    p.add_argument("--history", action="store_true",
+                   help="只看已有历史统计,不发新请求")
     args = p.parse_args()
 
     bt = KNOWN.get(args.base.upper(), args.base)
     qt = KNOWN.get(args.quote.upper(), args.quote)
+    jsonl = Path(args.jsonl.format(base=args.base.upper(), quote=args.quote.upper()))
+
+    if args.history:
+        rows = [r for r in read_jsonl(jsonl) if r.get("ok")]
+        if not rows:
+            print(f"还没有 {jsonl} 的历史记录"); return 0
+        sp = sorted(r["spread_bps"] for r in rows)
+        net = sorted(r["net_bps"] for r in rows if r.get("net_bps") is not None)
+        bn = sorted(r["best_net_bps"] for r in rows if r.get("best_net_bps") is not None)
+        n = len(sp)
+        print(f"{args.base}/{args.quote}  共 {n} 次观测")
+        print(f"  {rows[0]['ts']}  ~  {rows[-1]['ts']}")
+        print(f"  价差 bps    : 最低 {sp[0]:.2f} / 中位 {sp[n//2]:.2f} / 最高 {sp[-1]:.2f}")
+        if net:
+            m = len(net)
+            print(f"  净收益 bps  : 最低 {net[0]:.2f} / 中位 {net[m//2]:.2f} / 最高 {net[-1]:.2f}")
+            pos = sum(1 for x in net if x > 0)
+            print(f"  **净收益为正的轮次: {pos}/{m} ({pos/m*100:.1f}%)**")
+        if bn:
+            m = len(bn)
+            pos = sum(1 for x in bn if x > 0)
+            print(f"  最优配对净收益: 中位 {bn[m//2]:.2f}  为正 {pos}/{m} ({pos/m*100:.1f}%)")
+        if net and max(net) <= 0:
+            print("  → 全程没有一轮净收益为正。**这条路在观测期内不成立。**")
+        return 0
 
     pools = load_registry(args.repo, bt, qt)
     if not pools:
         print(f"清单里没有 {args.base}/{args.quote} 的两币池", file=sys.stderr)
         return 1
+
+    if args.interval or args.max_rounds:
+        # 持续监控:复用 chainkit 的循环骨架(单轮异常不拖垮整个循环)
+        state = {"n": 0}
+
+        def one_round():
+            # 监控模式下不打整张表 —— 每轮刷一屏,三天下来日志没法看。
+            # 大表留给单次模式;循环模式只要一行摘要 + JSONL 落盘。
+            with contextlib.redirect_stdout(io.StringIO()):
+                rec = probe_once(args, pools, bt, qt, quiet=True)
+            append_jsonl(jsonl, rec)
+            state["n"] += 1
+            if rec.get("ok"):
+                net = rec.get("net_bps")
+                flag = "  ⚠ 净收益为正!" if (net is not None and net > 0) else ""
+                print(f"[{rec['ts']}] 价差 {rec['spread_bps']:>6.2f} bps  "
+                      f"地板 {rec.get('floor_bps','?')}  净 {net if net is not None else '?'}"
+                      f"  ({rec['buy_dex']}→{rec['sell_dex']}, {rec['n_live']} 池){flag}",
+                      flush=True)
+            else:
+                print(f"[{rec['ts']}] 存活池不足,本轮无结论", flush=True)
+
+        eprint(f"[sui:{args.base}/{args.quote}] 启动  "
+               f"{'循环 '+str(args.interval)+'s' if args.interval else '单次'}  → {jsonl}")
+        run_loop(one_round, interval=args.interval,
+                 max_rounds=args.max_rounds, label=f"sui:{args.base}/{args.quote}")
+        return 0
+    rec = probe_once(args, pools, bt, qt)
+    return 0
+
+
+def probe_once(args, pools, bt, qt, quiet=False):
+    """跑一次探测。quiet=True 时只返回记录不打印大表(监控循环用)。"""
 
     print(f"\n从池子清单找到 {len(pools)} 个 {args.base}/{args.quote} 池,正在读链上状态…",
           file=sys.stderr)
@@ -368,7 +487,9 @@ def main():
         Path(args.json).write_text(json.dumps(rows, indent=2, ensure_ascii=False),
                                    encoding="utf-8")
         print(f"已导出 {args.json}")
-    return 0
+    return summarise(rows, live, bad, args.base, args.quote, med_px)
+
+
 
 
 if __name__ == "__main__":
