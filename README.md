@@ -241,6 +241,8 @@ python3 lib/graph.py discover uniswap
 cost_probe.py           通用成本探针(主工具)
 watch_probe.py          持续监控:定期跑探针、落 JSONL、门槛变化告警
 route_compare.py        比较 /advanced/routes 全部候选:成本 vs 延迟、支配关系、延迟溢价
+delay_risk.py           实测延迟风险:链上 swap 秒级数据 → T 秒后价差跑多远
+cost_model.py           完整成本模型:七项逐个算,每项带证据等级
 make_evidence.py        监控历史 → 证据记录表(自动列刷新,人工判断保留)
 li_fi_cost_probe.py     Day-0 原版,保留不动 —— 和上面的 diff 就是学习证明
 lib/chainkit.py         采集骨架(复用自 onChainListen):checkpoint / 去重 / 循环容错
@@ -266,6 +268,7 @@ docs/week_2/
   ├── 外部结论-零费率实测.md    群内 120 轮实测存档:零费率仍无机会 / fly 报价污染 / 成本地板准则
   ├── 从数据到结论教学.md       三天数据收口:四道检验 / 日内周期证伪 / 异常归因
   ├── 原子套利.md               Solana 实测拆解 + Sui 可行性待验清单
+  ├── 成本模型教学.md           七项怎么从"拍脑袋"变成"可算" / 证据等级
   ├── 待办.md                   Week 2 剩余任务 + 本周攒下的方法论
   └── 服务器拉取数据.md         tmux 长跑攒观测:参数取值理由 / 查看 / 限制
 ```

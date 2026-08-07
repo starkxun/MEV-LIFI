@@ -41,10 +41,19 @@ ROOT = Path(__file__).parent
 WATCH_DIR = ROOT / "watch"
 DEFAULT_CSV = ROOT / "evidence.csv"
 
-# 表头。前 7 列 + 真实成本 + 延迟 由脚本填;其余留给人。
+# 表头。
+#
+# **「真实成本bps」改名成「执行成本bps」的原因(2026-08-07)**:
+# 原来那个名字暗示"这就是全部成本",但它只含三项(桥费+滑点+gas)——
+# 都是**你确定要付的钱**。而延迟风险、资金占用是**风险估计**,口径完全不同。
+# 混在一个叫"真实成本"的列里,会让人以为门槛就那么多。
+# 实测差距不小:100k 规模那条路,执行成本 25.00 但完整成本 41.36(延迟 1080 秒)。
 HEADER = ["时间", "链", "资产", "类型", "规模", "路径", "观测次数",
-          "屏幕价差bps", "真实成本bps", "净收益bps", "延迟秒",
+          "屏幕价差bps", "执行成本bps", "完整成本bps", "净收益bps", "延迟秒",
           "成败原因", "可复现"]
+
+# 旧列名 → 新列名。读回历史 CSV 时自动迁移,不丢数据。
+RENAMED = {"真实成本bps": "执行成本bps"}
 
 # 这几列是人的判断,重新生成时必须原样保留
 MANUAL_COLS = ["屏幕价差bps", "成败原因", "可复现"]
@@ -140,8 +149,9 @@ def summarise(key, obs):
         "链": key[0], "资产": key[1], "类型": key[2], "规模": f"{key[3]} {key[1].split('→')[0]}",
         "路径": tool_str,
         "观测次数": len(obs),
-        "真实成本bps": cost,
+        "执行成本bps": cost,
         "延迟秒": f"{dur:g}",
+        "_dur": dur,
         "_median": med,
         "_spread": hi - lo,
         "_warned": sum(1 for o in obs if o["warned"]),
@@ -163,12 +173,42 @@ def load_existing(path):
         return manual, raw
     with path.open(encoding="utf-8") as f:
         for row in csv.DictReader(f):
+            # 旧表可能还是老列名,迁移过来,别让历史数据掉了
+            for old, new in RENAMED.items():
+                if old in row and not row.get(new):
+                    row[new] = row.pop(old)
             key = norm_key(row.get(c, "") for c in KEY_COLS)
             raw[key] = row
             kept = {c: row.get(c, "") for c in MANUAL_COLS if row.get(c)}
             if kept:
                 manual[key] = kept
     return manual, raw
+
+
+def full_cost(exec_med_bps, duration_s, chain, delay_json="delay_risk.json"):
+    """
+    完整成本 = 执行成本 + 延迟风险 + 资金占用。
+
+    **和「执行成本」的区别是口径,不是精度**:
+      · 执行成本 —— 你**确定要付**的钱(桥费/滑点/gas),实测
+      · 完整成本 —— 再加上**风险估计**(延迟风险)和机会成本(资金占用)
+
+    延迟风险取不利侧 95% 分位(长尾分布,中位数全是 0 没意义)。
+    拿不到延迟风险数据时返回 None —— **宁可空着,也不输出一个少算了大头的数**。
+    """
+    try:
+        import cost_model as cm
+    except ImportError:
+        return None, "cost_model.py 不可用"
+    dr = cm.load_delay_risk(delay_json)
+    if not dr:
+        return None, f"缺 {delay_json},先跑 delay_risk.py"
+    dv, dsrc = cm.delay_risk_at(dr, duration_s)
+    if dv is None:
+        return None, "延迟风险无数据"
+    rate = cm.aave_supply_apy(chain)
+    cap = (rate or 0) * (duration_s / cm.SEC_PER_YEAR) * 10_000
+    return exec_med_bps + dv + cap, f"+延迟{dv:.2f}({dsrc})+资金{cap:.2f}"
 
 
 def fetch_screen_spread(chains, token):
@@ -199,6 +239,8 @@ def main():
     p.add_argument("--since",
                    help="只统计这个时刻之后的观测,ISO8601,如 2026-08-03T08:34:00Z。"
                         "用来切掉正式监控开始前的本地调试数据")
+    p.add_argument("--delay-risk", default="delay_risk.json",
+                   help="delay_risk.py 产出的 JSON,用来算完整成本")
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()
 
@@ -247,6 +289,19 @@ def main():
         touched.add(mkey)
         row.update(manual.get(mkey, {}))
 
+        # 完整成本:执行成本 + 延迟风险 + 资金占用
+        src_chain = s["链"].split("→")[0]
+        fc, fnote = full_cost(s["_median"], s["_dur"], src_chain, args.delay_risk)
+        if fc is not None:
+            row["完整成本bps"] = f"{fc:.2f}"
+            if fc - s["_median"] > 1:
+                notes.append(f"[{s['链']} {s['资产']} {s['规模']}] "
+                             f"完整成本 {fc:.2f} 比执行成本 {s['_median']:.2f} "
+                             f"高 {fc-s['_median']:.2f} bps({fnote})"
+                             f" —— 延迟 {s['_dur']:g}s 是主因")
+        else:
+            notes.append(f"[{s['链']} {s['资产']} {s['规模']}] 完整成本算不出:{fnote}")
+
         # 屏幕价差:能抓就抓,抓到了才算得出净收益
         if args.fetch_screen and not row["屏幕价差bps"]:
             frm, to = s["资产"].split("→")
@@ -257,11 +312,16 @@ def main():
                 except Exception as e:
                     notes.append(f"{s['链']} {frm} 标价抓取失败: {e}")
 
-        # 净收益 = 屏幕价差 − 真实成本(中位)。只有屏幕价差有值时才算。
+        # 净收益 = 屏幕价差 − 成本。**优先用完整成本** —— 那才是诚实的门槛。
+        # 拿不到完整成本时退回执行成本,并在括号里标明用的哪个口径,
+        # 免得两行的净收益口径不同却看不出来。
         if row["屏幕价差bps"] and not row["净收益bps"]:
             try:
                 sp = float(row["屏幕价差bps"].split("(")[0])
-                row["净收益bps"] = f"{sp - s['_median']:+.2f}"
+                if row["完整成本bps"]:
+                    row["净收益bps"] = f"{sp - float(row['完整成本bps']):+.2f}(完整口径)"
+                else:
+                    row["净收益bps"] = f"{sp - s['_median']:+.2f}(仅执行成本)"
             except ValueError:
                 pass
 
