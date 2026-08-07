@@ -243,6 +243,7 @@ watch_probe.py          持续监控:定期跑探针、落 JSONL、门槛变化�
 route_compare.py        比较 /advanced/routes 全部候选:成本 vs 延迟、支配关系、延迟溢价
 delay_risk.py           实测延迟风险:链上 swap 秒级数据 → T 秒后价差跑多远
 cost_model.py           完整成本模型:七项逐个算,每项带证据等级
+actor_profile.py        链上地址画像:行为分类 + 利润分布 + 策略/基础设施/运气 归因
 make_evidence.py        监控历史 → 证据记录表(自动列刷新,人工判断保留)
 li_fi_cost_probe.py     Day-0 原版,保留不动 —— 和上面的 diff 就是学习证明
 lib/chainkit.py         采集骨架(复用自 onChainListen):checkpoint / 去重 / 循环容错
@@ -269,6 +270,7 @@ docs/week_2/
   ├── 从数据到结论教学.md       三天数据收口:四道检验 / 日内周期证伪 / 异常归因
   ├── 原子套利.md               Solana 实测拆解 + Sui 可行性待验清单
   ├── 成本模型教学.md           七项怎么从"拍脑袋"变成"可算" / 证据等级
+  ├── 研究人教学.md             榜单筛选 → 行为分类 → 画像 → 反编译:清算没有秘密策略
   ├── 待办.md                   Week 2 剩余任务 + 本周攒下的方法论
   └── 服务器拉取数据.md         tmux 长跑攒观测:参数取值理由 / 查看 / 限制
 ```
