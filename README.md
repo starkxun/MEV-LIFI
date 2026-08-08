@@ -243,7 +243,9 @@ watch_probe.py          持续监控:定期跑探针、落 JSONL、门槛变化�
 route_compare.py        比较 /advanced/routes 全部候选:成本 vs 延迟、支配关系、延迟溢价
 delay_risk.py           实测延迟风险:链上 swap 秒级数据 → T 秒后价差跑多远
 cost_model.py           完整成本模型:七项逐个算,每项带证据等级
-actor_profile.py        链上地址画像:行为分类 + 利润分布 + 策略/基础设施/运气 归因
+actor_profile.py        链上地址画像:行为分类 + 毛机会分布 + 策略/基础设施/运气 归因
+                        ⚠️ 竞价必须走 trace —— block.coinbase 转账不发任何 event
+refund_probe.py         量构建者事后 refund:判据是「付款人 == 该块出块人」,不用地址名单
 make_evidence.py        监控历史 → 证据记录表(自动列刷新,人工判断保留)
 li_fi_cost_probe.py     Day-0 原版,保留不动 —— 和上面的 diff 就是学习证明
 lib/chainkit.py         采集骨架(复用自 onChainListen):checkpoint / 去重 / 循环容错
