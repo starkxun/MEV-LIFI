@@ -33,6 +33,35 @@ actor_profile.py —— 给一个链上地址做画像:策略 / 基础设施 / �
    利润可能落到别的地址(机器人合约、独立收款钱包),量出来会偏低。
    看到系统性为负时,先怀疑口径而不是下结论 —— 我在 Solana 那次
    就因为只看原生 SOL 漏了 WSOL,得出过符号相反的结论。
+
+⚠️⚠️ **2026-08-08 修正:只扫 Transfer 日志算利润是错的,而且会错成反的。**
+
+   第一版的 ETH 分支把「WETH 的 Transfer 净变化」当利润、把「gas 成本」当
+   "为速度付费"。在 0xf0570ec4 这类清算机器人上,两个都错:
+
+     · 它给区块构建者的钱走 `block.coinbase.call{value:}("")` ——
+       **原生 ETH 转账,不发任何 event**,只扫日志永远看不见。
+     · 它解包 WETH 用的 `WETH9.withdraw()` **只发 Withdrawal,不发 Transfer**
+       (deposit 同理只发 Deposit),所以这笔流出也看不见。
+
+   两个盲点叠加,Transfer 净变化恰好 **恒等于付给构建者的竞价**:
+
+       MM → 合约   +G          (Transfer,看得见)
+       合约 → MM   −f          (Transfer,看得见)
+       withdraw(T)             (Withdrawal,看不见)   T = coinbaseTip
+       合约 → 收款  −(S−T)      (Transfer,看得见)    S = G−f
+       ─────────────────────────────────────────────
+       净变化 = G − f − (S−T) = T   ← 脚本把「竞价」当成了「利润」
+
+   已在 tx 0xefe4f89f…e52762d 上 wei 级验证:Transfer 净变化
+   0.536620432662676339 WETH,trace 实测付给 block.coinbase 的也是
+   0.536620432662676339 ETH,差值为 0。
+
+   现在的做法:
+     · 竞价 —— 用 trace_transaction 实测转给 block.coinbase 的原生 ETH
+     · WETH 净变化 —— Transfer delta **加上** Deposit / Withdrawal
+     · 落袋 —— 单独统计转给收款地址(--receiver)的 WETH
+     · gas 单独一栏,**不再叫"为速度付费"**
 """
 
 import argparse
@@ -48,6 +77,17 @@ import requests
 SOL_RPC = "https://api.mainnet-beta.solana.com"
 WSOL = "So11111111111111111111111111111111111111112"
 WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+
+# topic0 一律现算,不凭记忆抄 —— 这个项目已经在这上面栽过三次。
+def _topic0(sig):
+    from eth_hash.auto import keccak
+    return "0x" + keccak(sig.encode()).hex()
+
+TRANSFER = _topic0("Transfer(address,address,uint256)")
+# WETH9 的 deposit/withdraw **不发 Transfer**,只发这两个 —— 漏了它们,
+# WETH 净变化就是错的(见模块 docstring 的 2026-08-08 修正)。
+WITHDRAWAL = _topic0("Withdrawal(address,uint256)")
+DEPOSIT = _topic0("Deposit(address,uint256)")
 
 _S = requests.Session()
 _S.headers.update({"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"})
@@ -173,7 +213,44 @@ def sol_profile(addr, sample, max_pages=6):
 # Ethereum(Ankr Advanced API)
 # ============================================================
 
-def eth_profile(addr, sample, key):
+def _miner_of(eth, blk_hex, cache):
+    """区块的 fee recipient。缓存 —— 同一区块可能有多笔样本。"""
+    if blk_hex not in cache:
+        b = rpc(eth, "eth_getBlockByNumber", [blk_hex, False]) or {}
+        cache[blk_hex] = (b.get("miner") or "").lower()
+    return cache[blk_hex]
+
+
+def _builder_bid(eth, txhash, miner):
+    """
+    实测这笔交易转给 `block.coinbase` 的原生 ETH。
+
+    **必须走 trace。** 机器人给构建者的钱是 `block.coinbase.call{value:}("")`,
+    原生转账不产生任何 log,receipt 里一个字都没有。第一版只扫日志,
+    于是把这笔钱整个漏掉,还把它错记成了利润(见模块 docstring)。
+
+    返回 (bid_wei, 来源)。trace 不可用时返回 (None, "unavailable") ——
+    **返回 None 而不是 0**,免得"测不到"被下游当成"确实没付"。
+    """
+    if not miner:
+        return None, "no-miner"
+    try:
+        tr = rpc(eth, "trace_transaction", [txhash], retries=2)
+    except RuntimeError:
+        return None, "unavailable"
+    if tr is None:
+        return None, "unavailable"
+    bid = 0
+    for t in tr:
+        if t.get("type") != "call":
+            continue
+        act = t.get("action") or {}
+        if (act.get("to") or "").lower() == miner:
+            bid += int(act.get("value") or "0x0", 16)
+    return bid, "trace"
+
+
+def eth_profile(addr, sample, key, receiver=None):
     """
     以太坊画像。**合约和 EOA 要分开处理:**
 
@@ -182,11 +259,14 @@ def eth_profile(addr, sample, key):
 
     第一版只写了 EOA 分支,遇到机器人合约直接报"没有一笔是该地址发出的" ——
     而榜单上的地址**几乎全是合约**(机器人不会用 EOA 直接干活)。
+
+    `receiver` —— 机器人常把利润转到独立收款地址,合约自己净留 0。
+    给了就单独统计「转给收款地址的 WETH」,那才是落袋数。
     """
     multi = f"https://rpc.ankr.com/multichain/{key}"
     eth = f"https://rpc.ankr.com/eth/{key}"
     a = addr.lower()
-    TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+    rcv = (receiver or "").lower() or None
 
     code = rpc(eth, "eth_getCode", [a, "latest"]) or "0x"
     is_contract = len(code) > 2
@@ -216,6 +296,8 @@ def eth_profile(addr, sample, key):
     okn = sum(1 for t in rel if t.get("status") == "0x1")
 
     profits, fees, tips, skipped, callers = [], [], [], [], {}
+    bids, payouts, retained, no_trace = [], [], [], 0
+    miners, two_way = {}, False
     for t in rel[:sample]:
         callers[(t.get("from") or "").lower()] = \
             callers.get((t.get("from") or "").lower(), 0) + 1
@@ -232,35 +314,73 @@ def eth_profile(addr, sample, key):
         # 从日志里算该地址的每种 token 净变化。**这比调 token-transfers API 准**,
         # 因为它就是这笔交易实际发生的事,不依赖第三方索引。
         deltas = {}
+        wd = dp = 0          # WETH 的 withdraw / deposit —— 这两个不发 Transfer
+        pay = 0              # 转给收款地址的 WETH
         for lg in (rc.get("logs") or []):
             tp = lg.get("topics") or []
-            if len(tp) < 3 or tp[0] != TRANSFER:
-                continue
-            frm = "0x" + tp[1][-40:]
-            to = "0x" + tp[2][-40:]
-            try:
-                v = int(lg["data"], 16)
-            except (ValueError, KeyError):
+            if not tp:
                 continue
             tok = lg["address"].lower()
-            if frm.lower() == a:
-                deltas[tok] = deltas.get(tok, 0) - v
-            if to.lower() == a:
-                deltas[tok] = deltas.get(tok, 0) + v
+            try:
+                data = int(lg["data"], 16)
+            except (ValueError, KeyError):
+                data = None
 
-        # 只把 WETH 计入利润(18 位)。其它 token 无法免费定价 —— 单独记,不硬折算。
-        weth = deltas.get(WETH, 0) / 1e18
+            # WETH9 的 deposit/withdraw 只发 Deposit/Withdrawal,**没有 Transfer**。
+            # 漏了它们,WETH 净变化就不是余额变化,而是一个没有意义的中间量。
+            if tok == WETH and data is not None and len(tp) >= 2:
+                who = ("0x" + tp[1][-40:]).lower()
+                if who == a and tp[0] == WITHDRAWAL:
+                    wd += data
+                elif who == a and tp[0] == DEPOSIT:
+                    dp += data
+
+            if len(tp) < 3 or tp[0] != TRANSFER or data is None:
+                continue
+            frm = ("0x" + tp[1][-40:]).lower()
+            to = ("0x" + tp[2][-40:]).lower()
+            if frm == a:
+                deltas[tok] = deltas.get(tok, 0) - data
+                if tok == WETH and rcv and to == rcv:
+                    pay += data
+            if to == a:
+                deltas[tok] = deltas.get(tok, 0) + data
+                # 收款地址**同时是交易对手**时(0xf0570ec4 的收款地址就是
+                # Bebop 做市商 Wintermute),单向求和会把 RFQ 换币腿当成利润。
+                # 必须取净额 —— 实测最大一笔 141.41 WETH 其实是抵押品卖出腿。
+                if tok == WETH and rcv and frm == rcv:
+                    pay -= data
+                    two_way = True
+
+        # WETH **余额**变化 = Transfer 净额 + deposit − withdraw。
+        # 旧版只有第一项,于是这个数恒等于给构建者的竞价(见 docstring)。
+        weth = (deltas.get(WETH, 0) + dp - wd) / 1e18
+
+        miner = _miner_of(eth, rc.get("blockNumber"), miners)
+        bid_wei, src = _builder_bid(eth, t["hash"], miner)
+        if bid_wei is None:
+            no_trace += 1
+        bids.append(None if bid_wei is None else bid_wei / 1e18)
+        payouts.append(pay / 1e18)
+        retained.append(weth)
+
         others = {k: v for k, v in deltas.items() if k != WETH and abs(v) > 0}
         fees.append(fee)
-        tips.append(fee)
-        profits.append(weth)
+        # tips 现在只装**给构建者的竞价**。旧版往这里塞 gas 成本,
+        # 于是"为速度付费"算出来永远 ≈0 —— 那是在拿 gas 除以 gas。
+        tips.append(0.0 if bid_wei is None else bid_wei / 1e18)
+        # 分布分析用**毛机会** = 合约自留 + 竞价,也就是这笔清算到底抓到多大的肉。
+        # 不能用"自留",转发型合约每笔都是 0,分布退化成一条零线。
+        profits.append(weth + (0.0 if bid_wei is None else bid_wei / 1e18))
         if others:
             skipped.append((f"另有 {len(others)} 种 token 变化未计价", 0.0))
         time.sleep(0.06)
 
     return {"total": len(rel), "ok": okn, "span_h": span_h,
             "profits": profits, "fees": fees, "tips": tips, "unit": "WETH",
-            "skipped": skipped, "callers": callers, "is_contract": is_contract}
+            "skipped": skipped, "callers": callers, "is_contract": is_contract,
+            "bids": bids, "payouts": payouts, "retained": retained,
+            "no_trace": no_trace, "receiver": rcv, "rcv_two_way": two_way}
 
 
 # ============================================================
@@ -500,7 +620,12 @@ def show(name, r):
     print("=" * 80)
     print(f"活动:  抓到 {r['total']:,} 笔  成功 {r['ok']:,} "
           f"({r['ok']/r['total']*100:.1f}%)  跨度 {r['span_h']:.1f}h"
-          + (f"  ≈{r['total']/r['span_h']:.0f} 笔/小时" if r["span_h"] > 0 else ""))
+          # 低频地址用「笔/小时」会被 .0f 截成 0,看着像没活动。
+          # 这里按量级换单位 —— 之前就是这个坑,把 1.2 笔/**天** 读成了 1.2 笔/**小时**。
+          + ((f"  ≈{r['total']/r['span_h']:.1f} 笔/小时"
+              if r["total"] / r["span_h"] >= 1
+              else f"  ≈{r['total']/r['span_h']*24:.2f} 笔/天")
+             if r["span_h"] > 0 else ""))
     print(f"样本:  分析了 {n} 笔")
     print()
     print(f"盈亏:  合计 {tot:+.4f} {u}   中位 {med:+.6f}   均值 {mean:+.6f}")
@@ -518,9 +643,16 @@ def show(name, r):
         print(f"       中位 ≤ 0,均值/中位判据不适用")
 
     sk = r.get("skipped") or []
-    if sk:
-        print(f"       (已剔除 {len(sk)} 笔纯转账/归集,合计 "
-              f"{sum(x[1] for x in sk):+.4f} {u} —— 那不是套利行为)")
+    # skipped 里混了两类东西,不能都叫"纯转账" —— 分开报,否则
+    # "已剔除 6 笔纯转账"会让人以为样本被砍了,其实那 6 笔都算进来了。
+    pure = [x for x in sk if x[0] == "纯转账"]
+    uncounted = [x for x in sk if x[0] != "纯转账"]
+    if pure:
+        print(f"       (已剔除 {len(pure)} 笔纯转账/归集,合计 "
+              f"{sum(x[1] for x in pure):+.4f} {u} —— 那不是套利行为)")
+    if uncounted:
+        print(f"       ({len(uncounted)} 笔另含未计价 token(非 WETH),"
+              f"**这些笔仍在样本内**,只是非 WETH 部分没折算)")
 
     c = concentration(p)
     if c:
@@ -531,11 +663,40 @@ def show(name, r):
                   f"  → {v:>5.1f}% 的利润")
         print(f"   基尼系数 {c['gini']:.3f}   (0=均匀 1=全集中在一笔)")
 
-    if r["tips"] and sum(r["tips"]) > 0 and tot > 0:
-        tip_ratio = sum(r["tips"][:len(p)]) / (tot + sum(r["tips"][:len(p)])) * 100
+    # ---- 竞价 / 落袋 / gas 分开报 ----
+    # 旧版把 gas 当"为速度付费",分母又是被污染的"利润",算出来恒 ≈0%。
+    bids = [b for b in (r.get("bids") or []) if b is not None]
+    if bids:
+        gas = sum(r["fees"][:len(p)])
+        bid_sum = sum(bids)
+        pay_sum = sum(r.get("payouts") or [])
+        # 毛机会 = 合约自留 + 竞价。**不能把 pay_sum 算进来** ——
+        # 收款地址若同时是做市商,那一栏是换币流水,加进分母会把
+        # "为速度付费" 稀释成 2.3% 这种假象(真实值是 99.99%)。
+        gross = sum(r.get("retained") or []) + bid_sum
+        kept = sum(r.get("retained") or [])
         print()
-        print(f"基础设施依赖度:  为速度付出 {sum(r['tips'][:len(p)]):.4f} {u},"
-              f"占毛利润 **{tip_ratio:.0f}%**")
+        print("毛机会去哪了(trace 实测,不靠日志推断):")
+        print(f"   付给区块构建者  {bid_sum:>12.4f} {u}   非零 {sum(1 for b in bids if b > 0)}/{len(bids)} 笔")
+        print(f"   合约自留        {kept:>12.4f} {u}")
+        if r.get("receiver"):
+            print(f"   净流向收款地址  {pay_sum:>12.4f} {u}   ({r['receiver']})")
+            if r.get("rcv_two_way"):
+                print(f"                   ^ ⚠️ 该地址与机器人**双向**转 WETH,"
+                      f"说明它是交易对手(做市商)而不是纯收款方。")
+                print(f"                     这一栏是换币流水,**不能当利润读** —— "
+                      f"实测最大一笔 141.41 WETH 是抵押品卖出腿。")
+        print(f"   gas(EOA 支付)  {gas:>12.4f} ETH")
+        if gross > 0:
+            print(f"   **为速度付费占毛机会 {bid_sum / gross * 100:.1f}%**"
+                  f"   (毛机会 = 自留 + 竞价 = {gross:.4f} {u})")
+        if r.get("no_trace"):
+            print(f"   ⚠️ {r['no_trace']} 笔拿不到 trace,竞价按缺失处理(**不是按 0**)")
+        if bid_sum > 0 and abs(kept) < bid_sum * 0.01:
+            print()
+            print(f"   ⚠️ **自留 ≈ 0,毛机会几乎全额报给了构建者。**")
+            print(f"      真实收益取决于构建者事后 refund —— 那是链下的,"
+                  f"链上测不到,别把毛机会当利润记。")
 
     print()
     print("判读:")
@@ -598,6 +759,8 @@ def main():
     p.add_argument("--sample", type=int, default=60, help="每个地址分析多少笔")
     p.add_argument("--classify", action="store_true",
                    help="只做行为分类(不算利润)。**先跑这个再决定深挖谁**")
+    p.add_argument("--receiver", help="机器人的利润收款地址(合约自己常净留 0,"
+                                     "不给这个就量不到落袋数)")
     p.add_argument("--json", help="导出")
     args = p.parse_args()
 
@@ -639,7 +802,7 @@ def main():
     for addr, label in targets:
         try:
             r = (sol_profile(addr, args.sample) if args.chain == "sol"
-                 else eth_profile(addr, args.sample, key))
+                 else eth_profile(addr, args.sample, key, args.receiver))
         except RuntimeError as e:
             print(f"\n{label}: {e}", file=sys.stderr)
             continue
