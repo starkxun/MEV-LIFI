@@ -1,0 +1,38 @@
+[
+ {
+  "usd": 1819146.2515587318,
+  "bid": 35.52536209291663,
+  "kind": "Aave\u7cfb",
+  "target": "0x50016ed4bd06a6e555a241fb3f98269d8cbbeec5"
+ },
+ {
+  "usd": 252929.478994,
+  "bid": 5.977200367400364,
+  "kind": "Aave\u7cfb",
+  "target": "0x3169e4e2f903062b0cf7f2db4eb1dc665412cc5d"
+ },
+ {
+  "usd": 215338.250179,
+  "bid": 5.164939236353262,
+  "kind": "Aave\u7cfb",
+  "target": "0x3169e4e2f903062b0cf7f2db4eb1dc665412cc5d"
+ },
+ {
+  "usd": 160458.864101,
+  "bid": 3.863071806613831,
+  "kind": "Aave\u7cfb",
+  "target": "0x5b17f510083c616fe4162936d15d946923d8c47f"
+ },
+ {
+  "usd": 89287.995326,
+  "bid": 2.187118671590226,
+  "kind": "Aave\u7cfb",
+  "target": "0x53c1c54c04a2ad6eb9d7d69f4ceb7747ca8f8382"
+ },
+ {
+  "usd": 46102.2744474559,
+  "bid": 0.5366204326626763,
+  "kind": "Aave\u7cfb",
+  "target": "0xf0570ec48d03171a80ff796dceadf0d385a00004"
+ }
+]

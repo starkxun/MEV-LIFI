@@ -60,8 +60,33 @@ actor_profile.py —— 给一个链上地址做画像:策略 / 基础设施 / �
    现在的做法:
      · 竞价 —— 用 trace_transaction 实测转给 block.coinbase 的原生 ETH
      · WETH 净变化 —— Transfer delta **加上** Deposit / Withdrawal
-     · 落袋 —— 单独统计转给收款地址(--receiver)的 WETH
      · gas 单独一栏,**不再叫"为速度付费"**
+     · payout —— 见下,这一项踩了第二个坑
+
+⚠️⚠️ **2026-08-08 第二次修正:payout 不能按地址认,要按位置认。**
+
+   收款地址常常**同时是 RFQ 做市商**(这两代清算机器人的收款地址都是
+   Wintermute 0x51c72848…),所以「转给它的 WETH」里混着两样东西:
+
+     · 抵押品卖出腿(可以有 15,131 WETH 那么大)
+     · 真正的利润分成 payout
+
+   单向求和 → 把卖出腿当利润(算出 27,466 WETH 这种荒唐数);
+   取净额     → 被换币方向带偏,同样不对。**两种都试过,都错。**
+
+   正确做法是按**日志位置**认。合约出账顺序是固定的:
+
+       …换币… → withdraw(coinbaseTip) → 打给构建者 → transfer(收款地址, payout)
+
+   所以 **WETH.Withdrawal 之后**那笔转给收款地址的,才是 payout。两代验证:
+
+       第三代 0xefe4f89f   解包 0.536620 → 之后 OUT   0.006600  = payout
+       第二代 0xcadcbc27   解包 29.188298 → 之后 OUT  23.286174 = payout
+                           (解包**之前**那笔 817.251709 是卖出腿)
+
+   修正前一度把 payout 整个剔出分母,得出"毛机会 100% 给了构建者、
+   这门生意不赚钱"的结论 —— **那是错的**。实测第三代 payout 占毛机会
+   **49.8%**,第二代 **31.4%**。利润没有消失,只是没留在合约里。
 """
 
 import argparse
@@ -315,7 +340,27 @@ def eth_profile(addr, sample, key, receiver=None):
         # 因为它就是这笔交易实际发生的事,不依赖第三方索引。
         deltas = {}
         wd = dp = 0          # WETH 的 withdraw / deposit —— 这两个不发 Transfer
-        pay = 0              # 转给收款地址的 WETH
+        pay = 0              # 转给收款地址的 WETH(只认「解包之后」那笔,见下)
+
+        # 收款地址常常**同时是 RFQ 做市商**(这两代机器人的收款地址都是
+        # Wintermute),所以"转给它的 WETH"里既有换币腿又有利润分成,
+        # 单向求和会把 817 WETH 的抵押品卖出腿当成利润,取净额又会被
+        # 换币方向带偏。**两种都不对。**
+        #
+        # 靠位置认:合约的出账顺序是固定的
+        #     …换币… → withdraw(coinbaseTip) → 打给构建者 → transfer(收款地址, payout)
+        # 所以 **WETH.Withdrawal 之后**那笔转给收款地址的,才是 payout。
+        # 已在两代机器人上验证:
+        #     第三代 0xefe4f89f  解包 0.536620 → 之后 OUT 0.006600  = payout
+        #     第二代 0xcadcbc27  解包 29.188298 → 之后 OUT 23.286174 = payout
+        #                        (解包**之前**那笔 817.251709 是卖出腿)
+        wd_idx = -1
+        for lg in (rc.get("logs") or []):
+            tp = lg.get("topics") or []
+            if (lg["address"].lower() == WETH and tp and tp[0] == WITHDRAWAL
+                    and len(tp) >= 2 and ("0x" + tp[1][-40:]).lower() == a):
+                wd_idx = max(wd_idx, int(lg["logIndex"], 16))
+
         for lg in (rc.get("logs") or []):
             tp = lg.get("topics") or []
             if not tp:
@@ -341,15 +386,12 @@ def eth_profile(addr, sample, key, receiver=None):
             to = ("0x" + tp[2][-40:]).lower()
             if frm == a:
                 deltas[tok] = deltas.get(tok, 0) - data
-                if tok == WETH and rcv and to == rcv:
+                if (tok == WETH and rcv and to == rcv
+                        and wd_idx >= 0 and int(lg["logIndex"], 16) > wd_idx):
                     pay += data
             if to == a:
                 deltas[tok] = deltas.get(tok, 0) + data
-                # 收款地址**同时是交易对手**时(0xf0570ec4 的收款地址就是
-                # Bebop 做市商 Wintermute),单向求和会把 RFQ 换币腿当成利润。
-                # 必须取净额 —— 实测最大一笔 141.41 WETH 其实是抵押品卖出腿。
                 if tok == WETH and rcv and frm == rcv:
-                    pay -= data
                     two_way = True
 
         # WETH **余额**变化 = Transfer 净额 + deposit − withdraw。
@@ -369,9 +411,10 @@ def eth_profile(addr, sample, key, receiver=None):
         # tips 现在只装**给构建者的竞价**。旧版往这里塞 gas 成本,
         # 于是"为速度付费"算出来永远 ≈0 —— 那是在拿 gas 除以 gas。
         tips.append(0.0 if bid_wei is None else bid_wei / 1e18)
-        # 分布分析用**毛机会** = 合约自留 + 竞价,也就是这笔清算到底抓到多大的肉。
-        # 不能用"自留",转发型合约每笔都是 0,分布退化成一条零线。
-        profits.append(weth + (0.0 if bid_wei is None else bid_wei / 1e18))
+        # 分布分析用**毛机会** = 自留 + 竞价 + payout,也就是这笔清算抓到多大的肉。
+        # 不能用"自留",转发型合约每笔都是 0,分布退化成一条零线;
+        # 也不能只用"自留+竞价",那会漏掉转给收款地址的那一半利润。
+        profits.append(weth + (0.0 if bid_wei is None else bid_wei / 1e18) + pay / 1e18)
         if others:
             skipped.append((f"另有 {len(others)} 种 token 变化未计价", 0.0))
         time.sleep(0.06)
@@ -670,33 +713,49 @@ def show(name, r):
         gas = sum(r["fees"][:len(p)])
         bid_sum = sum(bids)
         pay_sum = sum(r.get("payouts") or [])
-        # 毛机会 = 合约自留 + 竞价。**不能把 pay_sum 算进来** ——
-        # 收款地址若同时是做市商,那一栏是换币流水,加进分母会把
-        # "为速度付费" 稀释成 2.3% 这种假象(真实值是 99.99%)。
-        gross = sum(r.get("retained") or []) + bid_sum
+        # 毛机会 = 自留 + 竞价 + payout。payout 现在只认「解包之后」那笔,
+        # 换币腿已经排除,可以放心进分母了(旧版一度整个剔掉 pay_sum,
+        # 那会把第二代 44% 的利润分成也一起抹掉)。
+        gross = sum(r.get("retained") or []) + bid_sum + pay_sum
         kept = sum(r.get("retained") or [])
         print()
         print("毛机会去哪了(trace 实测,不靠日志推断):")
         print(f"   付给区块构建者  {bid_sum:>12.4f} {u}   非零 {sum(1 for b in bids if b > 0)}/{len(bids)} 笔")
         print(f"   合约自留        {kept:>12.4f} {u}")
         if r.get("receiver"):
-            print(f"   净流向收款地址  {pay_sum:>12.4f} {u}   ({r['receiver']})")
+            print(f"   payout→收款地址 {pay_sum:>12.4f} {u}   ({r['receiver']})")
             if r.get("rcv_two_way"):
-                print(f"                   ^ ⚠️ 该地址与机器人**双向**转 WETH,"
-                      f"说明它是交易对手(做市商)而不是纯收款方。")
-                print(f"                     这一栏是换币流水,**不能当利润读** —— "
-                      f"实测最大一笔 141.41 WETH 是抵押品卖出腿。")
+                print(f"                   ^ 该地址与机器人双向转 WETH(它同时是 RFQ 做市商),"
+                      f"换币腿已按「解包之后」规则排除")
         print(f"   gas(EOA 支付)  {gas:>12.4f} ETH")
         if gross > 0:
             print(f"   **为速度付费占毛机会 {bid_sum / gross * 100:.1f}%**"
-                  f"   (毛机会 = 自留 + 竞价 = {gross:.4f} {u})")
+                  f"   (毛机会 = 自留 + 竞价 + payout = {gross:.4f} {u})")
         if r.get("no_trace"):
             print(f"   ⚠️ {r['no_trace']} 笔拿不到 trace,竞价按缺失处理(**不是按 0**)")
-        if bid_sum > 0 and abs(kept) < bid_sum * 0.01:
+        if bid_sum > 0 and abs(kept) < bid_sum * 0.01 and pay_sum > bid_sum * 0.01:
             print()
-            print(f"   ⚠️ **自留 ≈ 0,毛机会几乎全额报给了构建者。**")
-            print(f"      真实收益取决于构建者事后 refund —— 那是链下的,"
-                  f"链上测不到,别把毛机会当利润记。")
+            print(f"   ℹ️ 合约自留 ≈ 0,但**利润没有消失,是转走了** —— "
+                  f"{pay_sum:.2f} {u} 进了收款地址。")
+            print(f"      转发型合约就该是这样。别把「自留 0」读成「不赚钱」。")
+
+    # 利润留存率随机会规模怎么变 —— 这个斜率比单一比例有用得多:
+    # 小机会会被竞价吃干净,利润全在尾部的大单里。
+    rows = [(x + (b or 0) + q, b or 0, x)
+            for x, b, q in zip(r.get("payouts") or [], r.get("bids") or [],
+                               r.get("retained") or [])]
+    rows = [x for x in rows if x[0] > 1e-9]
+    if rows and sum(x[2] for x in rows) > 0:
+        print()
+        print("利润留存率 vs 机会规模(留存 = payout / 毛机会):")
+        for lo, hi in ((0, 1), (1, 5), (5, 20), (20, 100), (100, float("inf"))):
+            sel = [x for x in rows if lo <= x[0] < hi]
+            if not sel:
+                continue
+            g = sum(x[0] for x in sel)
+            print(f"   毛机会 {lo:>3}~{'∞' if hi == float('inf') else int(hi):<4} "
+                  f"n={len(sel):>2}   留存 **{sum(x[2] for x in sel) / g * 100:>5.1f}%**"
+                  f"   (毛 {g:.2f} {u})")
 
     print()
     print("判读:")
