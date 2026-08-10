@@ -1,0 +1,32 @@
+{
+  "feed": "ETH",
+  "ref": "OPT",
+  "hours": 24.0,
+  "counts": {
+    "OPT": 989,
+    "ARB": 1629,
+    "BASE": 679
+  },
+  "results": {
+    "ARB": {
+      "n": 979,
+      "already_ahead": 48,
+      "censored": 163,
+      "measured": 768,
+      "lead_pct": 78.44739530132789,
+      "mean_lead": 57.536458333333336,
+      "median_lead": 34.0,
+      "max_lead": 298
+    },
+    "BASE": {
+      "n": 979,
+      "already_ahead": 67,
+      "censored": 241,
+      "measured": 671,
+      "lead_pct": 68.53932584269663,
+      "mean_lead": 72.91803278688525,
+      "median_lead": 48,
+      "max_lead": 300
+    }
+  }
+}
