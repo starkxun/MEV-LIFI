@@ -1,0 +1,306 @@
+[
+ {
+  "blk": 488321865,
+  "tx": "cc92f1856fbc20b1613cfe4b9c50409a0208170b1f27c8bea7a94bc4262c97f9",
+  "liquidator": "0x544412bc7a2ce755abe7b398505f776a89fbeae9",
+  "user": "0x0db95de8ef0170d3870a59081f0c414d547284e8",
+  "logIndex": 20,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 488403462,
+  "tx": "ffd88f702c915e11bfadfd2f38822a810414f43d8951443bf4e8fdeffe3a00da",
+  "liquidator": "0xd12810b19b596347a3afac206d3ca65d08594b3f",
+  "user": "0x1c721671916560c9ab5b7c5406e152b750eb03a2",
+  "logIndex": 18,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 488779090,
+  "tx": "a8b6bfdb49f7f9451ac9c43aeaf8df5dfd0dcabbd2401a38968f6178608fa338",
+  "liquidator": "0xc252b4943b7a98a5377d9c8d6bf453947aaa749c",
+  "user": "0x2c82ea7c6f4977ecb389861cc77efb768e3d9f73",
+  "logIndex": 17,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 488823997,
+  "tx": "374677b33a5ae0bece93eb962c43bc8efc422642ad7f095f3e100c7b88581b5a",
+  "liquidator": "0xeb636fecce2568905d6256be58100af1140d268e",
+  "user": "0xd8474c7af14b5f6fcf1bd6f4092fc55ef66e5577",
+  "logIndex": 14,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 489061426,
+  "tx": "b82408b6a18fae4b19aa20656823a81ac227aff247f0231e01638d91a8ed817e",
+  "liquidator": "0xd12810b19b596347a3afac206d3ca65d08594b3f",
+  "user": "0x334377641aa9b531c01489d11ac24b22ebc24595",
+  "logIndex": 52,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 489163042,
+  "tx": "3ac483b0545e7ae6311c3fb637f0e96a1dccb64495ebf8f92a3b882b2c4e3771",
+  "liquidator": "0x939df57b6cdb6d9ef423a037e24373f780b2fe99",
+  "user": "0x2cef35ddad95cd702ac8bc9ef423abae9155ee1c",
+  "logIndex": 30,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 489482948,
+  "tx": "a32102f96e4d591e21317f04486f094ad0b20df71a9e8d0513418c895a22dabd",
+  "liquidator": "0x73e4811b0fd5ad6234b0035d3cf2e72773e89506",
+  "user": "0x6af5be7d013766f201bbd9377287b303488fc691",
+  "logIndex": 27,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 489660491,
+  "tx": "d7d0b20f823d99db93f8dc0efe876ae5f47bc27d157057559f58cbb977698332",
+  "liquidator": "0xd12810b19b596347a3afac206d3ca65d08594b3f",
+  "user": "0x35016df07b8bfc1eb25e4f5195faa6419209419f",
+  "logIndex": 74,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 490069608,
+  "tx": "20b065d301b3b16bc04bd8f444c81d560e8c1ba94a71769b6f23d58d90cd1df1",
+  "liquidator": "0xd12810b19b596347a3afac206d3ca65d08594b3f",
+  "user": "0x471fb4b7aab51d26f847c1c73a6647565a3f8607",
+  "logIndex": 65,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 490069610,
+  "tx": "dcb0ff184eb52127caec315075b0b2049f0d3eeee3a4dbae71bbede616c35464",
+  "liquidator": "0x9f83664976adc0abe9c375151b0e5b36ee7703d7",
+  "user": "0x4bc1d23c5208cac48c57bbedc529db1ccf2c5ad1",
+  "logIndex": 20,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 490069734,
+  "tx": "e2f9615ef3fda0966fad5cafb1d2bae1ae3cc4ae62c7631d8332c4be729a8fd2",
+  "liquidator": "0x9f83664976adc0abe9c375151b0e5b36ee7703d7",
+  "user": "0x17e2fd1ae9c2959313cabda8860b34f04952a2b9",
+  "logIndex": 54,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 490073209,
+  "tx": "8a90acc6717e505f619bdc0fd410fc85da0a210d2b7095c6dff1c73e90c47469",
+  "liquidator": "0x9f83664976adc0abe9c375151b0e5b36ee7703d7",
+  "user": "0xce6aea0af34518a4af635decda55f90ea8df5537",
+  "logIndex": 22,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 490113940,
+  "tx": "01ae5cae6a17fc89d4a755c0860de8311519abea810c8a0d3d279b823a7f8a06",
+  "liquidator": "0x544412bc7a2ce755abe7b398505f776a89fbeae9",
+  "user": "0x8eb73d481ce851a68f68ff3ecd5dd5e51f2daceb",
+  "logIndex": 16,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 490316184,
+  "tx": "90a3441079f6de197bcb1543d0b0a792a8c20e7f7715c33caf805c73dcc2511f",
+  "liquidator": "0xacd41c66ab42368ff92f8bff55288f32ace66b8e",
+  "user": "0xb9702296c4c6af3fb62e9523dc08e5a451c12a0c",
+  "logIndex": 31,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 490522299,
+  "tx": "0e0ce2dc3a95acd414b6f0123e544d57e7472c147a93e062f5f342ff71bf0a0f",
+  "liquidator": "0xeb636fecce2568905d6256be58100af1140d268e",
+  "user": "0x8cfebe8a76addc492bad81b9ca8ca0abf8e7093e",
+  "logIndex": 17,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 490610351,
+  "tx": "539b432c53530029c3cd39d66a91be7dcbe602f54a6c2aa116fcb55b04142849",
+  "liquidator": "0xd12810b19b596347a3afac206d3ca65d08594b3f",
+  "user": "0xafb1dcd9692019c7f17788cebabc002cc6efdcd9",
+  "logIndex": 26,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 491341978,
+  "tx": "b49ad876896325c51ba397e6777626303945c736a9473149a36f2f3ed3dc543a",
+  "liquidator": "0xeb636fecce2568905d6256be58100af1140d268e",
+  "user": "0x435d6cb3b809efa7cebc3695733f5bc086e776a3",
+  "logIndex": 15,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 491372312,
+  "tx": "e7cbe4ad59ee46e94fe0a166d5419827d1790ea2a52f18b81f672e687b3af3ff",
+  "liquidator": "0xeb636fecce2568905d6256be58100af1140d268e",
+  "user": "0x7909ae35277ad2f8e5ce69be2863f3491c029bcc",
+  "logIndex": 15,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 491661735,
+  "tx": "80fc76f09519050426d32fcb69615d25337e71e55384093b0fed775004b50256",
+  "liquidator": "0xd12810b19b596347a3afac206d3ca65d08594b3f",
+  "user": "0x8e8ffdb13060d3e73097eb6c77a85c93335ba617",
+  "logIndex": 18,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 491768428,
+  "tx": "4feda29be8c9ecbc19b8124c7c141fc3a88597d1289d1a196c77cc8870288bbe",
+  "liquidator": "0xc252b4943b7a98a5377d9c8d6bf453947aaa749c",
+  "user": "0x064bc3c796f85245f8389ebc1d534e0bc922db7b",
+  "logIndex": 18,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492049141,
+  "tx": "0dd29ea20a835fee23e37c68bb56f9284e3e69ab78664044395d9bc202cc21c7",
+  "liquidator": "0xa13011ade4aacf8b8c798bef6b6c816db1cd4e4d",
+  "user": "0x2a5f15a7d4bb66888300cc91e4b6f7c7be00527c",
+  "logIndex": 18,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492074576,
+  "tx": "36680d2e9d4c487fa6f2aed8e67b521700d36f8fa3b8d3d36ebfcfc8446626c7",
+  "liquidator": "0xd12810b19b596347a3afac206d3ca65d08594b3f",
+  "user": "0x620c917712738c47d366526effd34c52478ae753",
+  "logIndex": 17,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 492082729,
+  "tx": "1370f957d75396ec0c2a85b99eb2932c8cc092567c2343d2b80a4091b6c5b829",
+  "liquidator": "0xa13011ade4aacf8b8c798bef6b6c816db1cd4e4d",
+  "user": "0xc15d011904a38305e9f5682afc462d46ab90e7c3",
+  "logIndex": 22,
+  "svr": "\u00b120\u5757\u5185"
+ },
+ {
+  "blk": 492133977,
+  "tx": "5f14abff5436394864bbc3525bea3d261dacd71a9bcfa319aee2be36a8bec00c",
+  "liquidator": "0xeb636fecce2568905d6256be58100af1140d268e",
+  "user": "0x259e143bc32bcd86db53ce018302d1fe7b4cb50f",
+  "logIndex": 18,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492428056,
+  "tx": "d8e555d855e5da6c4a5c165da55faf81c777376aaf894ed568e8447724981bf1",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0xdb306e5c24cd28a02b50c6f893d46a3572835195",
+  "logIndex": 14,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492476803,
+  "tx": "ec4605c5e3c735613030455faac569fbfc457e10a68f5e9ed329238efbcff9a3",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0xe48652156eda91ba6dba337e5e9b945f63e7a228",
+  "logIndex": 13,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492476803,
+  "tx": "ec4605c5e3c735613030455faac569fbfc457e10a68f5e9ed329238efbcff9a3",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0x520087fa617e7b15f7b896b1c54d620e0cb55953",
+  "logIndex": 27,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492479576,
+  "tx": "d965eddfe821115e26cb7aeb181b82d60d9162b823f6be7a52e6ba16daba944f",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0x510f741a24f689a72ebbfc78bea31197a6693550",
+  "logIndex": 15,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492481685,
+  "tx": "2e68a4a01a5ededf298b66d9ad87600070f6e10138f3d3f66361eee645047be5",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0xd7302f527da74005fa012bfaa659737ae9b99803",
+  "logIndex": 13,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492482972,
+  "tx": "5db13b0bf72e5202ff601cb03db36bceecc4bf5e0aba8084fed4803fe0513c8c",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0xaace8becba7b5905e2dece19772139f812e2edf1",
+  "logIndex": 32,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492591224,
+  "tx": "2c319d7d8e09b7f1b049d02cd9e7d77125271de9f76781327841d0af70ac77b8",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0x72a1941e0c97b9183f6e321bd9ba223adefb32e3",
+  "logIndex": 26,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492593855,
+  "tx": "b2748d264f6a392bd2665daecae5f902b17a39665a7274ebcd0f7f697c773095",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0xfa5eb325f8515b3ca2be1b23aa503b3f9a471739",
+  "logIndex": 13,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492593855,
+  "tx": "b2748d264f6a392bd2665daecae5f902b17a39665a7274ebcd0f7f697c773095",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0x6149528be854755956248c043957e103602e81b2",
+  "logIndex": 25,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492593855,
+  "tx": "b2748d264f6a392bd2665daecae5f902b17a39665a7274ebcd0f7f697c773095",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0x40ef824486902a99b5a3901a971f46e15aef69a6",
+  "logIndex": 37,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492593855,
+  "tx": "b2748d264f6a392bd2665daecae5f902b17a39665a7274ebcd0f7f697c773095",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0xc5ac69c3c0f7fe193a91963747ecd7fcd42242bc",
+  "logIndex": 49,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492606439,
+  "tx": "87c7d28555dbc5053e3b9aa78ea4d459115994a8e7ab00b00c72d14462a2dfd8",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0x70783b54c12cb12cb8bcbfb60b6d0ad2ca109530",
+  "logIndex": 16,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492606439,
+  "tx": "87c7d28555dbc5053e3b9aa78ea4d459115994a8e7ab00b00c72d14462a2dfd8",
+  "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+  "user": "0xf8518329db738481b7eb3fb0c7d65c2a55828bd3",
+  "logIndex": 28,
+  "svr": "\u65e0\u5173\u8054"
+ },
+ {
+  "blk": 492886520,
+  "tx": "c62e2f6459b970a7dfc28950932053119337dd8a2d3f99d1a6c65f551a4ef6db",
+  "liquidator": "0x4ef12ab6d0d59a840369886ccb1d01f4ab4e6587",
+  "user": "0x5b8b732b56fcdf77540a4548dc3133ece15ae60d",
+  "logIndex": 16,
+  "svr": "\u00b120\u5757\u5185"
+ }
+]

@@ -1,0 +1,271 @@
+{
+ "Optimism": [
+  {
+   "blk": 154767950,
+   "liquidator": "0x8888888885fca4862619cafeda9b03768c930012",
+   "tx": "1ccc9fafac3737e15b559753ab9425e66e9915aa0a58cf2445961f9013f3bb75"
+  },
+  {
+   "blk": 154777410,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "b70d9c574cafe6b68a423df4d14c142da346f94d2a58fb657b74a88c0e5c08c2"
+  },
+  {
+   "blk": 154789793,
+   "liquidator": "0xa4523d140a9552e66df4b03accef62835a78e002",
+   "tx": "db42818b224ad7bbf76056759e047fbf8738ee63d48559ad42736bba118c37e6"
+  },
+  {
+   "blk": 154796636,
+   "liquidator": "0xa4523d140a9552e66df4b03accef62835a78e002",
+   "tx": "0d5a23d60bc137be08f27afa24f8d13ba8ff3562a3594633ee78e452b0bcfad8"
+  },
+  {
+   "blk": 154796920,
+   "liquidator": "0xf00003bf2dcfeb166e3dee7d0e0fff197cdfcabd",
+   "tx": "eacabfede7146008c4783dc63d34675c420ad8a56766117c2d349f53d679ad63"
+  },
+  {
+   "blk": 154796920,
+   "liquidator": "0xa4523d140a9552e66df4b03accef62835a78e002",
+   "tx": "3a62477bb4f404438ce23679b9a26eee76fec869cafd25dac3416db1a7605a3b"
+  },
+  {
+   "blk": 154796920,
+   "liquidator": "0xa4523d140a9552e66df4b03accef62835a78e002",
+   "tx": "3a62477bb4f404438ce23679b9a26eee76fec869cafd25dac3416db1a7605a3b"
+  },
+  {
+   "blk": 154797224,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "d3e1d1c8e6a1739217713a57d5d07ba73133a886106b9d61a3b1f5970e87c21e"
+  },
+  {
+   "blk": 154913214,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "682ccb2eba9255dbb1966b95604bfeadfdebaf9a7cb77aee2ffec8b198c14c75"
+  },
+  {
+   "blk": 154945944,
+   "liquidator": "0xa4523d140a9552e66df4b03accef62835a78e002",
+   "tx": "09c989f91441e96ebef348af56c3ef4aaa7e542ae941405915c6d19e3f75e420"
+  },
+  {
+   "blk": 154954022,
+   "liquidator": "0xf00003bf2dcfeb166e3dee7d0e0fff197cdfcabd",
+   "tx": "596529de36a4a72388ea7fdbd283e538e749f7bce20055d12dac06998ae4a5bd"
+  },
+  {
+   "blk": 154954024,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "9a86ba7d05c091fbab4112b903a4ca6220ef7b7e11046f2fa00fc3635feba31d"
+  },
+  {
+   "blk": 154989857,
+   "liquidator": "0x8e4b10a95fae6b943a8f853d5fbf0071b28a937c",
+   "tx": "a047394b937c5071a572a950dcd7203492e2be0d2d44ac5a32abdfd9de7668df"
+  },
+  {
+   "blk": 155003943,
+   "liquidator": "0xa00003b2e58e808bcb536041045a5d0f7750c777",
+   "tx": "27332a850d8800501059383768397010f02a0e0db8efaab07e84b6315a01517c"
+  },
+  {
+   "blk": 155003944,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "34f782b2e4d648cc9b6c1d59c439702b06e321399daf4ea4b0134c8a65bc7d15"
+  },
+  {
+   "blk": 155004731,
+   "liquidator": "0xf00003bf2dcfeb166e3dee7d0e0fff197cdfcabd",
+   "tx": "a6663a454abab53a6f54f04a6a8f9fd4f94caf6ebfbd32342227693f002bafe7"
+  },
+  {
+   "blk": 155004732,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "8a1c8ae4c37d25a4148a028f8bc1f9fdaba3d4b54102a319b9594a0190cedfc0"
+  },
+  {
+   "blk": 155005139,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "bf7a37db7ec4ab16c02d94793cc63a59ceb70f222d532f53129c06bb71a629af"
+  },
+  {
+   "blk": 155005558,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "b4b95da5dd582276625b95c031159ff5c5fd340c445f889bc12d67ce5d0abdd3"
+  },
+  {
+   "blk": 155094389,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "304988b064a1e37ec8e980f9e24117307f081b7634ab5d2722bb402474c332d7"
+  },
+  {
+   "blk": 155094389,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "4efa84298e1c0add175adf86947b350f20467d2f97584d151ad802df7b511f6d"
+  },
+  {
+   "blk": 155094389,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "6948689ab1d40ce4d1acb73aee5a4a8a368a7efac150a1b648cd7910f237b6cb"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155320463,
+   "liquidator": "0xdcd7b6b46fca0f1314b5b7e73b4f3129fe3c7c47",
+   "tx": "8993dbf23c46e9c86282db89fc5ec782e657efa73088d1f3f44571640cb0e99a"
+  },
+  {
+   "blk": 155321478,
+   "liquidator": "0xd21fb9f8e37e3e16047d8dc3bff15bf6c7e4fdc8",
+   "tx": "1eddfe51f8ee7463aec4ca1b5e1571070cda0c64f24fcc9f836d7f6324511f64"
+  },
+  {
+   "blk": 155329108,
+   "liquidator": "0xa4523d140a9552e66df4b03accef62835a78e002",
+   "tx": "b377df9b34809050dabfa6a809ebe335146e51a73bfa9cde26e3445642be950b"
+  },
+  {
+   "blk": 155363148,
+   "liquidator": "0x4661f836f07c78a01d5490bff6e8587b9291c6b8",
+   "tx": "b106db7ff025cd42979ea3560720ab700ac0f5814499244013710234c3ef6c6b"
+  }
+ ],
+ "Avalanche": [
+  {
+   "blk": 91930004,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "2c84f707fe320a5f4abce7c9a437228467b1ac1e144b2a6f2b34e8833fa119fb"
+  },
+  {
+   "blk": 91930513,
+   "liquidator": "0x3f55d36c8729e0b37c8a5f8aebeb94cd32859bd0",
+   "tx": "7845019a58b90436e80f6d7a9bd996158daf003ef510298d192f258aaba7bef5"
+  },
+  {
+   "blk": 91941059,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "e0d6712cde5f98f50e8fff4df5b7b6b0e968d85da36dee86e5e7da45c6ee936a"
+  },
+  {
+   "blk": 91967292,
+   "liquidator": "0xbb9a3b86da851f5fa7f13dab1a2f06291a774d75",
+   "tx": "d4f6451205814f8be4413b25c392939e58007a3676c7034ec3c4b13d08337725"
+  },
+  {
+   "blk": 92046769,
+   "liquidator": "0x3f55d36c8729e0b37c8a5f8aebeb94cd32859bd0",
+   "tx": "f41c7ec041379f565a188a077a3542437773ac2bb6e8c103bc5dd2a898321ed7"
+  },
+  {
+   "blk": 92049260,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "e96e907632cfdda9034cbf1db6d5f9d83f31dcfbf5d7346bbf86ee3281d8573f"
+  },
+  {
+   "blk": 92126460,
+   "liquidator": "0x3f55d36c8729e0b37c8a5f8aebeb94cd32859bd0",
+   "tx": "a6af43bdfe12f392a55cd7312c8ed6c0b3591a5ecfd43b49fbe46449c433e5f4"
+  },
+  {
+   "blk": 92127119,
+   "liquidator": "0x3f55d36c8729e0b37c8a5f8aebeb94cd32859bd0",
+   "tx": "92e487977fc49ab5d9e5304b1edb02c12f1d931c702a6075b2daccb3d6590135"
+  },
+  {
+   "blk": 92127635,
+   "liquidator": "0x3f55d36c8729e0b37c8a5f8aebeb94cd32859bd0",
+   "tx": "49619b9b117f40f008ac03129621aca3d9a2a09264d18f897465d1d26d775e42"
+  },
+  {
+   "blk": 92129348,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "cdd676c7ff16939979e88311e798bb28a68483b41a5abf3f0c752a76f8e32b43"
+  },
+  {
+   "blk": 92130023,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "8fefb1934632403eb11b683ce45098b72699b6f259e3293329ddee892d51a174"
+  },
+  {
+   "blk": 92130727,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "364d0b9270e27e53ea6bc3a05b7530a52ad080d3cf9eb16f0492ee4c22b3e1e7"
+  },
+  {
+   "blk": 92131127,
+   "liquidator": "0x3f55d36c8729e0b37c8a5f8aebeb94cd32859bd0",
+   "tx": "391345267189d4bb7b7320a6afdab123c3c38eb05dde77bc18de59e34b299009"
+  },
+  {
+   "blk": 92131935,
+   "liquidator": "0x3f55d36c8729e0b37c8a5f8aebeb94cd32859bd0",
+   "tx": "ac97e1c93edce45b21e5711827d4ebf00116e3b50ec48daa4b66582452df28af"
+  },
+  {
+   "blk": 92185271,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "7cf51197aa2dffe5e5d519f24816a3c57389e86b521a90d5fd8fafb9dd81b974"
+  },
+  {
+   "blk": 92191345,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "afa6d535de85c5d2213c6c460482988e68cf9fbb142a869127ff575923772aa2"
+  },
+  {
+   "blk": 92286684,
+   "liquidator": "0x26d2dbfca0b4cdd4e9255bef3050b9146de44ebf",
+   "tx": "daf70d99ad2b301d306c753db93eedf76bec189f39a69283729908116d2b33c5"
+  },
+  {
+   "blk": 92287610,
+   "liquidator": "0x26d2dbfca0b4cdd4e9255bef3050b9146de44ebf",
+   "tx": "b45b16b34454e2fdc323eac42c4b36273b671d632d8d931e8a169a429fa0a8f3"
+  },
+  {
+   "blk": 92289883,
+   "liquidator": "0x4acbf41bd7e7600056a1b415e894f64a400aab23",
+   "tx": "c90b13bc690e6fffe86cf8dd10bf035e497df9376cef7ebce36ceb6eb3d34f12"
+  }
+ ]
+}
