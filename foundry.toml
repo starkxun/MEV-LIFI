@@ -1,0 +1,10 @@
+# 本仓库以 Python 为主,lib/ 是 Python 包(chainkit/graph),
+# 不是 foundry 依赖目录 —— 所以 libs 显式置空,避免 forge 去解析它。
+[profile.default]
+src = "contracts"
+test = "test"
+out = "out"
+libs = ["forge-lib"]
+solc = "0.8.30"
+optimizer = true
+optimizer_runs = 200

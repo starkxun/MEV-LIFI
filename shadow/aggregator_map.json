@@ -1,0 +1,46 @@
+{
+ "ARB": {
+  "0x4c76f02e484e8ce9b6c2358cf9624babc5531e9e": {
+   "asset": "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
+   "symbol": "LINK",
+   "proxy": "0x2c1c5eab455a91cead280b12650faaa7bfdd59e6",
+   "decimals": 8,
+   "liq_bonus": 1.1
+  },
+  "0xe7c522c60ba7f1b5e398d2312593713e2b19aeb0": {
+   "asset": "0x6c84a8f1c29108f47a79964b5fe888d4f4d0de40",
+   "symbol": "tBTC",
+   "proxy": "0xde4af8b4747192ea29339d0feb36d9830d399134",
+   "decimals": 8,
+   "liq_bonus": 1.075
+  },
+  "0xa5e1a36938769cbd5a26f5e19d8fcb379f597c83": {
+   "asset": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+   "symbol": "WETH",
+   "proxy": "0xbd41b1548a5a06544cbcf87c0c54864312842c00",
+   "decimals": 8,
+   "liq_bonus": 1.05
+  },
+  "0xc1720a8240dbd992d95d6c865a15e490901879b1": {
+   "asset": "0xba5ddd1f9d7f570dc94a51479a000e3bce967196",
+   "symbol": "AAVE",
+   "proxy": "0xf97eeaac36bdd096bb2445c7582f9095bfce04c7",
+   "decimals": 8,
+   "liq_bonus": 1.1
+  },
+  "0x1ce4eeea2e091f8ecde210b4f82aaee05158dddd": {
+   "asset": "0xd22a58f79e9481d1a88e00c343885a588b34b68b",
+   "symbol": "EURS",
+   "proxy": "0xa14d53bc1f1c0f31b4aa3bd109344e5009051a84",
+   "decimals": 8,
+   "liq_bonus": 1.075
+  },
+  "0xb72359b2dc04ff363e094648df78247c98297c20": {
+   "asset": "0x912ce59144191c1204e64559fe8253a0e49e6548",
+   "symbol": "ARB",
+   "proxy": "0x339a66699167d8bc7105c4b9772492d2576e5183",
+   "decimals": 8,
+   "liq_bonus": 1.1
+  }
+ }
+}

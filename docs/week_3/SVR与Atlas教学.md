@@ -441,6 +441,159 @@ python3 svr_probe.py solvers --days 7
 
 ---
 
+## 第 9.5 课:动手连上去看看(已实测)
+
+上面那些是文档说的。**下面是真连上去之后看到的。**
+
+```bash
+python3 svr_listen.py --seconds 90
+```
+
+> [`svr_listen.py`](../../svr_listen.py) **在代码层面就不可能出价** ——
+> 它没有实现 `solver_submitSolverOperation`,也不读私钥。只订阅,只收。
+
+### 结论一:匿名就能订阅
+
+```
+[16:53:12] ✅ WebSocket 已建立(未鉴权)
+[16:53:12] → 已发送订阅请求
+[16:53:14] 推送 #1  ...
+```
+
+**不需要押金、不需要注册、不需要任何 header。** permissionless 是真的,
+而且连"先押 0.1 ETH"都不是订阅的前置条件 —— 押金是**出价**才需要的。
+
+> 这一步值得单独跑,因为它把"文档说 permissionless"变成了"我连上了"。
+> 很多集成卡在这里:文档写得漂亮,实际要邮件申请。**这个没有。**
+
+### 结论二:推送里到底有什么
+
+90 秒收到 15 帧,结构是:
+
+```json
+{
+  "auction_id": "579bc6f7-fa13-4243-b191-b65e03b79159",
+  "partial_user_operation": {
+    "chainId": "0x38",
+    "control": "0x7d50b32444609a9b53bcf208c159c8d0d0767835",
+    "from":    "0x0000000000000000000000000000000000000000",   ← 留给你填
+    "gas":     "0x7a120",
+    "deadline":"0x6dc3da6",
+    "to":      "...",
+    "userOpHash": "...",
+    "hints": {
+      "aggregator":  "0x10cAD61aF7b534F18DB2E39e9b8515a78B116433",
+      "medianPrice": "0xdc966b5422be7bed000",
+      "rawReport":   "...",
+      "forwardData": "0x6fadcf72..."
+    }
+  }
+}
+```
+
+### 结论三:medianPrice 的小数位 —— 我在这里错了一次
+
+第一批样本全是 BNB Chain 的喂价,除以 1e18 得到:
+
+```
+0x290a47E6…  0x682b866f16cba44000  ÷1e18  =  $1,921.60   ← ETH/USD
+0x10cAD61a…  0xdc966b5422be7bed000 ÷1e18  =  $65,105.96  ← BTC/USD
+0x494aE7aF…  0x20b8c331c3fe6e6000  ÷1e18  =  $603.61     ← BNB/USD
+```
+
+数字很漂亮,和链上一致,**我就写下了"medianPrice 是 18 位小数"。错了。**
+
+抓到 Arbitrum 的推送后,同样除以 1e18 全变成 $0.00:
+
+```
+聚合器                      raw              decimals()  正确解法
+0xa5E1a369…(Aave SVR ETH)  0x2cac671dc0     8           ÷1e8  = $1,918.71  ✅
+0x0b6eaC11…(另一个 ETH/USD) 0x6803a88da8c5…  18          ÷1e18 = $1,918.73  ✅
+0xE7c522c6…(BTC/USD)       0x5ea9af16f00    8           ÷1e8  = $65,051.80 ✅
+0x62619470…(ARB/USD)       0x796dac         8           ÷1e8  = $0.0796    ✅
+```
+
+> ### 🔑 正确的规则
+> **`价格 = medianPrice / 10 ** aggregator.decimals()`**
+> —— 小数位要**从那个聚合器自己链上读**,不能假设。
+> 同一条链上 8 位和 18 位的喂价是混着的
+> (上表里 `0xa5E1a369` 是 8 位、`0x0b6eaC11` 是 18 位,都是 ETH/USD)。
+
+**我为什么会错:第一批样本恰好全是 18 位的。**
+这是本文档第三次栽在"样本不够宽"上(前两次见第 10 课、第 9.5 课结论五)。
+区别是这次错误留下了痕迹 —— 除出来是 $0.00,一眼就看得出不对。
+
+> **可迁移的一条:让错误"显眼"比让代码"聪明"更重要。**
+> 如果我当初写的是"猜一个能让数字落在合理区间的小数位",
+> Arbitrum 那批会被猜成某个看起来正常的数,错误就永远藏住了。
+
+### 结论四:最关键的一条 —— 你拿到的不是价格,是那笔交易
+
+`forwardData` 以 `0x6fadcf72` 开头。查一下这是什么:
+
+```python
+Web3.keccak(text="forward(address,bytes)")[:4]  →  0x6fadcf72
+```
+
+**这就是 Chainlink Forwarder 的方法选择器** —— 也正是我们在第 5 课查
+"谁在更新聚合器"时,链上看到的那个方法。
+
+所以推送给你的东西是:
+
+```
+forwardData = forward(聚合器地址, 预言机报告)
+              ↑
+              **这笔预言机更新交易的完整 calldata,而它还没上链**
+```
+
+> ### 🔑 这才是 SVR 拍卖的本质
+> 不是"你比别人早看到价格",而是 —— **拍卖方把即将上链的那笔预言机更新
+> 交易交给你,让你出价买"紧跟在它后面"的位置。**
+>
+> 所有参与者拿到的是**同一份**数据、**同一时刻**。
+> 所以竞争维度只剩一个:**你能算出这次更新值多少钱,而且敢出多高。**
+
+### 结论五:推送节奏和覆盖范围
+
+```
+15 条 / 66 秒  =  每 4.7 秒一条
+```
+
+比单个喂价的更新频率(约 90 秒)快得多,因为它覆盖**整条链上所有喂价**。
+
+90 秒的样本里 **15 帧全部是 BNB Chain(chainId 0x38)**。
+
+当时我差点写下"订阅只推 BNB"。**忍住了,先跑长的:**
+
+```bash
+python3 svr_listen.py --seconds 900 --out shadow/svr_feed_long.jsonl
+```
+
+结果完全不同:
+
+```
+BNB Chain  ×15
+Base       ×7
+Arbitrum   ×5      ← 出现了
+0x8f = 143 ×3      ← Monad
+```
+
+**订阅是全局的,一条连接覆盖所有 SVR 链。** 90 秒里全是 BNB 纯属巧合。
+
+> ### 🔑 这是第 10 课那条教训的第二次应用
+> 90 秒样本 → "只推 BNB"(错)
+> 15 分钟样本 → "全局推送,4 条链"(对)
+>
+> **同一个项目里,我因为短样本已经错过两次**(14 天窗口算错 39 倍、
+> 用笔数判断市场大小)。第三次忍住了,是因为在写文档时逼自己
+> 标注"这个结论的样本有多大" —— **把样本量写进结论旁边,
+> 是防止自己过度推断的最便宜的办法。**
+
+这也意味着:**你写一个 solver,天然就能同时覆盖 Arbitrum / Base / BNB / Monad。**
+集成是链无关的 —— 这是第 11 课"新市场上线"那条路唯一实打实的价值。
+
+---
+
 ## 第 10 课:这门生意值多少钱 —— 兼一堂取样课
 
 这一课的教训比数字重要。
@@ -606,3 +759,424 @@ AnswerUpdated(int256,uint256,uint256)
 4. **偏态分布下,窗口取样必须覆盖极端事件** —— 否则你测的是"平时"
 
 这四条和 SVR 一点关系都没有,**但它们是这次调查里唯一不会过期的东西。**
+
+---
+
+## 第 12 课:写 solver 合约 —— 以及一次差点被误导的接口核实
+
+合约在 [`contracts/SvrLiquidatorSolver.sol`](../../contracts/SvrLiquidatorSolver.sol),
+**已编译通过,未部署、未押金、未实盘。**
+
+### 先核实接口,别照文档抄
+
+写合约之前必须确认:文档给的函数签名,链上真的是这个吗?
+
+**方法一:扫真实合约的字节码找选择器。**
+
+Solidity 编译出来的分发表里,每个 external 函数的 4 字节选择器会以
+`PUSH4`(操作码 `0x63`)的形式出现。扫出来和候选签名的 keccak 前 4 字节比对:
+
+```
+atlasSolverCall(address,address,address,uint256,bytes,bytes) = 0x024181a6
+  0x72004a0dc826…  ✅ 有        ← 真实 solver 合约
+  0xd351755a32de…  ✅ 有
+  0x7eda748f4278…  ✅ 有
+```
+
+**三个独立的真实 solver 合约都有这个选择器 —— 文档给的签名是对的。**
+
+### 然后我差点被这个方法误导
+
+同样的方法去核实 Aave 的 `liquidationCall`:
+
+```
+flashLoanSimple(address,address,uint256,bytes,uint16) = 0x42b0b77c  ✅ 存在
+liquidationCall(address,address,address,uint256,bool) = 0x00a718a9  🔴 找不到
+```
+
+**但链上明明有几千笔清算。** 我当时的第一反应是"签名一定变了",
+差点去改合约。
+
+### 换个方法:eth_call 试探
+
+拿一个**健康的**仓位去调用它,看会发生什么:
+
+```
+0x00a718a9  →  revert 数据 0x930bb771
+0x5534b55b  →  revert 数据 0x(空)        ← 另一个候选签名
+```
+
+`0x930bb771` 是什么?反查一下:
+
+```python
+Web3.keccak(text="HealthFactorNotBelowThreshold()")[:4]  →  0x930bb771
+```
+
+**正是"健康度没跌破阈值,不能清算"** —— 这是拿健康仓位去清算时
+本该报的业务错误。
+
+> ### 🔑 两种 revert 的区别,是这一课的核心
+>
+> ```
+> 函数存在,被业务逻辑挡下   →  revert 带 4 字节 custom error(或错误字符串)
+> 函数根本不存在             →  revert 数据为 0x(空),命中 fallback
+> ```
+>
+> **所以 `0x00a718a9` 是对的,字节码扫描给了个假阴性。**
+> 原因大概率是代理 / 模块化分发 —— Aave V3 较新版本把 Pool 拆开了,
+> 函数不在我扫的那个实现合约里,但调用能被正确路由过去。
+>
+> **可迁移的一条:核实一个函数存不存在,`eth_call` 试探比扫字节码可靠。**
+> 扫字节码只能证明"有",不能证明"没有"。
+
+### 合约做了什么
+
+```
+Atlas 中标后调 atlasSolverCall
+  ① 校验 msg.sender == Atlas          ← 没这行,任何人都能驱动你的合约
+  ② 校验 solverOpFrom == owner        ← 押金记在 solverFrom 名下,
+                                         不校验别人能用你的押金
+  ③ 出价封顶 maxBidWei                ← 估值程序算错时的最后一道闸
+  ④ bidToken 必须是 address(0)        ← 实测 SVR 就是原生币;
+                                         遇到别的币种直接 revert,不猜
+  ⑤ 闪电贷 → liquidationCall → 变现 → 还贷
+  ⑥ 把中标价付给执行环境
+  ⑦ 调 Atlas.reconcile 结清 gas
+```
+
+### 补上了那个 bot 缺的东西
+
+我们之前反编译过一个真实清算 bot(`0xf0570Ec4…`),
+发现它**完全没有滑点保护**。本合约在两处强制下限:
+
+```solidity
+// ★ 滑点保护 1:清算实际拿到的抵押物不能少于预期
+if (collOut < p.minCollateralOut) revert CollateralShortfall(collOut, p.minCollateralOut);
+
+// ★ 滑点保护 2:变现换回来的钱不能少于预期
+if (debtBack < p.minDebtBack)     revert ProceedsShortfall(debtBack, p.minDebtBack);
+```
+
+**两处不满足就整笔回滚,只损失 gas。宁可不赚,不能亏。**
+
+在 Atlas 里这个设计代价特别低 —— 因为 metacall 本来就是原子的,
+revert 之后预言机更新照样生效,只是你没中标那次机会。
+
+### 编译
+
+```bash
+solc --optimize --optimize-runs 200 --bin --hashes contracts/SvrLiquidatorSolver.sol
+```
+
+输出里最该看的一行:
+
+```
+024181a6: atlasSolverCall(address,address,address,uint256,bytes,bytes)
+```
+
+**和链上真实 solver 合约的选择器一模一样** —— 说明 Atlas 能找到我们的回调。
+
+### 还没做的(诚实清单)
+
+- [ ] 没部署、没押金、没实盘
+- [ ] `borrow(uint256)` 没用上 —— Atlas 允许在 metacall 里借原生币,
+      现在是靠合约里预存余额付中标价,是**刻意的简化**
+- [ ] 没写 fork 测试。下一步该用 `forge test --fork-url` 在
+      历史区块上重放一笔真实清算
+- [ ] 链下估值程序还没写 —— 收到推送后算"这次更新值多少钱、该出多少价"
+      **这才是真正的竞争点**,合约只是执行器
+
+---
+
+## 第 13 课:fork 测试 —— 在历史区块上重放真实清算
+
+光编译通过不算数。**要在真实的历史状态上跑一遍。**
+
+```bash
+export ARB_RPC_URL="https://rpc.ankr.com/arbitrum/$ANKR_KEY"
+forge test --match-contract SvrLiquidatorSolverTest -vv
+```
+
+测试在 [`test/SvrLiquidatorSolver.t.sol`](../../test/SvrLiquidatorSolver.t.sol)。
+
+### 一个必须先想清楚的时序问题
+
+真实交易里 **[预言机更新 + 清算] 在同一个区块**(468923284)。
+
+所以 fork 到前一块(468923283)时,**价格还是旧的,仓位是健康的** ——
+直接跑清算一定失败。
+
+测试因此分两步:
+
+```
+① 先证明"此刻不可清算"   ← 确认 fork 点和参数都对
+② 再把价格打下去          ← 复现"预言机更新之后"
+③ 然后跑完整流程
+```
+
+**第 ① 步不是形式主义。** 如果 fork 点选错、参数抄错,后面全部无意义。
+
+跑出来:
+
+```
+HF at fork block: 1.000338471421177782
+```
+
+**距离清算线只差 0.034%。** 这个数字本身就说明了清算生意的性质 ——
+一次预言机跳动就够了,不需要暴跌。
+
+然后用 `vm.mockCall` 把 WBTC 价格下调 12%:
+
+```
+HF after -12% price: 0.880297854990716955
+```
+
+### 结果:能对上账
+
+```
+solver USDC after flow:  26,166.684579
+bid received by EE:      0.01 ETH
+```
+
+拆开看:
+
+```
+毛清算奖励            $26,354.93   ← 真实交易的数(7% 清算奖励)
+闪电贷费 0.05%        $   188.25   ← 376,499.06 × 0.0005
+────────────────────────────────
+净                    $26,166.68   ✅ 和测试输出分毫不差
+```
+
+> **闪电贷费第一次被算出了具体金额。** 之前成本模型里这一项一直是估的。
+> 在这笔交易的规模上,它是 $188.25 —— 占毛奖励的 0.71%。
+
+### 这个测试证明了什么、没证明什么
+
+**证明了:**
+- 那个仓位在那个区块确实处在清算边缘(HF 1.0003)
+- `liquidationCall` 接受我们编的参数并成功执行
+- 闪电贷借得出、还得上(premium 0.05% 被数字验证)
+- 中标价确实付给了执行环境
+- **滑点保护真的会拦** —— 把 `minCollateralOut` 设成 10 倍,整笔回滚,
+  且**中标价没有被付出去**
+
+**没证明:**
+- 变现用的是 MockRouter,**真实 DEX 的滑点没有测**。
+  $26,166 这个利润里,"抵押物能按预言机价卖掉"是我给的假设,不是实测。
+- 没跑通真实的 Atlas metacall(见下)
+
+### 踩到的两个坑
+
+**坑 1:`vm.prank` 被提前消耗**
+
+```solidity
+// ❌ 错的
+vm.prank(ATLAS);
+vm.expectRevert(abi.encodeWithSelector(..., solver.maxBidWei()));   // ← 这次调用吃掉了 prank
+solver.atlasSolverCall(...);                                         // ← 变成普通调用者
+```
+
+报错是 `NotAtlas() != BidTooHigh(...)`,一开始看不懂。
+
+**`vm.prank` 只对下一次外部调用生效**,而 `solver.maxBidWei()` 就是一次外部调用。
+修法:先读进局部变量。
+
+**坑 2:`Atlas.reconcile` 报 `WrongPhase()`**
+
+流程跑到最后一步 revert,错误码 `0xe2586bcc`。反查:
+
+```python
+Web3.keccak(text="WrongPhase()")[:4]  →  0xe2586bcc
+```
+
+**这不是我们合约的 bug** —— `reconcile` 要求处于真实 metacall 的正确阶段,
+而我们是裸调的。要真跑通得把 userOp + solverOp + 签名 + bundler
+整套搭起来,超出本测试范围。
+
+从 trace 看,**在它之前的每一步都成功了**:
+
+```
+flashLoanSimple  ✅
+liquidationCall  ✅
+swap             ✅
+还闪电贷          ✅  (FlashLoan 事件已发)
+付中标价          ✅  0xEE::fallback{value: 0.01 ether}
+reconcile        🔴  ← 只有这一步
+```
+
+所以在测试里 mock 掉它,专注验证主线。
+
+> ### 🔑 可迁移的一条
+> **测试失败时,先看它失败在第几步。**
+> 「最后一步失败」和「第一步失败」是完全不同的信息 ——
+> 前者说明主线是通的,只差环境;后者说明方向就错了。
+> 我如果只看到 "custom error 0xe2586bcc" 就去改合约,会把一个
+> **本来是对的实现**改坏。**`-vvvv` 看完整调用栈,是这一步的唯一办法。**
+
+### 还差什么
+
+- [ ] 真实 DEX 变现路径(现在是 MockRouter)
+- [ ] 完整 Atlas metacall(userOp + solverOp + EIP-712 签名 + bundler)
+- [ ] 链下估值程序 —— **收到推送后算该出多少价,这才是真正的竞争点**
+
+---
+
+## 第 14 课:链下估值 —— 拍卖里真正比的东西
+
+合约只是执行器。**拍卖比的是这个**:推送到达的那一刻,
+算出「这次预言机更新值多少钱、该出多少价」。
+
+脚本:[`svr_valuer.py`](../../svr_valuer.py)(只算不出价,代码里没有
+`solver_submitSolverOperation`,也不读私钥)
+
+### 第一步:把聚合器映射到 Aave 资产
+
+推送里给的是**聚合器**地址,而 `getSourceOfAsset` 返回的是**代理**。
+差一层,得多走一步:
+
+```
+Aave.getSourceOfAsset(WETH) → 代理 0xbd41b154…
+代理.aggregator()           → 聚合器 0xa5e1a369…   ← 推送里出现的是这个
+```
+
+```bash
+python3 svr_valuer.py build-map --chain ARB
+```
+
+```
+  WETH   agg 0xa5e1a369…  dec=8   清算奖励 5.0%
+  WBTC   agg 0xe7c522c6…  dec=8   清算奖励 7.0%
+  LINK   agg 0x4c76f02e…  dec=8   清算奖励 10.0%
+  ARB    agg 0xb72359b2…  dec=8   清算奖励 10.0%
+  AAVE   agg 0xc1720a82…  dec=8   清算奖励 10.0%
+  EURS   agg 0x1ce4eeea…  dec=8   清算奖励 7.5%
+
+  DAI/USDC/wstETH/weETH/GHO/rETH…  (适配器,无 aggregator() —— 跳过)
+```
+
+**稳定币和 LST 用的是复合/上限适配器,没有 `aggregator()`。**
+脚本如实跳过并打印出来,不假装能处理 —— 这类资产的价格更新
+不会以我们能识别的形式出现在推送里。
+
+### 第二步:离线重放验证
+
+```bash
+python3 svr_valuer.py replay shadow/svr_feed_long.jsonl
+```
+
+```
+  ARB WETH  $ 1,918.5316 (+0.078% vs 链上)   无机会
+  ARB tBTC  $65,014.5853 (+0.087% vs 链上)   无机会
+  ARB ARB   $     0.0796 (-0.009% vs 链上)   无机会
+  ARB LINK  $     8.2192 (-0.499% vs 链上)   无机会
+
+=== 260 帧 ===
+  链不支持        203  (78.1%)   ← BNB/Monad,我们没有那边的仓位名单
+  非 Aave 喂价     32  (12.3%)
+  Aave 喂价        25  ( 9.6%)
+  无机会           25  ( 9.6%)
+```
+
+**260 帧里只有 25 帧和我们相关,而这 25 帧一个机会都没产生。**
+这不是失败,**这就是这门生意的形状** —— 和第 10 课测出的
+「80% 的钱集中在 5 天」完全一致。
+
+### 第三步:必须能证明"没机会"不等于"坏了"
+
+平静期 replay 永远输出「0 个机会」。**这时候你没法区分
+「确实没机会」和「代码悄悄坏了」。**
+
+所以加了自检命令,注入一次必然触发的合成更新:
+
+```bash
+python3 svr_valuer.py simulate --symbol WETH --pct -15
+```
+
+```
+合成推送:ARB WETH  $1,917.03 → $1,629.48 (-15.0%)
+
+  ★ 53 个仓位跌破清算线
+    毛奖励 $ 28,964.95
+    成本   $    101.45  (闪电贷 5bps + 滑点 30bps + gas $0.07)
+    净     $ 28,863.50
+    **建议出价 $ 25,977.15**  (留 10% 利润率)
+      0x270d1c8c…  HF 1.0244 → 0.8707  债务 $40,145
+      0x11650b27…  HF 1.0320 → 0.8772  债务 $9,892
+```
+
+> ### 🔑 可迁移的一条
+> **任何"平时不输出"的监控,都必须配一个"必然触发"的自检入口。**
+> 否则你永远不知道它是在安静地工作,还是已经死了。
+> 这条比本课其他所有内容都通用。
+
+### 一个意外的交叉验证
+
+```
+建议出价 $25,977.15  ÷  毛奖励 $28,964.95  =  89.7%
+```
+
+**和市场实测的回收率 92.3% 几乎一致。**
+
+我们的出价公式是「毛奖励 − 成本,再留 10% 利润率」独立推出来的,
+落点却和真实市场的清算价重合。这说明:
+
+> **市场上那批 solver 的出价逻辑,和我们推的是同一个** ——
+> 都是「扣掉成本后,留一个很薄的利润率」。
+> 而 92.3% 这个数字的含义就是:**竞争已经把利润率压到 8% 左右。**
+
+### 成本参数的来源(每一项都标了)
+
+```python
+FLASHLOAN_BPS     = 5     # ✅ 实测:fork 测试里 $188.25 / $376,499
+GAS_USD           = 0.07  # ✅ 实测:gasUsed 1,789,466 @ Arbitrum
+SWAP_SLIPPAGE_BPS = 30    # ⚠️ **假设,没有实测**。真实 DEX 滑点未验证
+TARGET_MARGIN     = 0.10  # 目标利润率,市场实际清算在 ~8%
+```
+
+**滑点那一项是整个模型里唯一没有实测支撑的数。** 它也恰好是
+fork 测试里用 MockRouter 绕过去的那一项 —— 两处空白是同一个。
+
+### 已知的近似(和 P0 是同一个)
+
+```python
+new_hf = hf * ratio     # 一阶近似:HF ∝ 抵押物价格
+```
+
+**只在「抵押物是这个资产、债务是稳定币」时成立。**
+现在它把 WETH 的价格变动套用到了名单里**所有**仓位上,
+不管人家抵押的是不是 WETH —— 所以 53 这个数字**偏高**。
+
+要消除得用 `eth_call` 逐个模拟 `liquidationCall`。这是 P1 的事。
+
+---
+
+## 全流程速查
+
+```bash
+# 1. 搞清楚 Aave 读哪个喂价(有没有上 SVR)
+python3 svr_probe.py feeds --chains ARB OPT BASE
+
+# 2. 看拍卖场地和门槛
+python3 svr_probe.py atlas
+python3 svr_probe.py solvers --days 7
+
+# 3. 解剖一笔真实清算
+python3 svr_probe.py anatomy <txhash>
+
+# 4. 连上拍卖推送(只读)
+python3 svr_listen.py --seconds 900 --out shadow/svr_feed_long.jsonl
+
+# 5. 建映射 + 估值
+python3 svr_valuer.py build-map --chain ARB
+python3 svr_valuer.py replay shadow/svr_feed_long.jsonl
+python3 svr_valuer.py simulate --symbol WETH --pct -15    # 自检
+python3 svr_valuer.py watch --seconds 600
+
+# 6. 合约:编译 + 历史区块重放
+export ARB_RPC_URL="https://rpc.ankr.com/arbitrum/$ANKR_KEY"
+forge test -vv
+```
+
+**到这里,除了「真的出价」之外的每一步都跑通了。**
+没跑的那一步不是技术问题 —— 是第 10 课算出来的:
+Arbitrum 拍卖残留一年约 $57k,由 3 个 solver 分,Top1 占 84.6%。

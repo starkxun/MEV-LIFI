@@ -7,3 +7,7 @@ logs/
 .env
 .venv/
 shadow/predictions.jsonl
+shadow/svr_feed*.jsonl
+out/
+cache/
+forge-lib/
