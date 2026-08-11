@@ -200,6 +200,54 @@ def cmd_screen(args):
     return 0
 
 
+def cmd_compare(args):
+    """
+    比对多天的 screen 快照 —— 第 3 步「名单稳不稳」用这个。
+
+    判据不是"今天筛出几个",而是**"同一批币能不能连续多天留在名单里"**。
+    一个每天换一半的名单,说明判据太松,不能拿去下单。
+    """
+    import glob
+    import os
+    files = sorted(glob.glob(args.pattern))
+    if len(files) < 2:
+        print(f"至少要 2 个快照才能比。当前匹配到 {len(files)} 个:{files}")
+        return 1
+    snaps = []
+    for f in files:
+        rows = json.load(open(f))
+        ok = {r["sym"] for r in rows
+              if not r["flip"] and r["pos"] >= args.min_consistency
+              and r["payback_days"] <= args.max_payback}
+        snaps.append((os.path.basename(f), ok))
+    print(f"=== {len(snaps)} 个快照 ===")
+    for name, ok in snaps:
+        print(f"  {name:<32} {len(ok):>3} 个通过")
+
+    allsym = set().union(*[s for _, s in snaps])
+    n = len(snaps)
+    print(f"\n=== 每个币出现在几个快照里(共 {n} 个)===")
+    counts = {sym: sum(1 for _, ok in snaps if sym in ok) for sym in allsym}
+    for sym, c in sorted(counts.items(), key=lambda kv: -kv[1]):
+        bar = "█" * c + "·" * (n - c)
+        tag = "  ★ 全程在榜" if c == n else ("  ⚠️ 只出现一次" if c == 1 else "")
+        print(f"  {sym:<22} {bar}  {c}/{n}{tag}")
+
+    always = [s for s, c in counts.items() if c == n]
+    once = [s for s, c in counts.items() if c == 1]
+    print(f"\n=== 判定 ===")
+    print(f"  全程在榜  {len(always)}/{len(allsym)}  {always}")
+    print(f"  只来一次  {len(once)}/{len(allsym)}")
+    churn = 1 - len(always) / max(len(allsym), 1)
+    print(f"  换手率    {churn*100:.0f}%")
+    if churn > 0.5:
+        print(f"\n  🔴 换手超过一半 —— **判据太松,不要拿这个名单下单**。")
+        print(f"     回去把 --min-consistency 提高(比如 85),或延长观察期。")
+    elif always:
+        print(f"\n  ✅ 有 {len(always)} 个币全程在榜,可以进第 4 步(小额测单腿)。")
+    return 0
+
+
 def main():
     p = argparse.ArgumentParser(description="资金费 carry 探针(只读公开行情)")
     sub = p.add_subparsers(dest="cmd")
@@ -224,6 +272,12 @@ def main():
     s.add_argument("--max-payback", type=float, default=30)
     s.add_argument("--out", default="shadow/funding_screen.json")
     s.set_defaults(func=cmd_screen)
+
+    c = sub.add_parser("compare", help="比对多天快照,看名单稳不稳(第 3 步用)")
+    c.add_argument("pattern", nargs="?", default="shadow/funding_2*.json")
+    c.add_argument("--min-consistency", type=float, default=70)
+    c.add_argument("--max-payback", type=float, default=30)
+    c.set_defaults(func=cmd_compare)
 
     args = p.parse_args()
     if not getattr(args, "func", None):
