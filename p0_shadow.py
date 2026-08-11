@@ -82,6 +82,31 @@ FEED_OPT = "0x13e3Ee699D1909E989722E753853AE30b17e08c5"
 # 各链 Aave V3 的实际喂价源,--verify-feeds 会重新核对
 AAVE_FEED = {"ARB": FEED_ARB, "OPT": FEED_OPT}
 
+# 每条链的出块速度和单次日志上限
+CHAIN = {
+    "ARB": {"slug": "arbitrum", "blocktime": 0.25, "chunk": 10_000},
+    "OPT": {"slug": "optimism", "blocktime": 2.0,  "chunk": 10_000},
+}
+
+# ── 「用哪条链的喂价,预测哪条链的仓位」──────────────────────
+#
+# 原始 P0(ARB 版):盯 OPT 公开喂价 → 推算 ARB 仓位
+#   ❌ 已作废:Aave ARB 早就改读 SVR 喂价,不读公开代理了。
+#
+# Optimism 版:盯 ARB 公开喂价 → 推算 OPT 仓位
+#   ✅ 依据(实测 10 小时):
+#        ARB 公开喂价  153 次更新,中位间隔  165s
+#        OPT 公开喂价   46 次更新,中位间隔  992s   ← 慢 6 倍
+#      Aave Optimism 读的就是 OPT 公开喂价(--verify-feeds 已确认一致),
+#      所以在 OPT 喂价追上之前,ARB 已经告诉你价格到哪了。
+#      窗口不是"抢先几秒",而是 **OPT 平均 992 秒才跟一次**。
+PRESET = {
+    "OPT": {"target": "OPT", "lead": "ARB",
+            "target_feed": FEED_OPT, "lead_feed": FEED_ARB_PUBLIC},
+    "ARB": {"target": "ARB", "lead": "OPT",
+            "target_feed": FEED_ARB, "lead_feed": FEED_OPT},
+}
+
 BORROW_TOPIC = None      # 启动时由 keccak 现算,不写死
 
 
@@ -96,11 +121,33 @@ def key():
     raise RuntimeError(".env 里找不到 Ankr key")
 
 
+_CONN = {}
+
+
 def w3(chain):
     from web3 import Web3
-    slug = {"ARB": "arbitrum", "OPT": "optimism"}[chain]
-    return Web3(Web3.HTTPProvider(f"https://rpc.ankr.com/{slug}/{key()}",
-                                  request_kwargs={"timeout": 60}))
+    if chain not in _CONN:
+        slug = CHAIN[chain]["slug"]
+        _CONN[chain] = Web3(Web3.HTTPProvider(
+            f"https://rpc.ankr.com/{slug}/{key()}",
+            request_kwargs={"timeout": 60}))
+    return _CONN[chain]
+
+
+def retry(chain, fn, n=5):
+    """Ankr 公共端点会随机 reset。重连而不是让整轮跑白。
+
+    这不是可有可无的装饰 —— 建名单要几百次调用,
+    中途断一次就前功尽弃。
+    """
+    for i in range(n):
+        try:
+            return fn()
+        except Exception:
+            if i == n - 1:
+                raise
+            time.sleep(1.5 * (i + 1))
+            _CONN.pop(chain, None)      # 丢掉旧连接,下次 w3() 会重建
 
 
 def sel(sig):
@@ -112,8 +159,8 @@ def latest_price(chain, feed):
     """读喂价的最新价格和更新时间。latestRoundData() 的第 2、4 个返回值。"""
     from web3 import Web3
     c = w3(chain)
-    r = c.eth.call({"to": Web3.to_checksum_address(feed),
-                    "data": sel("latestRoundData()")})
+    r = retry(chain, lambda: w3(chain).eth.call(
+        {"to": Web3.to_checksum_address(feed), "data": sel("latestRoundData()")}))
     b = bytes(r)
     ans = int.from_bytes(b[32:64], "big")
     if ans >= 2 ** 255:
@@ -121,7 +168,7 @@ def latest_price(chain, feed):
     return ans / 1e8, int.from_bytes(b[96:128], "big")
 
 
-def refresh_positions(days=3, hf_max=3.0):
+def refresh_positions(days=3, hf_max=3.0, chain="ARB"):
     """
     重建高危名单。两步:
       1. 扫最近 N 天的 Borrow 事件,收集借款人地址
@@ -133,21 +180,24 @@ def refresh_positions(days=3, hf_max=3.0):
     **第三方索引数据必须交叉验证** —— 这次验证救了整个名单。
     """
     from web3 import Web3
-    c = w3("ARB")
+    c = w3(chain)
     pool = Web3.to_checksum_address(AAVE_POOL)
     topic = Web3.to_hex(Web3.keccak(
         text="Borrow(address,address,address,uint256,uint8,uint256,uint16)"))
 
-    head = c.eth.block_number
-    BPD, CHUNK = 345_600, 10_000        # Arbitrum ~0.25s 出块;单次上限 1 万块
+    head = retry(chain, lambda: w3(chain).eth.block_number)
+    # 出块速度按链取 —— 写死 Arbitrum 的 345,600 会让 Optimism 扫成 24 天
+    BPD = int(86_400 / CHAIN[chain]["blocktime"])
+    CHUNK = CHAIN[chain]["chunk"]
     start = head - int(days * BPD)
     users, n, t0 = set(), 0, time.time()
     b = start
     while b < head:
         e = min(b + CHUNK, head)
         try:
-            for l in c.eth.get_logs({"address": pool, "topics": [topic],
-                                     "fromBlock": b, "toBlock": e}):
+            for l in retry(chain, lambda: w3(chain).eth.get_logs(
+                    {"address": pool, "topics": [topic],
+                     "fromBlock": b, "toBlock": e}), 3):
                 users.add("0x" + l["topics"][2].hex()[-40:])
         except Exception:
             pass                         # 单片失败不影响整体
@@ -155,13 +205,14 @@ def refresh_positions(days=3, hf_max=3.0):
         n += 1
         if n % 40 == 0:
             eprint(f"[refresh] {n} 片, {len(users)} 个借款人, {time.time()-t0:.0f}s")
-    eprint(f"[refresh] 扫完 {days} 天,{len(users)} 个借款人,开始查健康度")
+    eprint(f"[refresh] {chain} 扫完 {days} 天,{len(users)} 个借款人,开始查健康度")
 
     s = sel("getUserAccountData(address)")
     out = []
     for i, u in enumerate(sorted(users)):
         try:
-            r = c.eth.call({"to": pool, "data": s + u[2:].lower().rjust(64, "0")})
+            r = retry(chain, lambda: w3(chain).eth.call(
+                {"to": pool, "data": s + u[2:].lower().rjust(64, "0")}), 3)
             bb = bytes(r)
             debt = int.from_bytes(bb[32:64], "big") / 1e8
             hf_raw = int.from_bytes(bb[160:192], "big")
@@ -183,9 +234,9 @@ def refresh_positions(days=3, hf_max=3.0):
 
     out.sort(key=lambda x: x["hf"])
     STATE.mkdir(exist_ok=True)
-    px, _ = latest_price("ARB", FEED_ARB)
+    px, _ = latest_price(chain, AAVE_FEED[chain])
     POSITIONS.write_text(json.dumps(
-        {"built_at": utcnow(), "eth_price": px, "days": days,
+        {"built_at": utcnow(), "chain": chain, "eth_price": px, "days": days,
          "scanned_borrowers": len(users), "positions": out},
         ensure_ascii=False, indent=2), encoding="utf-8")
     eprint(f"[refresh] 名单已存:{len(out)} 个有债务且 HF<{hf_max} 的仓位")
@@ -245,46 +296,60 @@ def cmd_whatif(pct):
 
 
 def cmd_watch(args):
+    """
+    影子监控:用 **领先链的喂价** 推算 **目标链的仓位**。
+
+    OPT 版的逻辑:
+        领先 = ARB 公开喂价(中位 165s 更新一次)
+        目标 = OPT 上的 Aave 仓位(Aave OPT 读的 OPT 公开喂价,中位 992s)
+
+    关键字段 `n_ahead` = 「按领先喂价已经可清算、但目标喂价还没反映」的仓位数。
+    **这就是窗口的实证** —— 它不是理论推算,是每一轮真实数过的数量。
+    """
+    P = PRESET[args.chain]
+    tgt, lead = P["target"], P["lead"]
     data = load_positions()
+    if data.get("chain") and data["chain"] != tgt:
+        raise RuntimeError(
+            f"名单是 {data['chain']} 的,但要监控 {tgt}。先跑 --refresh --chain {tgt}")
     pos = data["positions"]
     base_px = data["eth_price"]
     STATE.mkdir(exist_ok=True)
-    eprint(f"[watch] 名单 {len(pos)} 个仓位,建单时 ETH=${base_px:,.2f}")
-    last = {"opt": None, "arb": None}
+    eprint(f"[watch] 目标 {tgt} / 领先 {lead}:名单 {len(pos)} 个仓位,"
+           f"建单时 ETH=${base_px:,.2f}")
+    last = {"lead": None, "tgt": None}
 
     def once():
-        opt_px, opt_ts = latest_price("OPT", FEED_OPT)
-        arb_px, arb_ts = latest_price("ARB", FEED_ARB)
-        # 核心:用 **OPT 的价格** 推算 ARB 上的仓位
-        ratio_opt = opt_px / base_px
-        ratio_arb = arb_px / base_px
-        hit_opt = project(pos, ratio_opt)
-        hit_arb = project(pos, ratio_arb)
-        # OPT 已经看到、但 ARB 还没反映的 —— **这就是那 34 秒的窗口**
-        ahead = [x for x in hit_opt
-                 if x["user"] not in {y["user"] for y in hit_arb}]
-        rec = {"ts": utcnow(), "opt_px": opt_px, "arb_px": arb_px,
-               "spread_bps": (opt_px - arb_px) / arb_px * 10_000,
-               "opt_feed_ts": opt_ts, "arb_feed_ts": arb_ts,
-               "n_liquidatable_by_opt": len(hit_opt),
-               "n_liquidatable_by_arb": len(hit_arb),
+        lead_px, lead_ts = latest_price(lead, P["lead_feed"])
+        tgt_px, tgt_ts = latest_price(tgt, P["target_feed"])
+        hit_lead = project(pos, lead_px / base_px)
+        hit_tgt = project(pos, tgt_px / base_px)
+        # 领先喂价已经看到、但目标喂价还没反映的那批 —— 窗口的实证
+        ahead = [x for x in hit_lead
+                 if x["user"] not in {y["user"] for y in hit_tgt}]
+        now = int(time.time())
+        rec = {"ts": utcnow(), "target": tgt, "lead": lead,
+               "lead_px": lead_px, "target_px": tgt_px,
+               "spread_bps": (lead_px - tgt_px) / tgt_px * 10_000,
+               "lead_feed_age": now - lead_ts, "target_feed_age": now - tgt_ts,
+               "n_liquidatable_by_lead": len(hit_lead),
+               "n_liquidatable_by_target": len(hit_tgt),
                "n_ahead": len(ahead),
                "ahead": [{"user": x["user"], "hf": x["hf"],
                           "new_hf": x["new_hf"], "debt": x["debt"]}
                          for x in ahead[:20]]}
         append_jsonl(PREDICTIONS, rec)
-        moved = (last["opt"] != opt_px) or (last["arb"] != arb_px)
-        last["opt"], last["arb"] = opt_px, arb_px
-        flag = ""
-        if ahead:
-            flag = f"  ★ OPT 已见 {len(ahead)} 个可清算,ARB 还没反映"
+        moved = (last["lead"] != lead_px) or (last["tgt"] != tgt_px)
+        last["lead"], last["tgt"] = lead_px, tgt_px
+        flag = f"  ★ {lead} 已见 {len(ahead)} 个可清算,{tgt} 还没反映" if ahead else ""
         if moved or ahead:
-            print(f"[{rec['ts'][11:19]}] OPT ${opt_px:,.2f}  ARB ${arb_px:,.2f}  "
+            print(f"[{rec['ts'][11:19]}] {lead} ${lead_px:,.2f}({now-lead_ts:>4}s前) "
+                  f"{tgt} ${tgt_px:,.2f}({now-tgt_ts:>5}s前) "
                   f"差 {rec['spread_bps']:+.1f}bps  "
-                  f"可清算 OPT={len(hit_opt)} ARB={len(hit_arb)}{flag}", flush=True)
+                  f"可清算 {lead}={len(hit_lead)} {tgt}={len(hit_tgt)}{flag}", flush=True)
 
     run_loop(once, interval=args.interval, max_rounds=args.max_rounds,
-             label="p0-shadow")
+             label=f"p0-shadow-{tgt}")
 
 
 def verify_feeds():
@@ -334,6 +399,9 @@ def main():
     p = argparse.ArgumentParser(description="P0 影子模式:只记录,不发交易")
     p.add_argument("--verify-feeds", action="store_true",
                    help="核对 Aave 实际读的喂价与脚本常量是否一致(跑 --watch 前先跑这个)")
+    p.add_argument("--chain", default="OPT", choices=["OPT", "ARB"],
+                   help="目标链(仓位在哪条链)。默认 OPT —— "
+                        "ARB 已被 SVR 吃掉 89%%,OPT 官方明确永不上 SVR")
     p.add_argument("--refresh", action="store_true", help="重建高危仓位名单")
     p.add_argument("--days", type=float, default=3, help="--refresh 扫多少天的 Borrow")
     p.add_argument("--hf-max", type=float, default=3.0, help="名单只留 HF 低于此值的")
@@ -347,7 +415,7 @@ def main():
     if args.verify_feeds:
         return verify_feeds()
     if args.refresh:
-        refresh_positions(args.days, args.hf_max)
+        refresh_positions(args.days, args.hf_max, args.chain)
         return 0
     if args.what_if is not None:
         cmd_whatif(args.what_if)

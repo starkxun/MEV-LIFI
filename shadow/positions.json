@@ -1,2948 +1,716 @@
 {
-  "built_at": "2026-08-10T04:16:32+00:00",
-  "eth_price": 1918.0388,
-  "days": 3,
-  "scanned_borrowers": 484,
+  "built_at": "2026-08-11T01:48:27+00:00",
+  "chain": "OPT",
+  "eth_price": 1873.63553501,
+  "days": 14.0,
+  "scanned_borrowers": 147,
   "positions": [
     {
-      "user": "0x270d1c8c0f13ff925f710dff38bf806bdbb4e6b2",
-      "collateral": 49900.23776762,
-      "debt": 40144.74888339,
-      "liq_threshold": 82.4,
-      "hf": 1.024360018699333
+      "user": "0x30070c3be65516b842f03159ec0ecb7e43247dc9",
+      "collateral": 0.00450499,
+      "debt": 0.00397727,
+      "liq_threshold": 83.0,
+      "hf": 0.9401277006589946
     },
     {
-      "user": "0x11650b27213d5b05be4aed19acf57ac2c146ba5c",
-      "collateral": 10746.13058534,
-      "debt": 9892.15821993,
-      "liq_threshold": 94.99,
-      "hf": 1.0320118004215606
+      "user": "0x25e7fef6d57dc2022bb13afc924b1aa0da38300d",
+      "collateral": 6.36286408,
+      "debt": 5.24653679,
+      "liq_threshold": 83.0,
+      "hf": 1.006602526158975
     },
     {
-      "user": "0xf03837a074e9bc31242feb84e255e5b27159a0ce",
-      "collateral": 814.31660917,
-      "debt": 619.11950988,
-      "liq_threshold": 79.04,
-      "hf": 1.0396181102067905
-    },
-    {
-      "user": "0xbf5ff5dd67d5d70759b5783b26d5eb7b55bd5bd3",
-      "collateral": 8831.71936101,
-      "debt": 6621.45775393,
-      "liq_threshold": 78.0,
-      "hf": 1.0403662392166075
-    },
-    {
-      "user": "0x07c4e9ff4d7dd0c3f2ad422800b9bee95125315b",
-      "collateral": 24578.02805519,
-      "debt": 19767.82708753,
-      "liq_threshold": 84.0,
-      "hf": 1.0444012624626449
-    },
-    {
-      "user": "0xe33f2050adb6f8f9967f2eecef43bee49eca4679",
-      "collateral": 36066.89410904,
-      "debt": 27891.66459038,
-      "liq_threshold": 80.88,
-      "hf": 1.0459718020090794
-    },
-    {
-      "user": "0x541980dd1db4123185d6b632e9d6a09f77c1e4fa",
-      "collateral": 2701.31853992,
-      "debt": 2164.01272328,
-      "liq_threshold": 84.0,
-      "hf": 1.0485648023794922
-    },
-    {
-      "user": "0x1953f5aa94c081d36b564a2bbdb7ac25cee26dda",
-      "collateral": 4301.6210924,
-      "debt": 3403.90787046,
-      "liq_threshold": 83.99,
-      "hf": 1.0615333476896642
-    },
-    {
-      "user": "0x93b1d04807fc03303b0b3fc68f93bc36a813e2d1",
-      "collateral": 1089.6275541,
-      "debt": 853.5087854,
-      "liq_threshold": 83.43,
-      "hf": 1.0651705475717297
-    },
-    {
-      "user": "0x6819ab8b46fd7e6fc66732732fae0d8a36941132",
-      "collateral": 23462.56244404,
-      "debt": 18463.15716044,
-      "liq_threshold": 83.99,
-      "hf": 1.0674529967022022
-    },
-    {
-      "user": "0xf5415033f7211ea19ba2a448ec04db9c99ead270",
-      "collateral": 30041.99175596,
-      "debt": 23325.95977892,
-      "liq_threshold": 83.19,
-      "hf": 1.0715005865008835
-    },
-    {
-      "user": "0x3b2205c7fd88c578dc5bdc80b39d1dea6dc0784a",
-      "collateral": 4423.9257951,
-      "debt": 3256.59455066,
-      "liq_threshold": 78.95,
-      "hf": 1.0725301196468655
-    },
-    {
-      "user": "0x3a2e05addab2b7427dede29af958ebb56b01769d",
-      "collateral": 2416.70812357,
-      "debt": 1869.94502877,
-      "liq_threshold": 83.05,
-      "hf": 1.0734239232392364
-    },
-    {
-      "user": "0x391a19ca9cf71d30d60b1667a7643ad116f02ecc",
-      "collateral": 4589.37195257,
-      "debt": 3470.99405282,
-      "liq_threshold": 81.24,
-      "hf": 1.0742542741299148
-    },
-    {
-      "user": "0x6071b610694db4c502da5370ee39623008db0e03",
-      "collateral": 1045.55890349,
-      "debt": 815.27494529,
-      "liq_threshold": 84.0,
-      "hf": 1.0772678395252198
-    },
-    {
-      "user": "0x4b32ad6d34d5e07ed48bf7e9ff87addca6995b7d",
-      "collateral": 3970.76027104,
-      "debt": 2972.33156999,
-      "liq_threshold": 81.02,
-      "hf": 1.0824318699878508
-    },
-    {
-      "user": "0x6c59ef3e26bc5299ee761d3d71c35a59bcac8d6a",
-      "collateral": 1529.91664915,
-      "debt": 1121.45887726,
-      "liq_threshold": 79.37,
-      "hf": 1.0827988583038985
-    },
-    {
-      "user": "0xd54daa05976cd37816868fe800a4db5d99ddd22c",
-      "collateral": 757.70964032,
-      "debt": 560.38052169,
-      "liq_threshold": 80.71,
-      "hf": 1.0913522499911572
-    },
-    {
-      "user": "0xea12ea09ecd81f19ec642d93ccd2c4723bdb592b",
-      "collateral": 5023.92933071,
-      "debt": 3720.13418041,
-      "liq_threshold": 81.32,
-      "hf": 1.098217649391918
-    },
-    {
-      "user": "0x6e8b93499bfd74c211003e4d95cb51d5151f61e3",
-      "collateral": 19938.35558018,
-      "debt": 13427.05509242,
-      "liq_threshold": 74.0,
-      "hf": 1.0988547397606583
-    },
-    {
-      "user": "0x954b9cfb8055fcfcc74b2252d4b2b9827dfb44bb",
-      "collateral": 115066.20195735,
-      "debt": 87863.67152574,
-      "liq_threshold": 84.0,
-      "hf": 1.100063404655909
-    },
-    {
-      "user": "0x5fa1860661c283b33edab7285770b125bcca01d3",
-      "collateral": 17948.75492932,
-      "debt": 12690.12648177,
-      "liq_threshold": 78.0,
-      "hf": 1.103222167642012
-    },
-    {
-      "user": "0xb3bd4ea57177c06b22b2929036d781c387312b42",
-      "collateral": 72.56002913,
-      "debt": 51.23527919,
-      "liq_threshold": 78.0,
-      "hf": 1.1046455415401826
-    },
-    {
-      "user": "0x0e80e7f0540e63efc7dd3fadf9a95a62d0eb50b6",
-      "collateral": 2995.74758391,
-      "debt": 2173.22598136,
-      "liq_threshold": 80.28,
-      "hf": 1.1066495464580983
-    },
-    {
-      "user": "0xeabcc3bec1a93cda596080cde3c2fa19f3522aba",
-      "collateral": 2710.14973521,
-      "debt": 2056.15095447,
-      "liq_threshold": 84.0,
-      "hf": 1.1071783288222652
-    },
-    {
-      "user": "0x60e993f043d02de1090f6bcb0c7bc6322d4a8eff",
-      "collateral": 159907.89466095,
-      "debt": 112545.03460524,
-      "liq_threshold": 78.0,
-      "hf": 1.108251094977528
-    },
-    {
-      "user": "0xf534563e8734989464506377f97d3b36f6f9e7e1",
-      "collateral": 54401.1742062,
-      "debt": 38838.60050406,
-      "liq_threshold": 79.14,
-      "hf": 1.108580134211972
-    },
-    {
-      "user": "0xb25d26c75e7efc0d79672873d9def9b708fae975",
-      "collateral": 86311.15395922,
-      "debt": 60523.54245406,
-      "liq_threshold": 78.0,
-      "hf": 1.1123390561498026
-    },
-    {
-      "user": "0x4274d3b4e0b0d45e3f218a8a368bcd1a19744cc0",
-      "collateral": 1349.36135048,
-      "debt": 1150.82536359,
+      "user": "0x924dab9d8e116bea7532ec4d3a21b08b5a5d94a2",
+      "collateral": 60369.86863785,
+      "debt": 56143.85488838,
       "liq_threshold": 95.0,
-      "hf": 1.1138903638316882
+      "hf": 1.0215076132548822
     },
     {
-      "user": "0xe82ce49aa0802e92bc16c1fd7bcaf00e4e7375cb",
-      "collateral": 2530.07965964,
-      "debt": 1767.22877523,
+      "user": "0xcb6586874cc04b01cc4fdb777de502cea7b3d6c1",
+      "collateral": 4260.2442323,
+      "debt": 3366.5526058,
+      "liq_threshold": 82.2,
+      "hf": 1.040256484924285
+    },
+    {
+      "user": "0xd7d71ef6be3dde2faaccc692bf6b4939d71b68a7",
+      "collateral": 1684.52956908,
+      "debt": 1261.67437158,
       "liq_threshold": 78.0,
-      "hf": 1.1166987331690315
+      "hf": 1.0414201108301473
     },
     {
-      "user": "0x11573e51f776160d5fdbf6b2ce2249a754c55062",
-      "collateral": 2434.84673851,
-      "debt": 1941.44220213,
-      "liq_threshold": 89.14,
-      "hf": 1.117965916020643
-    },
-    {
-      "user": "0x07e05d5f1df1136149953f7df8cf3d577aaf097e",
-      "collateral": 2780.2819233,
-      "debt": 1927.07937219,
+      "user": "0x0612486dcd7562515c07eac3c80ce929628d8754",
+      "collateral": 6053.33795877,
+      "debt": 4456.53336256,
       "liq_threshold": 78.0,
-      "hf": 1.1253402072948895
+      "hf": 1.0594790218575485
     },
     {
-      "user": "0xb143f6ca55358fac056eca7ac1a228a1f018b048",
-      "collateral": 9745.72214948,
-      "debt": 6753.87455176,
+      "user": "0x1aa5a48440bbdd789eb235bc439646b49d814e85",
+      "collateral": 180.25919708,
+      "debt": 137.77865731,
+      "liq_threshold": 82.99,
+      "hf": 1.0859093596061695
+    },
+    {
+      "user": "0xedd060daafd989bb56d7f886524d681f9fad63b2",
+      "collateral": 904.23815205,
+      "debt": 649.19055177,
       "liq_threshold": 78.0,
-      "hf": 1.1255262765597969
+      "hf": 1.0864387300092453
     },
     {
-      "user": "0x8752b2c3fdf052a8e2f6099a22ac7ad04f4ae91b",
-      "collateral": 3170.08251979,
-      "debt": 2249.82999509,
-      "liq_threshold": 79.9,
-      "hf": 1.125940084277108
+      "user": "0x8ed1a128f275958ff1e8706ae3086f6746c27d72",
+      "collateral": 3003.05997829,
+      "debt": 2293.72100845,
+      "liq_threshold": 83.0,
+      "hf": 1.086679579948153
     },
     {
-      "user": "0xa0f7533b40fae885338a457b7722c317ef1de864",
-      "collateral": 404.31035524,
-      "debt": 279.7079675,
+      "user": "0x30b7496803d55a9d9f95dc0c96faf2321b345899",
+      "collateral": 230.74245536,
+      "debt": 176.01114871,
+      "liq_threshold": 83.0,
+      "hf": 1.0880915177955377
+    },
+    {
+      "user": "0x9f25248e8465a4a5106948615c6db2ed1e1b9052",
+      "collateral": 348.22851013,
+      "debt": 248.9996653,
       "liq_threshold": 78.0,
-      "hf": 1.127469052475954
+      "hf": 1.0908377630714832
     },
     {
-      "user": "0xe2375a1652ed147a718e9234ecf5f5f614a011b4",
-      "collateral": 4284.83222356,
-      "debt": 2956.01671959,
-      "liq_threshold": 78.02,
-      "hf": 1.1309570333789223
-    },
-    {
-      "user": "0x7b3a30275bc320661d54ccf37d69a0b010d5ebef",
-      "collateral": 7850.94381512,
-      "debt": 5405.1967575,
+      "user": "0xea3a3d8cd708fdf937f30d61a2cef7672d7c8b61",
+      "collateral": 19309.18286298,
+      "debt": 13795.15230079,
       "liq_threshold": 78.0,
-      "hf": 1.1329349236540904
+      "hf": 1.0917721170981127
     },
     {
-      "user": "0x4e25751094fc6b1b033dac1b2e1dcfd476bfbc1a",
-      "collateral": 4508.38988359,
-      "debt": 3103.68247441,
+      "user": "0x25ebf1b55d8c15a7ba723d9f32854354e943d67b",
+      "collateral": 1761.40213082,
+      "debt": 1249.91046533,
       "liq_threshold": 78.0,
-      "hf": 1.1330231549761491
-    },
-    {
-      "user": "0xa53b88cfdb356a1de7403243b35c46bffb983e25",
-      "collateral": 6068.86162762,
-      "debt": 4489.10528806,
-      "liq_threshold": 84.0,
-      "hf": 1.1356035200956203
-    },
-    {
-      "user": "0x26428d7cf61bddb5d9ac81bb79650fe01e86c098",
-      "collateral": 6085.34525015,
-      "debt": 4151.78594728,
-      "liq_threshold": 78.0,
-      "hf": 1.143259637528969
-    },
-    {
-      "user": "0x89d22f9fb20c006ee82603a4ee03a2afda8f32be",
-      "collateral": 10082.19504187,
-      "debt": 7186.14639743,
-      "liq_threshold": 81.49,
-      "hf": 1.1433717637704217
-    },
-    {
-      "user": "0xb6ca1818e35be146c1b78fc86c0e6023fbe0c527",
-      "collateral": 733.50826996,
-      "debt": 500.05889346,
-      "liq_threshold": 78.0,
-      "hf": 1.1441381366304317
-    },
-    {
-      "user": "0x65122b0a2bd32c22cdf7868573a0bda747d26a68",
-      "collateral": 2359.59743156,
-      "debt": 1619.56601438,
-      "liq_threshold": 78.6,
-      "hf": 1.1452761780629679
-    },
-    {
-      "user": "0x2914883e892dccefcebb29d017725dfde0408ae7",
-      "collateral": 6515.45654974,
-      "debt": 4488.9959946,
-      "liq_threshold": 78.93,
-      "hf": 1.1456160730325282
-    },
-    {
-      "user": "0xcd5a1ba22207d4676c220d66d8433462b4ade2ed",
-      "collateral": 3319.23994678,
-      "debt": 2252.26519064,
-      "liq_threshold": 78.0,
-      "hf": 1.1495125748281498
-    },
-    {
-      "user": "0xb4b83a3bf3ee2e0baa9f62f04714b70764754b73",
-      "collateral": 419.13829814,
-      "debt": 306.19200384,
-      "liq_threshold": 84.0,
-      "hf": 1.1498542287916071
-    },
-    {
-      "user": "0xc857cfac3321312b17dc9004de9f58eb1366a8cf",
-      "collateral": 93205.54209396,
-      "debt": 66100.54798582,
-      "liq_threshold": 81.57,
-      "hf": 1.1502361761690862
-    },
-    {
-      "user": "0x02b38d69a9011a577854702a4c0fdba786435184",
-      "collateral": 584.10010411,
-      "debt": 425.06270235,
-      "liq_threshold": 84.0,
-      "hf": 1.1542863787855933
-    },
-    {
-      "user": "0x53b4fed4eae84c7f0ee69e5582afb987deb874aa",
-      "collateral": 8538.98163007,
-      "debt": 5779.34785488,
-      "liq_threshold": 78.25,
-      "hf": 1.1562104918984402
-    },
-    {
-      "user": "0x4185ec940a2f79bd758e7346dd5b96027c79a411",
-      "collateral": 5172.81816277,
-      "debt": 3737.30788524,
-      "liq_threshold": 83.72,
-      "hf": 1.1587935054054261
-    },
-    {
-      "user": "0x4851a38b6bb8241c46e7858267b00529cf5215ba",
-      "collateral": 17516.76004026,
-      "debt": 12173.73746134,
-      "liq_threshold": 80.89,
-      "hf": 1.163990805005865
-    },
-    {
-      "user": "0x417be5f6bbb4ab60aa0708e311149fd2b7f04cab",
-      "collateral": 2709.01906857,
-      "debt": 1812.37032861,
-      "liq_threshold": 78.0,
-      "hf": 1.1658957554801699
-    },
-    {
-      "user": "0xf8b63e94eb4c2badefdbd2e4c570740753cc4e04",
-      "collateral": 16339.63063029,
-      "debt": 10915.98726546,
-      "liq_threshold": 78.15,
-      "hf": 1.1699388805828848
-    },
-    {
-      "user": "0xe1b5195cab8ab769d1a9a6ab4582255e41be705a",
-      "collateral": 12759.51737944,
-      "debt": 8454.12344638,
-      "liq_threshold": 78.0,
-      "hf": 1.1772271388141087
-    },
-    {
-      "user": "0xa556c5b68c64031e729e9d519ae07b51ac1ede1d",
-      "collateral": 1445.8576479,
-      "debt": 992.91383901,
-      "liq_threshold": 81.1,
-      "hf": 1.180973569569605
-    },
-    {
-      "user": "0xad38255febd566809ae387d5be66ecd287947cb9",
-      "collateral": 762414.19616745,
-      "debt": 503213.34549428,
-      "liq_threshold": 78.0,
-      "hf": 1.181771267267336
-    },
-    {
-      "user": "0xedeaab21e8c3c32e4b4446ca2aafe152171a51f1",
-      "collateral": 31322.35820062,
-      "debt": 20828.5748369,
-      "liq_threshold": 78.59,
-      "hf": 1.1819709705104005
-    },
-    {
-      "user": "0x5a22f046cb80c6525cc48f8ceda2487af2c55bfb",
-      "collateral": 1300.57588849,
-      "debt": 880.33394368,
-      "liq_threshold": 80.16,
-      "hf": 1.1843808937770572
-    },
-    {
-      "user": "0x28ba65f565578ea3a83ada32fa7fa5e81f14b14b",
-      "collateral": 4453.75554569,
-      "debt": 3026.00869793,
-      "liq_threshold": 80.6,
-      "hf": 1.186413674359917
-    },
-    {
-      "user": "0x12b4fcf877a4416c5630e2de4f340be6357e00db",
-      "collateral": 302.7764043,
-      "debt": 204.96110791,
-      "liq_threshold": 80.41,
-      "hf": 1.1879017885349799
-    },
-    {
-      "user": "0x22f4dc9e6a136379291a400a20a90383b2cb5de2",
-      "collateral": 1442.43279314,
-      "debt": 1019.28225619,
-      "liq_threshold": 84.0,
-      "hf": 1.1887222983422001
-    },
-    {
-      "user": "0x5543c8291427d721125e1c927fc1aad1e43f1119",
-      "collateral": 9438.24041539,
-      "debt": 6654.60862906,
-      "liq_threshold": 84.0,
-      "hf": 1.1913731356501263
-    },
-    {
-      "user": "0x979aad08a564fc89c5fb99a5dd3a09d9576901d8",
-      "collateral": 9311.90029326,
-      "debt": 6099.39793106,
-      "liq_threshold": 78.11,
-      "hf": 1.1925771833671241
-    },
-    {
-      "user": "0xb9973f2a0dee11f603994c9ccbfd3027bca175eb",
-      "collateral": 148901.44640276,
-      "debt": 100481.83055916,
-      "liq_threshold": 80.52,
-      "hf": 1.1933003289289685
-    },
-    {
-      "user": "0x7cf1d5dbb041ca19ce768af0fbc644e1cf540dc3",
-      "collateral": 7155.39552773,
-      "debt": 4730.66355795,
-      "liq_threshold": 79.0,
-      "hf": 1.194989449729401
-    },
-    {
-      "user": "0x3a3b04ac4db5cdbecacf252ec43b2b2dff125222",
-      "collateral": 31506.35065716,
-      "debt": 22042.28918615,
-      "liq_threshold": 84.0,
-      "hf": 1.2006617973528615
-    },
-    {
-      "user": "0xc5c8b1dc1fff6728869c8bcce6105caa6df9e68d",
-      "collateral": 32.5942751,
-      "debt": 22.77759205,
-      "liq_threshold": 84.0,
-      "hf": 1.2020230682812671
-    },
-    {
-      "user": "0x98f56ca2c2757b33ab6d5164eb6db093a61d4dfb",
-      "collateral": 35.45617751,
-      "debt": 23.00185779,
-      "liq_threshold": 78.0,
-      "hf": 1.2023297731117744
-    },
-    {
-      "user": "0xe8d8bb57edf69e4daf806ba60bf2658c81eb91db",
-      "collateral": 212502.12714747,
-      "debt": 137233.56814321,
-      "liq_threshold": 78.0,
-      "hf": 1.2078069631043664
-    },
-    {
-      "user": "0x8907bd00491d0b830c38276acc6d72e2419135a2",
-      "collateral": 552201.86884215,
-      "debt": 355120.22049632,
-      "liq_threshold": 77.92,
-      "hf": 1.2117322160432322
-    },
-    {
-      "user": "0x9430c0fad5ee15dc1b59b976fdee1fb5f888de0e",
-      "collateral": 22501.86781637,
-      "debt": 14595.98618283,
-      "liq_threshold": 78.71,
-      "hf": 1.2134365427601874
-    },
-    {
-      "user": "0x69efa3eecd642b15c50af0548f452916e1c2b843",
-      "collateral": 31928.63160681,
-      "debt": 20653.40998069,
-      "liq_threshold": 78.66,
-      "hf": 1.2161314787771365
-    },
-    {
-      "user": "0xd3ec146db6e6c72d9abc7b90443dcfe5efc1d52d",
-      "collateral": 2344.12684515,
-      "debt": 1503.31049972,
-      "liq_threshold": 78.0,
-      "hf": 1.2162616701989066
-    },
-    {
-      "user": "0x01fa73e586507f2d23e4796cf3e46bd59ccf0420",
-      "collateral": 8970.15616904,
-      "debt": 6121.28078242,
-      "liq_threshold": 83.04,
-      "hf": 1.2169814211511638
-    },
-    {
-      "user": "0x9b9390d15958f39af20d2634a80e57feb3bf1be2",
-      "collateral": 141482.6507293,
-      "debt": 90539.92830988,
-      "liq_threshold": 78.0,
-      "hf": 1.2188707195697168
-    },
-    {
-      "user": "0xc8f987e089584e7461d6047911b4551463385f8c",
-      "collateral": 89673.17666614,
-      "debt": 57480.55888887,
-      "liq_threshold": 78.16,
-      "hf": 1.2194341306946634
-    },
-    {
-      "user": "0xd698d585c74ddd51279ec421e38eeec584f3423a",
-      "collateral": 21843.56488577,
-      "debt": 14001.37791107,
-      "liq_threshold": 78.26,
-      "hf": 1.2210583525718697
-    },
-    {
-      "user": "0x39f07a9c2cec9b410ed3118ef7d74ddcadf86f98",
-      "collateral": 39.99682779,
-      "debt": 25.49846029,
-      "liq_threshold": 78.0,
-      "hf": 1.2235062557261571
-    },
-    {
-      "user": "0xb3a23556def1283abefd1953ac6255286944f855",
-      "collateral": 121988.40505093,
-      "debt": 78329.68452925,
-      "liq_threshold": 78.57,
-      "hf": 1.2236591062574864
-    },
-    {
-      "user": "0x2012395e71a4af2e621d522b175f6c29232398db",
-      "collateral": 5008.4006939,
-      "debt": 3180.6866674,
-      "liq_threshold": 78.0,
-      "hf": 1.2282104495692898
-    },
-    {
-      "user": "0x115231b1c0ad58f97944f8e69ef0dbb35f1cd055",
-      "collateral": 242208.79507359,
-      "debt": 153264.42788813,
-      "liq_threshold": 78.0,
-      "hf": 1.2326595463840953
-    },
-    {
-      "user": "0xfddacfbcc1209a271054cad7969ff684c1ce481b",
-      "collateral": 5909.95081518,
-      "debt": 3749.10682819,
-      "liq_threshold": 78.21,
-      "hf": 1.2328855753302241
-    },
-    {
-      "user": "0xa6cf9bf8ecaff5300e38c0169ff45bd9a5e15116",
-      "collateral": 3025.12693806,
-      "debt": 2002.49538498,
-      "liq_threshold": 81.69,
-      "hf": 1.234096703639735
-    },
-    {
-      "user": "0xf6305f5cfdf557de218743bdd24441526453f9dc",
-      "collateral": 3801.15250657,
-      "debt": 2462.68538721,
-      "liq_threshold": 79.97,
-      "hf": 1.2343623222091196
-    },
-    {
-      "user": "0xefeb5aca8707b50452dbd74baaf7632fdbb157ae",
-      "collateral": 15364.25066316,
-      "debt": 10418.30144152,
-      "liq_threshold": 83.99,
-      "hf": 1.2387787611232772
-    },
-    {
-      "user": "0xa8f6c162be3d73d59374c781a88e894b14b53dc2",
-      "collateral": 8002.97262186,
-      "debt": 5406.83811422,
-      "liq_threshold": 84.0,
-      "hf": 1.2433323987789118
-    },
-    {
-      "user": "0x049fbfbbd43aafa0571ac5f82a9e99ec7d477e90",
-      "collateral": 8752.70866365,
-      "debt": 5879.63541769,
-      "liq_threshold": 84.0,
-      "hf": 1.2504644854926352
-    },
-    {
-      "user": "0x4f95fe7ca3b5b9006d1f51c8aa337b4e5c9fd72e",
-      "collateral": 5713.09717973,
-      "debt": 3795.211474,
-      "liq_threshold": 83.15,
-      "hf": 1.2517923874661274
-    },
-    {
-      "user": "0x97698ba7a92e2eb3140aef8b486bcb1b7cc080e0",
-      "collateral": 2803.39128686,
-      "debt": 1741.15032652,
-      "liq_threshold": 78.0,
-      "hf": 1.2558623861738585
-    },
-    {
-      "user": "0xdd0851ba1ad5955a276b3448a259de0114dabc7f",
-      "collateral": 9684.43920159,
-      "debt": 6005.52548364,
-      "liq_threshold": 78.0,
-      "hf": 1.2578187533827163
-    },
-    {
-      "user": "0x40f9075a0bf3ec12cad6fe96a3c52ad01820f276",
-      "collateral": 13781.21951829,
-      "debt": 8538.53986112,
-      "liq_threshold": 78.0,
-      "hf": 1.258921478274414
-    },
-    {
-      "user": "0x101714f22a4a646f9fb2e26937cce0c400eb3092",
-      "collateral": 22343.96806652,
-      "debt": 13803.34889299,
-      "liq_threshold": 78.0,
-      "hf": 1.2626135314696363
-    },
-    {
-      "user": "0x98ef2c50b58be53caa1b7eea4848c8727744b30c",
-      "collateral": 2200.16923387,
-      "debt": 1391.7240642,
-      "liq_threshold": 79.93,
-      "hf": 1.2637106579570918
-    },
-    {
-      "user": "0x52da8807ffc94eb37e9c9f4eb0b4cae265561786",
-      "collateral": 156284.86181241,
-      "debt": 96394.78769032,
-      "liq_threshold": 78.0,
-      "hf": 1.264613939555585
-    },
-    {
-      "user": "0xe415597924ccd0bb561ad2a02beb322707feb7aa",
-      "collateral": 91260.93396305,
-      "debt": 56179.34636634,
-      "liq_threshold": 78.0,
-      "hf": 1.2671297353459665
-    },
-    {
-      "user": "0x4013b615068a535a093567d7d8ffb16f01ba3d3a",
-      "collateral": 713.27924546,
-      "debt": 444.40159342,
-      "liq_threshold": 79.0,
-      "hf": 1.2679761104745861
-    },
-    {
-      "user": "0x132e5b5defdd6b549f99beaadb0758b046f0fccd",
-      "collateral": 32795.43102069,
-      "debt": 20099.72154362,
-      "liq_threshold": 77.99,
-      "hf": 1.2726761483049536
-    },
-    {
-      "user": "0x907f39828c872bb7b5f4f9a83598d06acc8b2015",
-      "collateral": 7223.11999803,
-      "debt": 4406.41047436,
-      "liq_threshold": 78.0,
-      "hf": 1.2785993568340235
-    },
-    {
-      "user": "0x4cad914d39a0069d963833a0939b58cd7e1bacba",
-      "collateral": 3115.58644283,
-      "debt": 2038.52364733,
-      "liq_threshold": 83.99,
-      "hf": 1.2838176356038806
-    },
-    {
-      "user": "0x764c3ce2da0a2df42e5ca611582e76e7cd960c09",
-      "collateral": 36346.26940947,
-      "debt": 23001.60151846,
-      "liq_threshold": 81.26,
-      "hf": 1.2841027538524508
-    },
-    {
-      "user": "0x6775c29818871a68809f08eae82f4490b065a079",
-      "collateral": 21623.03376678,
-      "debt": 13128.3785896,
-      "liq_threshold": 78.0,
-      "hf": 1.2846953051345755
-    },
-    {
-      "user": "0x728891f4457e99393e451fe5dab8327af2785186",
-      "collateral": 14716.29583038,
-      "debt": 8966.52432334,
-      "liq_threshold": 78.49,
-      "hf": 1.2883279177825042
-    },
-    {
-      "user": "0x4598b3ba7d6714091b18da5d110b64f56e94e826",
-      "collateral": 767.17262575,
-      "debt": 500.04447921,
-      "liq_threshold": 84.0,
-      "hf": 1.2887353673979183
-    },
-    {
-      "user": "0x99893fe2bc777c9b4c567c0653472547558230ba",
-      "collateral": 247.92692292,
-      "debt": 149.46228245,
-      "liq_threshold": 78.0,
-      "hf": 1.2938582009296755
-    },
-    {
-      "user": "0xbacd1b6a0328dc8a498f12e8c769c0e4d35fcb4f",
-      "collateral": 2753.75512424,
-      "debt": 1656.09283727,
-      "liq_threshold": 78.0,
-      "hf": 1.2969858624882236
-    },
-    {
-      "user": "0x440de8b4e2ae9c63cb1c22c9edd32db11de86113",
-      "collateral": 8552.87554407,
-      "debt": 5507.4174063,
-      "liq_threshold": 83.8,
-      "hf": 1.301491339495914
-    },
-    {
-      "user": "0x8181bd0a0fc25b906d0b574bcc0a40af6537a28e",
-      "collateral": 147511.58751082,
-      "debt": 89906.49083257,
-      "liq_threshold": 79.39,
-      "hf": 1.3026512135178148
-    },
-    {
-      "user": "0x0a2418866631922b4756eb79e4a6d38de3a98f8c",
-      "collateral": 327.50917696,
-      "debt": 210.88323672,
-      "liq_threshold": 84.0,
-      "hf": 1.3045499155140245
-    },
-    {
-      "user": "0xb9ae027352cfb1ab072b642aea13deb43978b865",
-      "collateral": 16168.53675154,
-      "debt": 9838.50277949,
-      "liq_threshold": 79.4,
-      "hf": 1.3049497741786809
-    },
-    {
-      "user": "0xe2233d97f30745fa5f15761b81b281be5959db5c",
-      "collateral": 13786.08149492,
-      "debt": 8504.47546165,
-      "liq_threshold": 80.5,
-      "hf": 1.3050681403258981
-    },
-    {
-      "user": "0xb008c0667aa9182ad8961f93a8e156473f1eb151",
-      "collateral": 5053.59746477,
-      "debt": 3019.42904486,
-      "liq_threshold": 78.0,
-      "hf": 1.3054805938330527
-    },
-    {
-      "user": "0x17e6d71d30d260e30bb7721c63539694ab02b036",
-      "collateral": 7087.90994329,
-      "debt": 4302.98088259,
-      "liq_threshold": 79.3,
-      "hf": 1.3062447262942583
-    },
-    {
-      "user": "0x575e3fa1608ec75e20d91b383f15186d1228fe98",
-      "collateral": 1840.9368265,
-      "debt": 1181.11653366,
-      "liq_threshold": 84.0,
-      "hf": 1.3092585618695165
-    },
-    {
-      "user": "0x0096973350c946c8e0b33dc4523051023c42c4e1",
-      "collateral": 5562.22608183,
-      "debt": 3521.6912334,
-      "liq_threshold": 83.07,
-      "hf": 1.312048754432294
-    },
-    {
-      "user": "0x375b76cc2325f48fc07e7a87c7c2d434699a5a19",
-      "collateral": 8048.93358015,
-      "debt": 5137.35984994,
-      "liq_threshold": 84.0,
-      "hf": 1.316065918061972
-    },
-    {
-      "user": "0xc94075db3657b3a84cf75cf391ee0aa05afce0b1",
-      "collateral": 36863.67784491,
-      "debt": 22000.84993061,
-      "liq_threshold": 78.63,
-      "hf": 1.3176168624982776
-    },
-    {
-      "user": "0xecda2a72dbe4cab70ff05ec4b66433f522e0b1d6",
-      "collateral": 176.73659122,
-      "debt": 106.84622227,
-      "liq_threshold": 79.82,
-      "hf": 1.3203762743814975
-    },
-    {
-      "user": "0x15f1f443d224afb7e77d006b8aa1b3b6ceda5787",
-      "collateral": 1285.50246868,
-      "debt": 785.03609597,
-      "liq_threshold": 80.63,
-      "hf": 1.3204536923410635
-    },
-    {
-      "user": "0xa838b8a6a7f61925ef9bf08aea47a3a33a9a407d",
-      "collateral": 3808.14757729,
-      "debt": 2249.27562832,
-      "liq_threshold": 78.0,
-      "hf": 1.3205829791988541
-    },
-    {
-      "user": "0x7bf6e86eea9b360a49066d7fdf12c9d2f3bc6c29",
-      "collateral": 76713.15625777,
-      "debt": 48728.68156621,
-      "liq_threshold": 84.0,
-      "hf": 1.3224049817348407
-    },
-    {
-      "user": "0x1eefc94012a449e42a0ae574ffa82a80ee7501cb",
-      "collateral": 1908.90506641,
-      "debt": 1212.31099771,
-      "liq_threshold": 83.99,
-      "hf": 1.3226641143187687
-    },
-    {
-      "user": "0x0125dede2b2543e9f20d1a39e602d02c9cc4ff0f",
-      "collateral": 761.11662794,
-      "debt": 447.6125506,
-      "liq_threshold": 78.0,
-      "hf": 1.3263054599282722
-    },
-    {
-      "user": "0x6aa4d9b1ed50bd244ebc729e46810eeb34dcd65b",
-      "collateral": 262152.41151949,
-      "debt": 156746.12431199,
-      "liq_threshold": 79.54,
-      "hf": 1.3303740782951545
-    },
-    {
-      "user": "0x8a71bc78bdbe04b23085cd87b14ce2f1605bb577",
-      "collateral": 10733.4901593,
-      "debt": 6370.39075537,
-      "liq_threshold": 79.14,
-      "hf": 1.3334658080829485
-    },
-    {
-      "user": "0x137ae64234eca03048a849c626fbec2fb64cf058",
-      "collateral": 17451.63868555,
-      "debt": 10206.19057373,
-      "liq_threshold": 78.0,
-      "hf": 1.3337276113348329
-    },
-    {
-      "user": "0x3af6c13d2550d3cca7bf42f9566740b00689352c",
-      "collateral": 103.09441103,
-      "debt": 61.49713012,
-      "liq_threshold": 79.71,
-      "hf": 1.3364093641870909
-    },
-    {
-      "user": "0x063e28f9fb040e14213024f2cf903ca9d50568b9",
-      "collateral": 20135.17352591,
-      "debt": 12637.21099492,
-      "liq_threshold": 84.0,
-      "hf": 1.3383922899256357
-    },
-    {
-      "user": "0x168b06a63e0f3eb60fcec3881de9f46f4af2f086",
-      "collateral": 47.38290499,
-      "debt": 28.44569201,
-      "liq_threshold": 80.48,
-      "hf": 1.3406262406410694
-    },
-    {
-      "user": "0x4c2707ec572416256c939ca9cc653acbb1473145",
-      "collateral": 12133.71818359,
-      "debt": 7595.24759994,
-      "liq_threshold": 84.0,
-      "hf": 1.3419343003770035
-    },
-    {
-      "user": "0x7dd7f1be2607cdf543b9d51aef45624bc82e814b",
-      "collateral": 3879.29453995,
-      "debt": 2422.28418407,
-      "liq_threshold": 83.98,
-      "hf": 1.3449585240314035
-    },
-    {
-      "user": "0xbc7a2346a146188bf0049b3ffe4f1fc6f9a9d276",
-      "collateral": 120467.84868392,
-      "debt": 74912.29635367,
-      "liq_threshold": 83.99,
-      "hf": 1.3506994411884017
-    },
-    {
-      "user": "0xbff7451efbabec8d07f2cfd8897c8669bf1cdc27",
-      "collateral": 676.59504137,
-      "debt": 390.25470578,
-      "liq_threshold": 78.0,
-      "hf": 1.3523069022673297
-    },
-    {
-      "user": "0x3fa5800edda15799dfc0db952d4f2731498f38cd",
-      "collateral": 569.72073962,
-      "debt": 341.019859,
-      "liq_threshold": 81.0,
-      "hf": 1.3532864105529994
-    },
-    {
-      "user": "0x2e8f34807415ce513a6e042ebcace70798f832a8",
-      "collateral": 4404.56199273,
-      "debt": 2534.44130222,
-      "liq_threshold": 78.0,
-      "hf": 1.3555485981545843
-    },
-    {
-      "user": "0x8dd0bd941c9e6ec1feb8cf32b14866bd367f7ae4",
-      "collateral": 820.86752977,
-      "debt": 483.75047079,
-      "liq_threshold": 79.96,
-      "hf": 1.3569177094344425
-    },
-    {
-      "user": "0x34d526a85a3d6820d4088405274293ada9f696ad",
-      "collateral": 593.75254278,
-      "debt": 353.07496153,
-      "liq_threshold": 80.73,
-      "hf": 1.3576713473625057
-    },
-    {
-      "user": "0x58a4edd89b44584a177ea12ef060c9c353cab8ea",
-      "collateral": 60.66761877,
-      "debt": 36.18574509,
-      "liq_threshold": 81.02,
-      "hf": 1.3583768926284667
-    },
-    {
-      "user": "0x72aeb81499bc08d5429c6ad7b2ede51a5b0ebd89",
-      "collateral": 10686.76283851,
-      "debt": 6601.75975156,
-      "liq_threshold": 83.99,
-      "hf": 1.3597708964868582
-    },
-    {
-      "user": "0xf028655cf2a7eac7486a72657496ab970d1c4ca4",
-      "collateral": 38.95882391,
-      "debt": 23.54043132,
-      "liq_threshold": 82.22,
-      "hf": 1.360749069299551
-    },
-    {
-      "user": "0x69ae688ccb01b40d16bacb38471ac3ad4fe1434a",
-      "collateral": 158.6759975,
-      "debt": 93.31927367,
-      "liq_threshold": 80.07,
-      "hf": 1.361513238143059
-    },
-    {
-      "user": "0xe9e609d37ce7a36c3b8f8b2ad5594d2f27ce43dc",
-      "collateral": 2483.41395494,
-      "debt": 1531.34285065,
-      "liq_threshold": 84.0,
-      "hf": 1.362247338186964
-    },
-    {
-      "user": "0xcb0cd0f4d28e888d7cdddc530e5f1840465b59ce",
-      "collateral": 9610.07928806,
-      "debt": 5923.54852415,
-      "liq_threshold": 84.0,
-      "hf": 1.3627754662698166
-    },
-    {
-      "user": "0x6002ca2e11b8e8c0f1f09c67f551b209eb51a0e4",
-      "collateral": 9317.91865366,
-      "debt": 5272.11268778,
-      "liq_threshold": 77.24,
-      "hf": 1.365175406499892
-    },
-    {
-      "user": "0x87e48578b730b3b0221ba53c8d40d058a5c66e07",
-      "collateral": 30780.80162154,
-      "debt": 18929.41604719,
-      "liq_threshold": 84.0,
-      "hf": 1.3659097194354184
-    },
-    {
-      "user": "0xf259ae8216cd0c2effef7d600c1cbb4241fdf01a",
-      "collateral": 591.43034879,
-      "debt": 351.19521004,
-      "liq_threshold": 81.12,
-      "hf": 1.36611986849694
+      "hf": 1.0991936623851422
     },
     {
       "user": "0xf7789fa997beeb4fec6ba288af857a6943743ec7",
-      "collateral": 44.98843999,
-      "debt": 25.67928536,
+      "collateral": 112.75265241,
+      "debt": 78.9733482,
       "liq_threshold": 78.0,
-      "hf": 1.3665093362317775
+      "hf": 1.1136297356555538
     },
     {
-      "user": "0x1a63b37c83020ee1cc973a8e7f309161f7a82307",
-      "collateral": 14100.07578195,
-      "debt": 7884.22211331,
-      "liq_threshold": 76.61,
-      "hf": 1.370200747277024
+      "user": "0x60c0c3ccbbfd55dfa3b1816db83f1d0e1a9b3e88",
+      "collateral": 4083.07467355,
+      "debt": 2914.56053847,
+      "liq_threshold": 79.62,
+      "hf": 1.1154879995296294
     },
     {
-      "user": "0x617f06bb3e1773400f6e2fa1e2f35b3e70a0870a",
-      "collateral": 153.432841,
-      "debt": 90.61051196,
-      "liq_threshold": 81.04,
-      "hf": 1.3723160120063405
-    },
-    {
-      "user": "0x419267f72186f934f5876e054ea958a7d4c5bcba",
-      "collateral": 1251.51388822,
-      "debt": 710.89341634,
+      "user": "0x81b33deaaa62098e4dd767308c0edb8aaa2b1661",
+      "collateral": 0.00699506,
+      "debt": 0.00484723,
       "liq_threshold": 78.0,
-      "hf": 1.3731746705960781
+      "hf": 1.1256216024409817
     },
     {
-      "user": "0x07a6221b9e4d3560897a5914622d9f37106009b4",
-      "collateral": 9460.56193684,
-      "debt": 5370.06059979,
-      "liq_threshold": 78.0,
-      "hf": 1.3741443274378637
+      "user": "0xcad85e1ec294f71f3ca68ef3261f894f50c1c4c3",
+      "collateral": 1498.59417421,
+      "debt": 1065.66822784,
+      "liq_threshold": 80.59,
+      "hf": 1.1333516757873503
     },
     {
-      "user": "0xeb7ca622045cc14f9b1b1a008c686b2f183a3d72",
-      "collateral": 143.71317204,
-      "debt": 84.6684713,
-      "liq_threshold": 81.07,
-      "hf": 1.3760746102120778
+      "user": "0x95b040599eb3ab880a4291e38b0598cc33993de3",
+      "collateral": 1675.96322247,
+      "debt": 1145.4684602,
+      "liq_threshold": 78.01,
+      "hf": 1.1414009949805337
     },
     {
-      "user": "0x8f5c2906e8da85e4f2443ff093b128a5dd35f38d",
-      "collateral": 38844.54899928,
-      "debt": 22006.96596711,
-      "liq_threshold": 78.0,
-      "hf": 1.3767798916361615
-    },
-    {
-      "user": "0x04515f25b287b931a88cfa541163697bed0f8d77",
-      "collateral": 75.22012759,
-      "debt": 43.94952129,
-      "liq_threshold": 80.5,
-      "hf": 1.3778983036745611
-    },
-    {
-      "user": "0x57125d9f4bf7cf4a6400b62b236b1e6f0995d220",
-      "collateral": 724682.82565496,
-      "debt": 441401.31140437,
-      "liq_threshold": 84.0,
-      "hf": 1.3790932600843646
-    },
-    {
-      "user": "0xd4ce83a565cc319a04e616e97b5c322fdc768935",
-      "collateral": 573.04046497,
-      "debt": 334.37800742,
-      "liq_threshold": 80.71,
-      "hf": 1.3832062302956825
-    },
-    {
-      "user": "0xf12081c338df5a870d4e92529d958d73da79c353",
-      "collateral": 133.64652331,
-      "debt": 78.30531584,
-      "liq_threshold": 81.07,
-      "hf": 1.3836642364585603
-    },
-    {
-      "user": "0x13dd1fdd9c16035309785ff9288e1785734716e4",
-      "collateral": 514.33917412,
-      "debt": 297.14816625,
-      "liq_threshold": 79.98,
-      "hf": 1.3844234129067254
-    },
-    {
-      "user": "0x2b32730795d7185b4c386389f35030d2ef8c4cd8",
-      "collateral": 61.41932298,
-      "debt": 35.5786409,
-      "liq_threshold": 80.26,
-      "hf": 1.3855969072500463
-    },
-    {
-      "user": "0xcc5448a2dfd611909f3fbcd4f5298c5c13e62deb",
-      "collateral": 22905.48508763,
-      "debt": 13386.7065177,
-      "liq_threshold": 81.03,
-      "hf": 1.38653634605355
-    },
-    {
-      "user": "0xd9e64cf56ed65bb735f416502109058529fba49c",
-      "collateral": 15123.01641866,
-      "debt": 8495.48816509,
-      "liq_threshold": 78.0,
-      "hf": 1.3884961731836907
-    },
-    {
-      "user": "0xf224bc6782565e49bf21a799d13c39bc8b6d829d",
-      "collateral": 20166.15316286,
-      "debt": 11300.24539574,
-      "liq_threshold": 78.0,
-      "hf": 1.391969724211528
-    },
-    {
-      "user": "0xa35e6af71ec2566e21d85825beb0b52714efa4b3",
-      "collateral": 1764.65753542,
-      "debt": 1000.08608976,
+      "user": "0x0892e4d0f664f3712bcbdc347974cf9a8b08ddd7",
+      "collateral": 100200.83432203,
+      "debt": 67614.97549169,
       "liq_threshold": 79.0,
-      "hf": 1.3939692559751058
+      "hf": 1.1707267293786483
     },
     {
-      "user": "0xaad76cc14203c9c5e8fc06175c1d73526396aaa2",
-      "collateral": 64900.16420469,
-      "debt": 36283.57755186,
+      "user": "0xd9848348bf244f436dc8339993c0efc3774817a8",
+      "collateral": 173881.01948349,
+      "debt": 115149.2894764,
+      "liq_threshold": 78.01,
+      "hf": 1.1780994263898992
+    },
+    {
+      "user": "0xf6e54f496c8df4545a679481a37f0d5b24eac57f",
+      "collateral": 913.43259286,
+      "debt": 630.06575235,
+      "liq_threshold": 83.0,
+      "hf": 1.203285608281483
+    },
+    {
+      "user": "0xd310a1dbfedfce805750f2b65cb2918f4099a317",
+      "collateral": 7529.34539872,
+      "debt": 5176.9692165,
+      "liq_threshold": 83.0,
+      "hf": 1.2071458066661271
+    },
+    {
+      "user": "0x77505fdff541f0144682f409376c9961b71b2326",
+      "collateral": 1454.62511977,
+      "debt": 996.72561539,
+      "liq_threshold": 83.0,
+      "hf": 1.2113051282791514
+    },
+    {
+      "user": "0xbe896e881af8837406fbf700b985db5a228f889d",
+      "collateral": 234662.09714984,
+      "debt": 152541.76767084,
+      "liq_threshold": 79.11,
+      "hf": 1.2170531028927034
+    },
+    {
+      "user": "0x69efa3eecd642b15c50af0548f452916e1c2b843",
+      "collateral": 57133.28739613,
+      "debt": 36835.30744777,
+      "liq_threshold": 78.65,
+      "hf": 1.2199994285896343
+    },
+    {
+      "user": "0x6c4a72ec1dd4fbe90e7e23c6c9187262d59345bb",
+      "collateral": 2218.86756304,
+      "debt": 1499.79282054,
+      "liq_threshold": 83.0,
+      "hf": 1.227942987925566
+    },
+    {
+      "user": "0xa40ab366c81b3f6c5ecf5cb3e431a8cbffe19fd8",
+      "collateral": 10905.45715328,
+      "debt": 6780.16324101,
       "liq_threshold": 78.0,
-      "hf": 1.395180175033847
+      "hf": 1.2545799086529477
     },
     {
-      "user": "0xb7c68afffa311fe6fdd8a8d95bf9b419399f244c",
-      "collateral": 84956.08796771,
-      "debt": 51058.89075038,
-      "liq_threshold": 84.0,
-      "hf": 1.3976628329385572
+      "user": "0xcf5602706247616edadae214ee1ed2df2cdf1da2",
+      "collateral": 7500.66542887,
+      "debt": 4911.37533801,
+      "liq_threshold": 83.0,
+      "hf": 1.267578199080297
     },
     {
-      "user": "0x7b294deec82c8879c2f72f4d23bc0147df146c5d",
-      "collateral": 62.40780836,
-      "debt": 36.14315327,
-      "liq_threshold": 80.95,
-      "hf": 1.397922524278967
+      "user": "0x7ff422f552c60f5da294bf2a91c6752667f28f64",
+      "collateral": 515604.19730029,
+      "debt": 327356.75130166,
+      "liq_threshold": 83.0,
+      "hf": 1.3072938989576006
     },
     {
-      "user": "0x7e76383cb3f47c5a1c8016463c48fb5c404215b5",
-      "collateral": 6388.73264204,
-      "debt": 3630.62218215,
-      "liq_threshold": 79.61,
-      "hf": 1.4009965332176364
-    },
-    {
-      "user": "0x490baf48d2b663a9df747bec31ea57e4be0c988d",
-      "collateral": 4415.06712349,
-      "debt": 2643.66735309,
-      "liq_threshold": 83.96,
-      "hf": 1.4022796208578798
-    },
-    {
-      "user": "0xbc746fb9250d999bc0132c9eab63cbeee637ecef",
-      "collateral": 2342.89305636,
-      "debt": 1399.72749445,
-      "liq_threshold": 84.0,
-      "hf": 1.4060095090978442
-    },
-    {
-      "user": "0x2ef4ecf3da9da5f345f25f41fb18b41b142b3c41",
-      "collateral": 8662.83513382,
-      "debt": 5172.47061948,
-      "liq_threshold": 84.0,
-      "hf": 1.4068289697004313
-    },
-    {
-      "user": "0x68f7cc8f4b7299fddae4a3e6a3277f335db19021",
-      "collateral": 121.10959489,
-      "debt": 69.10340746,
-      "liq_threshold": 80.72,
-      "hf": 1.414786060432569
-    },
-    {
-      "user": "0xeff57c08d39d47eb88b7d9096ac2e5d6c32f0eb5",
-      "collateral": 84483.17708894,
-      "debt": 46240.45387632,
+      "user": "0xbdefa39baafd443c46f5c3afdcd238053825095c",
+      "collateral": 842.69307088,
+      "debt": 500.25909374,
       "liq_threshold": 78.0,
-      "hf": 1.4250915076575268
+      "hf": 1.3139203335062597
     },
     {
-      "user": "0x6046ed39fbdff8e5f0bba9221c8826986ab89159",
-      "collateral": 2484.04969944,
-      "debt": 1405.48332774,
-      "liq_threshold": 80.85,
-      "hf": 1.429095996426622
+      "user": "0x81545fbe953a26a208dc136ec70aa62670ef7018",
+      "collateral": 2823.29315044,
+      "debt": 1777.62204613,
+      "liq_threshold": 83.0,
+      "hf": 1.3182404662266598
     },
     {
-      "user": "0x101b6bdd507d5b5b0498628979ce61ad1825f6c1",
-      "collateral": 29914.52710615,
-      "debt": 16312.89897409,
+      "user": "0xbd1544dfd084b1e76bf07895ebbd1d4df940e98a",
+      "collateral": 10123.66855099,
+      "debt": 5980.64221043,
       "liq_threshold": 78.0,
-      "hf": 1.4303607948444754
+      "hf": 1.3203367116809108
     },
     {
-      "user": "0xed114bca333614d1d154222fadd0dac9596a8712",
-      "collateral": 15654.08780435,
-      "debt": 8850.00335365,
-      "liq_threshold": 80.95,
-      "hf": 1.4320225692176056
+      "user": "0xb5763583cc677e89e3fd996173617f876f64dc0a",
+      "collateral": 31149.45243212,
+      "debt": 19497.27621833,
+      "liq_threshold": 83.0,
+      "hf": 1.3260337099986
     },
     {
-      "user": "0xdbd1bac81ad581c7198c9d155ca468f32a0c29dd",
-      "collateral": 1788692.31371423,
-      "debt": 1049174.44465145,
-      "liq_threshold": 84.0,
-      "hf": 1.4320798139713597
+      "user": "0x19442fb7f2e2271f566c993a64fadfc006f5a444",
+      "collateral": 719.04509626,
+      "debt": 450.00267506,
+      "liq_threshold": 83.0,
+      "hf": 1.3262308492193433
     },
     {
-      "user": "0xeffafdbf8290545a5f63a12ea11b5de570a1ea5f",
-      "collateral": 77.13127829,
-      "debt": 45.14973839,
-      "liq_threshold": 84.0,
-      "hf": 1.4350088411132431
+      "user": "0xbb4d2dcaa5412040c59de4a1ff576289da83f9a3",
+      "collateral": 985.79435181,
+      "debt": 614.83286039,
+      "liq_threshold": 83.0,
+      "hf": 1.3307833148073682
     },
     {
-      "user": "0x765f209f6b90a80f262d5ec5e1d7865eb5f26cf9",
-      "collateral": 1702.72834697,
-      "debt": 957.87226448,
-      "liq_threshold": 81.14,
-      "hf": 1.442423297582857
+      "user": "0x6002ca2e11b8e8c0f1f09c67f551b209eb51a0e4",
+      "collateral": 8624.82829693,
+      "debt": 5097.07519515,
+      "liq_threshold": 78.66,
+      "hf": 1.3310340307568573
     },
     {
-      "user": "0xc0d0dade39d264c827b9aebe6c6aaf247e938ec3",
-      "collateral": 7192.39770242,
-      "debt": 3882.69815367,
+      "user": "0x06c92e2fa382b0e89c43885b4c6e2c97390f1148",
+      "collateral": 16630.98887246,
+      "debt": 10141.8162775,
+      "liq_threshold": 81.46,
+      "hf": 1.3358705110015046
+    },
+    {
+      "user": "0x8161074c5248f9f616c634e1803317ea4e8c4cbb",
+      "collateral": 84440.79653161,
+      "debt": 48689.36575223,
+      "liq_threshold": 78.38,
+      "hf": 1.3594648906603943
+    },
+    {
+      "user": "0x70d2ecf98e93a6e05fef3f5dd47a85b55f60fcfa",
+      "collateral": 65623.85228264,
+      "debt": 39497.12034586,
+      "liq_threshold": 82.5,
+      "hf": 1.3708271770439189
+    },
+    {
+      "user": "0x54015c2f05417af5f1f75ac75ce5a8b62ec7e972",
+      "collateral": 3826.16456986,
+      "debt": 2175.25151929,
       "liq_threshold": 78.0,
-      "hf": 1.4448896073149171
+      "hf": 1.3719831192049499
     },
     {
-      "user": "0xfbeabce32dbf90639e90a4eb8bd9dff2bf6ecfeb",
-      "collateral": 27299.73135492,
-      "debt": 15369.33752093,
-      "liq_threshold": 81.41,
-      "hf": 1.4461450869844508
-    },
-    {
-      "user": "0x338f08bd91bf20f9943630a926b60ebb5e3b39ca",
-      "collateral": 104367.69942656,
-      "debt": 60470.97529461,
-      "liq_threshold": 83.98,
-      "hf": 1.4495925009981543
-    },
-    {
-      "user": "0x7b8d33a910f19f6e9023bf28a72f0641eaba8143",
-      "collateral": 11.40299476,
-      "debt": 6.60746509,
-      "liq_threshold": 84.0,
-      "hf": 1.449650579750547
-    },
-    {
-      "user": "0xfbaf9d0b95fcbe3899bb254bace8dae6675d3773",
-      "collateral": 29400.89098392,
-      "debt": 15797.24163914,
+      "user": "0xb350832fde1c851647a2c10bbd96c0632a523f86",
+      "collateral": 2.49053331,
+      "debt": 1.3950242,
       "liq_threshold": 78.0,
-      "hf": 1.451689826152476
+      "hf": 1.3925321021671166
     },
     {
-      "user": "0xa067956ce441876791b6f5868a34387dc6a16daf",
-      "collateral": 2988.49416728,
-      "debt": 1663.15310917,
-      "liq_threshold": 80.9,
-      "hf": 1.4537559425566162
+      "user": "0xd57d2337a8f5cf7601a5c0790c08d88a5223d64d",
+      "collateral": 98780.57509482,
+      "debt": 54898.06636739,
+      "liq_threshold": 78.0,
+      "hf": 1.4034892974263824
     },
     {
-      "user": "0x6ab45fa315fc451f8fdfa9657b9869c6967874ac",
-      "collateral": 2902.32291741,
-      "debt": 1610.94157325,
+      "user": "0xd3facd6dc24c137a9871a791f2c844af8a3d278b",
+      "collateral": 19670.40783934,
+      "debt": 11548.50766121,
+      "liq_threshold": 83.0,
+      "hf": 1.4137271226385963
+    },
+    {
+      "user": "0x7ceb8e6ded5b113e14665bab33c83c85883061f3",
+      "collateral": 85872.54392552,
+      "debt": 49880.22948276,
+      "liq_threshold": 83.0,
+      "hf": 1.4289070478879005
+    },
+    {
+      "user": "0x52fd595f52e368c3a315c0db85c4c14fd7655053",
+      "collateral": 3232.76916986,
+      "debt": 1811.41402638,
+      "liq_threshold": 80.17,
+      "hf": 1.430898449606605
+    },
+    {
+      "user": "0xfb5ed713d7900aa88114c967f0ac8a9dd5bd03e1",
+      "collateral": 9244.88913393,
+      "debt": 5102.55754321,
+      "liq_threshold": 79.38,
+      "hf": 1.4383118310365628
+    },
+    {
+      "user": "0xb019664388882bbd6309f770a732c68d5c10b640",
+      "collateral": 192464.95143448,
+      "debt": 105972.06141509,
+      "liq_threshold": 79.26,
+      "hf": 1.4395861873166604
+    },
+    {
+      "user": "0xbc0d56377dfaac08157348e709af20c8f799df37",
+      "collateral": 345587.82654022,
+      "debt": 186836.73645339,
+      "liq_threshold": 78.19,
+      "hf": 1.4463508784383334
+    },
+    {
+      "user": "0x23462f71361b134125570da86792104cee0bac05",
+      "collateral": 11053.11608591,
+      "debt": 6018.8231002,
+      "liq_threshold": 79.52,
+      "hf": 1.460328114878461
+    },
+    {
+      "user": "0xf6d1dd5bf9ae70d4131fb2193b4ccbf077b80481",
+      "collateral": 85128.57925394,
+      "debt": 47685.17260251,
+      "liq_threshold": 82.48,
+      "hf": 1.4725657084962562
+    },
+    {
+      "user": "0x4a1b88c916aa34fec3210b88e31a248caac15535",
+      "collateral": 9.3694679,
+      "debt": 4.99992589,
+      "liq_threshold": 79.0,
+      "hf": 1.4803978706572387
+    },
+    {
+      "user": "0xfc7cbf81dee2d17cdd972322390d7759ba6baf3d",
+      "collateral": 169274.83479647,
+      "debt": 89367.20318733,
+      "liq_threshold": 78.83,
+      "hf": 1.4931725143292454
+    },
+    {
+      "user": "0x5596bf2732d5b2107f5d29e78f1096bfac087fbc",
+      "collateral": 8925.60375601,
+      "debt": 4933.90926519,
+      "liq_threshold": 82.56,
+      "hf": 1.4936552925070878
+    },
+    {
+      "user": "0xdf20f95dbac07058ee625ebd933706e371cb9f4a",
+      "collateral": 31181.55444892,
+      "debt": 17222.46756323,
+      "liq_threshold": 83.0,
+      "hf": 1.5027283458416214
+    },
+    {
+      "user": "0x8ab3a644a3ea05b514082099632b9e9cc539fd95",
+      "collateral": 1574.36787782,
+      "debt": 811.9788586,
+      "liq_threshold": 78.0,
+      "hf": 1.5123631997228457
+    },
+    {
+      "user": "0x49da97c4caa96138d9d7d9492b0cb96febf771ab",
+      "collateral": 612.25981689,
+      "debt": 332.88998024,
+      "liq_threshold": 82.23,
+      "hf": 1.512416324951325
+    },
+    {
+      "user": "0x1c5e5389ccaec969634dacd40759312d4316f594",
+      "collateral": 26861.01583484,
+      "debt": 14000.22308385,
+      "liq_threshold": 79.0,
+      "hf": 1.5157045985933058
+    },
+    {
+      "user": "0x1b2c5b95413487f27723a655e9f68eb6985fe1df",
+      "collateral": 628.23543535,
+      "debt": 340.38862011,
+      "liq_threshold": 83.0,
+      "hf": 1.5318826204354097
+    },
+    {
+      "user": "0x06b83208104d3792cd37ac77ad80784a1a602d69",
+      "collateral": 28861.37140139,
+      "debt": 14501.97199718,
+      "liq_threshold": 78.0,
+      "hf": 1.5523316206555753
+    },
+    {
+      "user": "0xcbb54eda2048b57d1b0afb19a73948e9d58b6973",
+      "collateral": 190.25830583,
+      "debt": 97.03754751,
+      "liq_threshold": 83.0,
+      "hf": 1.6273535130576797
+    },
+    {
+      "user": "0xc591b2c4236b2af8aa87e066137ccb5d1c29db0c",
+      "collateral": 1368.7659181,
+      "debt": 669.87814435,
+      "liq_threshold": 79.78,
+      "hf": 1.6303104485774824
+    },
+    {
+      "user": "0xa44acf351d5d15eb2cd859db43d32cc464284e4a",
+      "collateral": 3771.95397279,
+      "debt": 1902.23153425,
+      "liq_threshold": 83.0,
+      "hf": 1.6458153179812895
+    },
+    {
+      "user": "0x2739c31c46c11e945365ea987ab6ef6277886853",
+      "collateral": 96413.12057046,
+      "debt": 45017.16536334,
+      "liq_threshold": 78.0,
+      "hf": 1.6705235311461923
+    },
+    {
+      "user": "0xb7a5e516a4f441ecac0f405085c68c4101f74cec",
+      "collateral": 74505.55459092,
+      "debt": 35309.81449461,
+      "liq_threshold": 80.01,
+      "hf": 1.688299003314292
+    },
+    {
+      "user": "0x305d1239e09103efed3f8a0e5e3770345ced81d6",
+      "collateral": 94758.13624355,
+      "debt": 44529.54157725,
+      "liq_threshold": 79.96,
+      "hf": 1.7015999580090646
+    },
+    {
+      "user": "0xac0773710835a1a96b2228bea0c0ed63a6945904",
+      "collateral": 174398.57416505,
+      "debt": 83646.65282338,
+      "liq_threshold": 83.0,
+      "hf": 1.7305033933949876
+    },
+    {
+      "user": "0x000000064730640b7d670408d74280924883064f",
+      "collateral": 279171.78372828,
+      "debt": 133527.74889932,
+      "liq_threshold": 83.0,
+      "hf": 1.7353140632153083
+    },
+    {
+      "user": "0xcc9c37189f8ce8bd6e5c0ae0cce7a6bf40bff76a",
+      "collateral": 28615.61573672,
+      "debt": 13686.50142635,
+      "liq_threshold": 83.0,
+      "hf": 1.7353566350967495
+    },
+    {
+      "user": "0x9062bae1c225644013ba5af7ec8fd9ddc991029f",
+      "collateral": 284.73526631,
+      "debt": 130.78364027,
+      "liq_threshold": 81.46,
+      "hf": 1.773552654846132
+    },
+    {
+      "user": "0x9e02e1440c2e3b6578b4f902f0a4a1d537c17d55",
+      "collateral": 75651.53993125,
+      "debt": 33590.48904929,
+      "liq_threshold": 80.31,
+      "hf": 1.8087643005939245
+    },
+    {
+      "user": "0xb0e6686645136185390426b4a5c4083b2363337d",
+      "collateral": 8719.86771644,
+      "debt": 4000.92302488,
+      "liq_threshold": 83.0,
+      "hf": 1.808955123514848
+    },
+    {
+      "user": "0xd4f77c53f71eeb0910eb495bb0656d7882d58780",
+      "collateral": 1800.95225252,
+      "debt": 769.36627606,
+      "liq_threshold": 78.0,
+      "hf": 1.825843945434449
+    },
+    {
+      "user": "0xb92197bcf7793a69291740723f19cfbd152e91f5",
+      "collateral": 6747.41338092,
+      "debt": 3029.17938311,
+      "liq_threshold": 82.12,
+      "hf": 1.829281455007671
+    },
+    {
+      "user": "0x98d1333fe430e2cb5ec3b94cae59ef624aa53d3a",
+      "collateral": 6218.78014269,
+      "debt": 2813.72941939,
+      "liq_threshold": 82.91,
+      "hf": 1.8326522959324276
+    },
+    {
+      "user": "0x6a99ce9435493750e626a3e5ddf38f71a5ddc7e3",
+      "collateral": 10412.7231303,
+      "debt": 4660.90162241,
+      "liq_threshold": 83.0,
+      "hf": 1.8542678859804413
+    },
+    {
+      "user": "0x27d9ad548c2de460e12ef18d0c19713ade59f141",
+      "collateral": 14304.64094786,
+      "debt": 6015.66908855,
+      "liq_threshold": 78.0,
+      "hf": 1.8547595911762829
+    },
+    {
+      "user": "0x452accb5df760bcec94f1ed37f52c22138c92193",
+      "collateral": 21931.81205555,
+      "debt": 9737.50796541,
+      "liq_threshold": 83.0,
+      "hf": 1.86941094895834
+    },
+    {
+      "user": "0x2763601a5e6921832f246dc2bc5883f470748ade",
+      "collateral": 431.02400762,
+      "debt": 188.2267273,
+      "liq_threshold": 82.36,
+      "hf": 1.8861977302683517
+    },
+    {
+      "user": "0x99aa848ff3c8f9024e0de6c1e0d8d1a57f377534",
+      "collateral": 800.27231493,
+      "debt": 330.16264253,
+      "liq_threshold": 78.0,
+      "hf": 1.8906209402194294
+    },
+    {
+      "user": "0xb32cb14f2a5b17d1f1343749e302316be5133321",
+      "collateral": 2331472.94956285,
+      "debt": 971238.28833419,
+      "liq_threshold": 80.06,
+      "hf": 1.92204722788714
+    },
+    {
+      "user": "0xa6e029548152f098416c0ad60c18930b4f8619c6",
+      "collateral": 5630.20290255,
+      "debt": 2409.1920176,
+      "liq_threshold": 83.0,
+      "hf": 1.9396828376393753
+    },
+    {
+      "user": "0x2582483853229fa432c64faa1a669b6e98e0d304",
+      "collateral": 2680.61943084,
+      "debt": 1110.5599661,
+      "liq_threshold": 80.82,
+      "hf": 1.9509888871589318
+    },
+    {
+      "user": "0x07a92f07b414157f1b51dc6363c4e41483c9ae30",
+      "collateral": 41466.33265154,
+      "debt": 17287.64073985,
+      "liq_threshold": 81.42,
+      "hf": 1.9531889523198107
+    },
+    {
+      "user": "0xf46ccc8c1055b5ebc65d7d3d5c3c95f61131030a",
+      "collateral": 1280.58426082,
+      "debt": 500.20239281,
+      "liq_threshold": 78.0,
+      "hf": 1.9969031292079638
+    },
+    {
+      "user": "0xdf730de651f9cb0e49abf34e0e0c2104b7b96a95",
+      "collateral": 6499.24583944,
+      "debt": 2681.34055486,
+      "liq_threshold": 83.0,
+      "hf": 2.011819810414517
+    },
+    {
+      "user": "0x71185ca7f7a210cf869fe1bbfd54524f4e78769a",
+      "collateral": 4378.63820795,
+      "debt": 1754.19549381,
       "liq_threshold": 80.69,
-      "hf": 1.4537585257760062
+      "hf": 2.0142734818535635
     },
     {
-      "user": "0x28f40a2b1c94864601fe8e654a95c517e85cc9af",
-      "collateral": 1103.61466415,
-      "debt": 612.48699416,
-      "liq_threshold": 80.86,
-      "hf": 1.4570588162583427
-    },
-    {
-      "user": "0x21ef784c020ea6c959ffd22638fd3180a312f60d",
-      "collateral": 23737.92165337,
-      "debt": 12701.77025515,
+      "user": "0xc52c83744838d96b4b9e94d82621e545000b1d05",
+      "collateral": 124162.78336958,
+      "debt": 46894.88016023,
       "liq_threshold": 78.0,
-      "hf": 1.4577164062719021
+      "hf": 2.0651928461564792
     },
     {
-      "user": "0x625f02dada4d9f1ccea7b562db5b9afb2085a564",
-      "collateral": 3249.23865476,
-      "debt": 1799.67286018,
-      "liq_threshold": 80.84,
-      "hf": 1.4596005382156354
-    },
-    {
-      "user": "0xef5b53af3895711efa3570e1cc551d51b94e869b",
-      "collateral": 353.24818662,
-      "debt": 199.92351564,
-      "liq_threshold": 82.72,
-      "hf": 1.4617029226857587
-    },
-    {
-      "user": "0x48c0267f8f0ca8a2f7199a9ee5c3437f2437b8a8",
-      "collateral": 209.74126452,
-      "debt": 111.58514618,
-      "liq_threshold": 78.0,
-      "hf": 1.4661287091177606
-    },
-    {
-      "user": "0x39bd20ebedd26d7d63775675a08a2b15bfbe4a4f",
-      "collateral": 1331.80381076,
-      "debt": 734.0671403,
-      "liq_threshold": 80.81,
-      "hf": 1.4661779674694968
-    },
-    {
-      "user": "0x4c2073675883e3644b5b7ebc7c920128700fe9c4",
-      "collateral": 2144.29829239,
-      "debt": 1140.41246462,
-      "liq_threshold": 78.0,
-      "hf": 1.466620823564495
-    },
-    {
-      "user": "0xa1f0f29108611f1013e61515ddbe1ce29bd16707",
-      "collateral": 2090.72903926,
-      "debt": 1193.63134348,
-      "liq_threshold": 84.0,
-      "hf": 1.47131893157079
-    },
-    {
-      "user": "0x7272341064b2029c0c6cea0afe6cb4f6f49f9475",
-      "collateral": 13208.33897242,
-      "debt": 6988.7621737,
-      "liq_threshold": 78.0,
-      "hf": 1.4741529533309665
-    },
-    {
-      "user": "0x871183470748ba1273ad4c916ebd11d4cb59f7e5",
-      "collateral": 240.8794029,
-      "debt": 136.85997897,
-      "liq_threshold": 83.81,
-      "hf": 1.4751466573340217
-    },
-    {
-      "user": "0x406e68a6c524a4c680d88149abc96226d9cfc99e",
-      "collateral": 3832.45661639,
-      "debt": 2024.41397416,
-      "liq_threshold": 78.0,
-      "hf": 1.4766328423634654
-    },
-    {
-      "user": "0x2132400e8ab7afe2d574478a0b05143f84958d4b",
-      "collateral": 4713.23531976,
-      "debt": 2577.59357442,
-      "liq_threshold": 80.92,
-      "hf": 1.4796731692369347
-    },
-    {
-      "user": "0x3bc65e4717db38c533df78f772a9f4868e3cd591",
-      "collateral": 316.32288273,
-      "debt": 166.34820492,
-      "liq_threshold": 78.0,
-      "hf": 1.4832251940924641
-    },
-    {
-      "user": "0x0b8a2f66af09f2d576a1a37d82f230ffd84a7be2",
-      "collateral": 964.9116662,
-      "debt": 525.70523577,
-      "liq_threshold": 80.83,
-      "hf": 1.4836532900555708
-    },
-    {
-      "user": "0x73bff97a2d547d8676a29a13dd841b7e8beb6ce4",
-      "collateral": 20882.68538328,
-      "debt": 11025.83136628,
-      "liq_threshold": 78.36,
-      "hf": 1.4842491440076422
-    },
-    {
-      "user": "0x07997d229118a5bc00e13165f32cc4b027a56a0b",
-      "collateral": 4496.78766227,
-      "debt": 2527.51416931,
-      "liq_threshold": 84.0,
-      "hf": 1.4944729814662072
-    },
-    {
-      "user": "0x05b2288cfd2a069dc283435102f1e9babc1aeb03",
-      "collateral": 766.68648183,
-      "debt": 399.7875066,
-      "liq_threshold": 78.0,
-      "hf": 1.4958332763152935
-    },
-    {
-      "user": "0x2ffef93dd0f4dd23d5a72b691fa3ef7067d8ca3b",
-      "collateral": 1251.52673921,
-      "debt": 652.35792926,
-      "liq_threshold": 78.0,
-      "hf": 1.496403757506464
-    },
-    {
-      "user": "0xbf5d678ec5b5b26e49ef4436c7a2137681cea5d4",
-      "collateral": 2045.27957439,
-      "debt": 1103.33402345,
-      "liq_threshold": 81.06,
-      "hf": 1.5026633359036743
-    },
-    {
-      "user": "0x3a1b9226af7d67bcab6bee4ebd7b0817b9c7c775",
-      "collateral": 3512.87682253,
-      "debt": 1889.05371761,
-      "liq_threshold": 80.94,
-      "hf": 1.5051802211651135
-    },
-    {
-      "user": "0x2a832c6322ce1cfcfd83e69a0afa27f3a0a862a7",
-      "collateral": 28978.35636811,
-      "debt": 15046.02205156,
-      "liq_threshold": 78.3,
-      "hf": 1.50817700123404
-    },
-    {
-      "user": "0xe5ec006540be4f7cbb2cbc7be79708a6d96f90dc",
-      "collateral": 49996.9965803,
-      "debt": 25827.14583073,
-      "liq_threshold": 78.0,
-      "hf": 1.5099483926029986
-    },
-    {
-      "user": "0x7833f867bbe4a9b0a66cce820a3af345834c0579",
-      "collateral": 1115.58950939,
-      "debt": 584.98960887,
-      "liq_threshold": 79.35,
-      "hf": 1.5132348617052453
-    },
-    {
-      "user": "0x1cd57aa0ac3d855e8dac3dbc0367ecee86085424",
-      "collateral": 12249.34583386,
-      "debt": 6307.42582536,
-      "liq_threshold": 78.0,
-      "hf": 1.5148001760076937
-    },
-    {
-      "user": "0x5d54846e49faa98d3c5ede1fc106b7f5dc44a29d",
-      "collateral": 9723.31547217,
-      "debt": 5000.33124386,
-      "liq_threshold": 78.0,
-      "hf": 1.5167367317125968
-    },
-    {
-      "user": "0xf44be9b027ff6e8c8083514a559e9eabe43450ab",
-      "collateral": 9734.79454092,
-      "debt": 4999.67334283,
-      "liq_threshold": 78.14,
-      "hf": 1.5214544131180148
-    },
-    {
-      "user": "0xe8234fe01139d921a4aa23164ba5e60eb9d1267b",
-      "collateral": 104701.70623976,
-      "debt": 57729.26229115,
-      "liq_threshold": 84.0,
-      "hf": 1.5234809826225895
-    },
-    {
-      "user": "0xfdce93ff3df9b07150162b94c9749f75b4ebf6b8",
-      "collateral": 2542.51498259,
-      "debt": 1299.51961208,
-      "liq_threshold": 78.0,
-      "hf": 1.5260729180115784
-    },
-    {
-      "user": "0xf80d27241ee5dcabc90607db8a4a899b3e1ea3ed",
-      "collateral": 9912.05990875,
-      "debt": 5056.51921538,
-      "liq_threshold": 78.0,
-      "hf": 1.5289977946309417
-    },
-    {
-      "user": "0x23f6e32cd651e2f27905ea2b926344794029c692",
-      "collateral": 18940.80265356,
-      "debt": 9647.2049369,
-      "liq_threshold": 78.0,
-      "hf": 1.5314099995043922
-    },
-    {
-      "user": "0x49eeab803735c1c39beef8142b9be7255f641687",
-      "collateral": 27484.04850502,
-      "debt": 13959.37859405,
-      "liq_threshold": 78.0,
-      "hf": 1.535710038199915
-    },
-    {
-      "user": "0x441f96e71579aabc7e4f3214be237d76e2d5ebfe",
-      "collateral": 124553.12320993,
-      "debt": 66632.51651098,
-      "liq_threshold": 82.7,
-      "hf": 1.5460091220729568
-    },
-    {
-      "user": "0x8ffc180a6c72f03143ee60c08b6a5d9936f9be6b",
-      "collateral": 15.34101907,
-      "debt": 7.72009898,
-      "liq_threshold": 78.0,
-      "hf": 1.5499794634239263
-    },
-    {
-      "user": "0x30f4a032f63df12e9d35d187c2e163acbc6c5f1c",
-      "collateral": 5444.82421455,
-      "debt": 2830.61318515,
-      "liq_threshold": 80.71,
-      "hf": 1.5526477135095742
-    },
-    {
-      "user": "0x5bd33fb44ea137e47a6ee3f378850e63c40d413e",
-      "collateral": 1167.02554236,
-      "debt": 585.02175797,
-      "liq_threshold": 78.0,
-      "hf": 1.5559761848879463
-    },
-    {
-      "user": "0xf8683f02a189474961714d421e0610865e252f53",
-      "collateral": 21241.21793985,
-      "debt": 11466.51587057,
-      "liq_threshold": 84.0,
-      "hf": 1.556063173057558
-    },
-    {
-      "user": "0xaa4092b29643eeafe2ec66257595a70997ee4091",
-      "collateral": 40754.10212084,
-      "debt": 21998.03540575,
-      "liq_threshold": 84.0,
-      "hf": 1.5562046860128893
-    },
-    {
-      "user": "0xbd416ebf27cbd3df35f9c13733997b2e27f50a9e",
-      "collateral": 2296.04023278,
-      "debt": 1150.15928915,
-      "liq_threshold": 78.0,
-      "hf": 1.5570985675314015
-    },
-    {
-      "user": "0x456f1e5fa5d2e0335c4f71c1dda90fa3b4d17509",
-      "collateral": 11436.59562714,
-      "debt": 5726.24887096,
-      "liq_threshold": 78.0,
-      "hf": 1.557833896184411
-    },
-    {
-      "user": "0x0de7ab6ab2889be0e38383e909e4fc7b7fe95078",
-      "collateral": 581.93627107,
-      "debt": 291.18125762,
-      "liq_threshold": 78.0,
-      "hf": 1.5588582014202512
-    },
-    {
-      "user": "0xe3254397f5d9c0b69917ebb49b49e103367b406f",
-      "collateral": 277812.63889329,
-      "debt": 139003.44482834,
-      "liq_threshold": 78.0,
-      "hf": 1.5589099867587362
-    },
-    {
-      "user": "0xd776641c27cd5a39908408a3c80e03da3b48afaa",
-      "collateral": 5640.91266065,
-      "debt": 2912.20772213,
-      "liq_threshold": 80.5,
-      "hf": 1.5592950328061426
-    },
-    {
-      "user": "0xc45f944dbedb06d9f20c9a58ae783b05cec7d782",
-      "collateral": 9999.79453121,
-      "debt": 5000.57874977,
-      "liq_threshold": 78.0,
-      "hf": 1.5597874015487811
-    },
-    {
-      "user": "0xdbc75bb682c147f3df92e0948f5e19ac15628341",
-      "collateral": 2629.52294366,
-      "debt": 1362.47638287,
-      "liq_threshold": 80.83,
-      "hf": 1.5601490095500756
-    },
-    {
-      "user": "0xb998f5286610dec5b839731b6d97daedc8990ce4",
-      "collateral": 3540.99973486,
-      "debt": 1807.73406173,
-      "liq_threshold": 79.75,
-      "hf": 1.562155135451324
-    },
-    {
-      "user": "0xf27db063a453153be38f75c0c07daabfed0070b5",
-      "collateral": 77367.28649575,
-      "debt": 38626.83176942,
-      "liq_threshold": 78.32,
-      "hf": 1.568814036722927
-    },
-    {
-      "user": "0x0f807061a75ab6bc43f11485b75c0df7aab2174b",
-      "collateral": 482899.27942517,
-      "debt": 239350.01460095,
-      "liq_threshold": 78.0,
-      "hf": 1.573684624918914
-    },
-    {
-      "user": "0x511750599d773d603717066d1fb8ce13894bb451",
-      "collateral": 1687.91978272,
-      "debt": 900.97517816,
-      "liq_threshold": 84.0,
-      "hf": 1.5736866584719718
-    },
-    {
-      "user": "0x70080ba5cc1d9f5d102e8b830c7ac4b90f6643c0",
-      "collateral": 207818.72623946,
-      "debt": 104290.33150655,
+      "user": "0x7a3f6c397e02fa61546a519ec7377c145dbde5f2",
+      "collateral": 6797.44862651,
+      "debt": 2550.25782446,
       "liq_threshold": 79.0,
-      "hf": 1.5742283235417869
+      "hf": 2.105663350133455
     },
     {
-      "user": "0x43acb7ebe2dd0c66f36f34fd6531ed4d21d9024e",
-      "collateral": 0.01876052,
-      "debt": 0.01000279,
-      "liq_threshold": 84.0,
-      "hf": 1.5754441310874265
+      "user": "0x40f2899adb6734570265378d393636c39b101eb2",
+      "collateral": 13990.88405925,
+      "debt": 5301.68686636,
+      "liq_threshold": 80.33,
+      "hf": 2.120120120707683
     },
     {
-      "user": "0xb354af60d85e5fe431facdbb9388e4e4f70e1bbd",
-      "collateral": 17941.64210984,
-      "debt": 8992.91505389,
+      "user": "0x4fe6519eed2e70db0c2a5d6c82d15e19ca5ccef7",
+      "collateral": 5739.27444655,
+      "debt": 2120.87611305,
+      "liq_threshold": 78.79,
+      "hf": 2.1322714419895425
+    },
+    {
+      "user": "0x2669f6f5373d591e7432cb71ab0d12e46750c70a",
+      "collateral": 26538.28792838,
+      "debt": 9699.42839906,
       "liq_threshold": 79.0,
-      "hf": 1.576118219936093
+      "hf": 2.1614930901961196
     },
     {
-      "user": "0x3de8b0c05a4a430f856ca240491c9c3d2d6e33e9",
-      "collateral": 0.01879565,
-      "debt": 0.01000279,
-      "liq_threshold": 84.0,
-      "hf": 1.578394228010385
+      "user": "0xf45126f4cf742b106408a8058a98b36843ee88d9",
+      "collateral": 5412.01975889,
+      "debt": 2057.86714857,
+      "liq_threshold": 83.0,
+      "hf": 2.182831094320228
     },
     {
-      "user": "0x6191dcf86ed62e28c26a6da8a911856ea9c37d0c",
-      "collateral": 4059.87136429,
-      "debt": 2000.24759335,
-      "liq_threshold": 78.0,
-      "hf": 1.5831538428913368
-    },
-    {
-      "user": "0x65a8f7eab927149336aef5bc641933afc8fcbc1c",
-      "collateral": 9637.65895813,
-      "debt": 4912.91875914,
-      "liq_threshold": 80.7,
-      "hf": 1.583205664106108
-    },
-    {
-      "user": "0x6e547b2d18edd871b68aeaff153e34b4575382a0",
-      "collateral": 6092.56118293,
-      "debt": 2997.90180174,
-      "liq_threshold": 78.0,
-      "hf": 1.5851745777420716
-    },
-    {
-      "user": "0xbcec8197621f6669dc38668241d0b13d94c8d61e",
-      "collateral": 0.01888908,
-      "debt": 0.01000279,
-      "liq_threshold": 84.0,
-      "hf": 1.5862401589956403
-    },
-    {
-      "user": "0xfdbdd7aaa78f737265ecaa70adba5f03ac05d3dd",
-      "collateral": 10775.60950875,
-      "debt": 5277.5884,
-      "liq_threshold": 78.0,
-      "hf": 1.592578803004986
-    },
-    {
-      "user": "0x1bb0afe6da1fc6f87c2299143f39d0c5438e3249",
-      "collateral": 66489.25046003,
-      "debt": 32600.70390112,
-      "liq_threshold": 78.1,
-      "hf": 1.5930389610782851
-    },
-    {
-      "user": "0x5148944b33d6e29b7c7b2e2e7aa98f4b44f55b01",
-      "collateral": 225.31552285,
-      "debt": 110.20219966,
-      "liq_threshold": 78.0,
-      "hf": 1.5947604345940332
-    },
-    {
-      "user": "0x5b9e05c1eddfbc2d21a121871f2a15f1a940c9b7",
-      "collateral": 5715.96436672,
-      "debt": 2786.39247183,
-      "liq_threshold": 78.0,
-      "hf": 1.6000804808065867
-    },
-    {
-      "user": "0x313abd42357ccd3aec7554e9bdd662ca318befdc",
-      "collateral": 113.94226572,
-      "debt": 55.40102719,
-      "liq_threshold": 78.0,
-      "hf": 1.6042115420856693
-    },
-    {
-      "user": "0xe200641502e89abd58810ad1e2e7ca63efe9cd02",
-      "collateral": 1022.1545007,
-      "debt": 499.60230216,
-      "liq_threshold": 78.46,
-      "hf": 1.6053658345346085
-    },
-    {
-      "user": "0x92c7b6e8716eaf190406144fae3be372561fd0c8",
-      "collateral": 4599.89522228,
-      "debt": 2230.43684045,
-      "liq_threshold": 78.0,
-      "hf": 1.6086168450546765
-    },
-    {
-      "user": "0xae7cb005d6c2bad9b95d8632001757e995953c52",
-      "collateral": 825.4950754,
-      "debt": 399.96330955,
-      "liq_threshold": 78.0,
-      "hf": 1.6098630635305984
-    },
-    {
-      "user": "0x2c92c7c6b28d876edeb337ab5cb6372002e9f8a4",
-      "collateral": 28579.06871598,
-      "debt": 14506.501557,
-      "liq_threshold": 81.72,
-      "hf": 1.6101422899032471
-    },
-    {
-      "user": "0xc50fb8ec9c730a5e2af959060007920ede5a22c5",
-      "collateral": 783.73927359,
-      "debt": 379.52577104,
-      "liq_threshold": 78.0,
-      "hf": 1.6107381370309382
-    },
-    {
-      "user": "0x9461d75665e0e0da818960416485cec2fa6934a7",
-      "collateral": 3835.68864341,
-      "debt": 1999.83544046,
-      "liq_threshold": 84.0,
-      "hf": 1.6111217929627668
-    },
-    {
-      "user": "0xadc26a71569c6cad83a796679c3bada6d0aefe1c",
-      "collateral": 175386.28668833,
-      "debt": 84992.28777256,
-      "liq_threshold": 78.09,
-      "hf": 1.611602551489362
-    },
-    {
-      "user": "0xf46fb3dcc2690cb9ecf085ba1394a3c8b87a358e",
-      "collateral": 125.05003016,
-      "debt": 62.68057525,
-      "liq_threshold": 81.06,
-      "hf": 1.6172707554339172
-    },
-    {
-      "user": "0x730baadc8e0f914f7f2adaa8d8e9494f9ea1fe88",
-      "collateral": 97593.37743195,
-      "debt": 46673.87305507,
-      "liq_threshold": 78.0,
-      "hf": 1.630951738401077
-    },
-    {
-      "user": "0xcc0ee33b6a4721a12775444bc59c3588360a7c7c",
-      "collateral": 103.50606677,
-      "debt": 49.99621523,
-      "liq_threshold": 78.89,
-      "hf": 1.6333199392221274
-    },
-    {
-      "user": "0x113059060cb61249ecc2c43a1e6e605e1e4d9201",
-      "collateral": 408.98931467,
-      "debt": 210.09313408,
-      "liq_threshold": 84.0,
-      "hf": 1.6352320404339413
-    },
-    {
-      "user": "0x2e7becb53ea526bfce23eff5657c8256f5493050",
-      "collateral": 4201.0165744,
-      "debt": 1998.97632358,
-      "liq_threshold": 78.0,
-      "hf": 1.639235487373626
-    },
-    {
-      "user": "0xe25d9fbe91e9e87d821ed0e3f6af6fe5a9a58b56",
-      "collateral": 306.73893981,
-      "debt": 151.12988955,
-      "liq_threshold": 81.02,
-      "hf": 1.6444490055977812
-    },
-    {
-      "user": "0xbc7c46bac04350bae5e67d88f4db7ae6cc8c6e7a",
-      "collateral": 1671.25015894,
-      "debt": 832.72016456,
-      "liq_threshold": 82.22,
-      "hf": 1.6503095069241371
-    },
-    {
-      "user": "0x4153e46558b81aecd4b193fa85262ede74d6da25",
-      "collateral": 4379.90396723,
-      "debt": 2066.90188254,
-      "liq_threshold": 78.02,
-      "hf": 1.653475876677499
-    },
-    {
-      "user": "0x1da802833a24e9f0d3f37d6daa7616e6fafaa2c1",
-      "collateral": 6639.20099122,
-      "debt": 3233.33417846,
-      "liq_threshold": 80.76,
-      "hf": 1.6584977107275334
-    },
-    {
-      "user": "0x511cc534565efacb75f876104c744261b80d001f",
-      "collateral": 10542.54782179,
-      "debt": 4983.31468235,
-      "liq_threshold": 78.47,
-      "hf": 1.6601773900820334
-    },
-    {
-      "user": "0x3f4d0c87ef84606c302f1bf756b1a460992773ea",
-      "collateral": 129021.88549053,
-      "debt": 61268.21713218,
-      "liq_threshold": 79.0,
-      "hf": 1.6637674016096082
-    },
-    {
-      "user": "0x696f6d66c2da2aa4a400a4317eec8da88f7a378c",
-      "collateral": 183847.61677793,
-      "debt": 92091.29750203,
-      "liq_threshold": 84.0,
-      "hf": 1.6769445352863772
-    },
-    {
-      "user": "0x7599cb65a4ae2f56f3da0d877886ebe8c6b604f8",
-      "collateral": 11292.99935699,
-      "debt": 5648.12305919,
-      "liq_threshold": 84.0,
-      "hf": 1.6795171352431562
-    },
-    {
-      "user": "0xacd61ea5c9ae1ee03672acc51861bad96ab05178",
-      "collateral": 63.18689323,
-      "debt": 29.33327536,
-      "liq_threshold": 78.0,
-      "hf": 1.680200254425321
-    },
-    {
-      "user": "0x7fb01004c57795b9ed5ae0ad8240569d3585ceab",
-      "collateral": 54594.48098633,
-      "debt": 26180.04991642,
-      "liq_threshold": 80.6,
-      "hf": 1.6809627291359515
-    },
-    {
-      "user": "0x3d0942fd931d3ebe5d402f409252022ee4e23121",
-      "collateral": 20019.58266359,
-      "debt": 9997.59531557,
-      "liq_threshold": 84.0,
-      "hf": 1.6820494235474894
-    },
-    {
-      "user": "0x8f89be0705007822dcb4f5af2e4942bca02d3323",
-      "collateral": 123.05577991,
-      "debt": 57.00708395,
-      "liq_threshold": 78.0,
-      "hf": 1.6837119473429933
-    },
-    {
-      "user": "0x16ca5ddec5da94bbd333871bd811e41b21bc0dbd",
-      "collateral": 9428.36510174,
-      "debt": 4358.1909405,
-      "liq_threshold": 78.0,
-      "hf": 1.687426016840255
-    },
-    {
-      "user": "0x588e52e2f9eaad6da78e70236235f0b7d2edbf36",
-      "collateral": 421.94308946,
-      "debt": 210.01520855,
-      "liq_threshold": 84.0,
-      "hf": 1.687650135404444
-    },
-    {
-      "user": "0xe08b13c56672a65f0d5b524480eb559e7cb20822",
-      "collateral": 3990.08171458,
-      "debt": 1843.47219314,
-      "liq_threshold": 78.0,
-      "hf": 1.6882618294725986
-    },
-    {
-      "user": "0x9822c731b38009a05384ffd757c854f71ce751f9",
-      "collateral": 6739.31456273,
-      "debt": 3108.8226699,
-      "liq_threshold": 78.0,
-      "hf": 1.6908862026210356
-    },
-    {
-      "user": "0xf5d6e04621439c1bb2ad157c1bbae5d4e7436bac",
-      "collateral": 14692.25591207,
-      "debt": 6912.16177846,
-      "liq_threshold": 79.67,
-      "hf": 1.693522400073429
-    },
-    {
-      "user": "0x6f13bedd3255a01e677a5fbbaceb77e5dfa8971e",
-      "collateral": 68.24302665,
-      "debt": 31.40456272,
-      "liq_threshold": 78.0,
-      "hf": 1.6949626479944822
-    },
-    {
-      "user": "0x233ad7960300dea29584788d880c95e26c2e0413",
-      "collateral": 6559.38341719,
-      "debt": 3250.02682586,
-      "liq_threshold": 84.0,
-      "hf": 1.6953343358886315
-    },
-    {
-      "user": "0xd2d4576d4e52beb51b83e508c59870f7c78b5fe4",
-      "collateral": 107267.97859694,
-      "debt": 50682.28184747,
-      "liq_threshold": 80.36,
-      "hf": 1.7009487522096916
-    },
-    {
-      "user": "0x50e2a0e1fb442f5f700a01f100787935f2910367",
-      "collateral": 9150.29454901,
-      "debt": 4509.89113605,
-      "liq_threshold": 83.99,
-      "hf": 1.7043085916233487
-    },
-    {
-      "user": "0xa695dcedb157951ec66ae1b868d2aa679cc37211",
-      "collateral": 29763.5320868,
-      "debt": 14083.72210952,
-      "liq_threshold": 80.74,
-      "hf": 1.7063446139513503
-    },
-    {
-      "user": "0xd5cc7ca6098968605c0a0aabad431f2d87a14b55",
-      "collateral": 40741.79684852,
-      "debt": 18515.90103851,
-      "liq_threshold": 78.0,
-      "hf": 1.7162870700027715
-    },
-    {
-      "user": "0x37764fc2b53a0990b9f719f450739903e59da4b4",
-      "collateral": 3924.0232143,
-      "debt": 1782.49828854,
-      "liq_threshold": 77.99,
-      "hf": 1.7169807488804334
+      "user": "0xa359a3ed0f1b3a49c1772ad3f3447cb3e86067d4",
+      "collateral": 896.18972661,
+      "debt": 340.05733212,
+      "liq_threshold": 83.0,
+      "hf": 2.1873884278543168
     },
     {
       "user": "0x6d71ae149099f5c80b207d15b042e5ea773319c1",
-      "collateral": 1255.02917349,
-      "debt": 603.29465715,
-      "liq_threshold": 82.59,
-      "hf": 1.718225786295943
-    },
-    {
-      "user": "0x123567e3cad1cdbb81489da895607604c5fc19cd",
-      "collateral": 1450.6163526,
-      "debt": 674.76026164,
-      "liq_threshold": 79.95,
-      "hf": 1.7188956328142548
-    },
-    {
-      "user": "0xe32fa80e47fc41fa4595541f07e08083d5bfd00f",
-      "collateral": 15434.29481814,
-      "debt": 7529.28127602,
-      "liq_threshold": 84.0,
-      "hf": 1.721918357404073
-    },
-    {
-      "user": "0x4531c0a7384a9a3e14c33b7aa2cce678f80a7e6a",
-      "collateral": 5483.58147725,
-      "debt": 2666.17020938,
-      "liq_threshold": 83.99,
-      "hf": 1.7276493866971618
-    },
-    {
-      "user": "0xd26b28819ab597fd802d70f31928a82917aaad27",
-      "collateral": 25159.36241311,
-      "debt": 12225.6195753,
-      "liq_threshold": 83.99,
-      "hf": 1.7286538565054037
-    },
-    {
-      "user": "0x1c3b088416621ea74db763f108add6994547ef12",
-      "collateral": 6236.0232017,
-      "debt": 2834.56713367,
-      "liq_threshold": 78.77,
-      "hf": 1.733138970748553
-    },
-    {
-      "user": "0x6aff090fea4f525b2462e6fad66a3097cde8a1d3",
-      "collateral": 2936.82593133,
-      "debt": 1330.66299051,
-      "liq_threshold": 79.12,
-      "hf": 1.7462995873761298
-    },
-    {
-      "user": "0x957064ef5c6a43737eeec3e85fec9868b68faa92",
-      "collateral": 11220.72501568,
-      "debt": 5131.04348485,
-      "liq_threshold": 81.02,
-      "hf": 1.7718980402055169
-    },
-    {
-      "user": "0x18cafe5162abb3e710b9f78f0ad5ddbb58a526a1",
-      "collateral": 2620.03349076,
-      "debt": 1240.69120566,
-      "liq_threshold": 84.0,
-      "hf": 1.7738725979504657
-    },
-    {
-      "user": "0xd223ee50bf08f407a3f0a103181462309976fe96",
-      "collateral": 53.41361521,
-      "debt": 23.44874946,
+      "collateral": 3.68255699,
+      "debt": 1.30123977,
       "liq_threshold": 78.0,
-      "hf": 1.7767523140144463
+      "hf": 2.2074290368484513
     },
     {
-      "user": "0x4d24469946154c71ba6cb85b713d7545ff9f3aa9",
-      "collateral": 5100.76124726,
-      "debt": 2300.12531179,
-      "liq_threshold": 80.83,
-      "hf": 1.7924874823207122
-    },
-    {
-      "user": "0x037b93616145cc907f25aca6017360f28ea08920",
-      "collateral": 699.11376415,
-      "debt": 304.09820038,
+      "user": "0xbf4f201bb526d33de8e36ee7438102953f761d86",
+      "collateral": 8734.76508791,
+      "debt": 3010.64987988,
       "liq_threshold": 78.0,
-      "hf": 1.793199484099492
+      "hf": 2.263005344494379
     },
     {
-      "user": "0xb71cf003eba25e3bfc4185babe5dade3655f8e2f",
-      "collateral": 27763.01255534,
-      "debt": 12082.91112755,
-      "liq_threshold": 78.07,
-      "hf": 1.7938292232674296
+      "user": "0xc9da0543894635368e035eefb589a66bf4a82f8e",
+      "collateral": 10627.27091573,
+      "debt": 3715.67487364,
+      "liq_threshold": 82.09,
+      "hf": 2.348088281583517
     },
     {
-      "user": "0xc847a92349c98f322a6600f017bb1b5480175818",
-      "collateral": 20329.50814661,
-      "debt": 9514.06740753,
-      "liq_threshold": 83.99,
-      "hf": 1.7948857850560118
-    },
-    {
-      "user": "0x2685bd4fde633e8b13d3f891f9d7411ec99e2f39",
-      "collateral": 16657.46890734,
-      "debt": 7219.50816511,
-      "liq_threshold": 78.0,
-      "hf": 1.7996829493892863
-    },
-    {
-      "user": "0x5a2693d5b5e51e3d4c14ccd86c3e2d66348b47e9",
-      "collateral": 103.95354662,
-      "debt": 44.99610506,
-      "liq_threshold": 78.0,
-      "hf": 1.8020174469652195
-    },
-    {
-      "user": "0x26610d54281a6b513a18b130356e76d0593f2621",
-      "collateral": 1395.24468228,
-      "debt": 613.53308299,
-      "liq_threshold": 79.31,
-      "hf": 1.8038272716877082
-    },
-    {
-      "user": "0x3cf6c3b479bdf9da5b5b7396bb13175086ca5eb6",
-      "collateral": 49392.11406707,
-      "debt": 22190.05730366,
-      "liq_threshold": 81.57,
-      "hf": 1.81585981597146
-    },
-    {
-      "user": "0x3ea45089b1a73ac1010ad36b34c98fd496e5929c",
-      "collateral": 11549.74133876,
-      "debt": 5341.96893875,
-      "liq_threshold": 84.0,
-      "hf": 1.8161436046890567
-    },
-    {
-      "user": "0xfdec78207f7181783f6ee6f3db598f43c445a3fc",
-      "collateral": 2440.24932319,
-      "debt": 1094.83100812,
-      "liq_threshold": 81.62,
-      "hf": 1.81935911978123
-    },
-    {
-      "user": "0x95436a381e35998c97d265d39bddd209f01bdc6a",
-      "collateral": 8384.40101647,
-      "debt": 3593.2851121,
-      "liq_threshold": 78.0,
-      "hf": 1.8200149970912185
-    },
-    {
-      "user": "0x0ff29f2b54a0004f4354b28ab9b25b6f97238475",
-      "collateral": 15467.20094894,
-      "debt": 7131.43010885,
-      "liq_threshold": 83.98,
-      "hf": 1.821424820521201
-    },
-    {
-      "user": "0x38741b85840efd529d55d8567eee5064f719ea3c",
-      "collateral": 425995.54948512,
-      "debt": 192170.909708,
-      "liq_threshold": 82.17,
-      "hf": 1.8215544501775398
-    },
-    {
-      "user": "0x6eb88fe754875e4dc0cdfbad808795aaf7a3c78c",
-      "collateral": 11348.06811179,
-      "debt": 5224.98329208,
-      "liq_threshold": 84.0,
-      "hf": 1.8243842479559165
-    },
-    {
-      "user": "0x2bc29fc766a0bf6f1b1d6f6f12e29adf0103510c",
-      "collateral": 17004.14901456,
-      "debt": 7255.53488041,
-      "liq_threshold": 77.99,
-      "hf": 1.8280163282191284
-    },
-    {
-      "user": "0x688d781096decef2a7ef145b1e1ca8b5b5c852c0",
-      "collateral": 9166.19230916,
-      "debt": 4204.63772071,
-      "liq_threshold": 84.0,
-      "hf": 1.8312163974960096
-    },
-    {
-      "user": "0x572372831a9d6b2e3ee8fa284505599e6125fea9",
-      "collateral": 2.74905447,
-      "debt": 1.21410294,
-      "liq_threshold": 81.34,
-      "hf": 1.841953183804991
-    },
-    {
-      "user": "0xf21da6a1bbaa6660f1eb9b39a61eee9b46962593",
-      "collateral": 5144.83926041,
-      "debt": 2325.81859739,
-      "liq_threshold": 83.33,
-      "hf": 1.8435081266464015
-    },
-    {
-      "user": "0x7561c05878ed7538fe4809abf20741f7196f9a51",
-      "collateral": 6.6281731,
-      "debt": 2.99965935,
-      "liq_threshold": 84.0,
-      "hf": 1.856099228067347
-    },
-    {
-      "user": "0x9a3347c504bd7ea52b84d13a3167569874f3bb31",
-      "collateral": 5035.30504807,
-      "debt": 2269.85024317,
-      "liq_threshold": 83.8,
-      "hf": 1.8589748952161484
-    },
-    {
-      "user": "0xc6ddbbb107aade806f8172f3849504ddad78d9cd",
-      "collateral": 18710.86083712,
-      "debt": 7897.05995207,
-      "liq_threshold": 78.56,
-      "hf": 1.8615574204075882
-    },
-    {
-      "user": "0xed0b4ee13ab20356688f10ea83cb488190097df8",
-      "collateral": 4439.99157805,
-      "debt": 1860.31460028,
-      "liq_threshold": 78.0,
-      "hf": 1.8616170782929655
-    },
-    {
-      "user": "0x8f747d43b6bfe7a1ac2acf63b4d6b255eb3c7383",
-      "collateral": 77069.63287271,
-      "debt": 31976.41724015,
-      "liq_threshold": 77.27,
-      "hf": 1.8624892021862742
-    },
-    {
-      "user": "0xf5bc7af89cde21e8aafc619196f9eb0e6238b626",
-      "collateral": 10234.23737372,
-      "debt": 4283.59143117,
-      "liq_threshold": 78.0,
-      "hf": 1.8635542816021184
-    },
-    {
-      "user": "0x573136b286b3004b3fbab218024e1a51f3f6e73d",
-      "collateral": 55170.75816211,
-      "debt": 22958.62799841,
-      "liq_threshold": 78.0,
-      "hf": 1.8743799224163598
-    },
-    {
-      "user": "0x35800c965e850c9d957ff3d253dc01c501b6d8e1",
-      "collateral": 2860.85736198,
-      "debt": 1212.98417885,
-      "liq_threshold": 79.58,
-      "hf": 1.8771118189941096
-    },
-    {
-      "user": "0xeb993a7be55ddfb88e74a577e8353801e1975c7d",
-      "collateral": 2908.17559094,
-      "debt": 1290.90521287,
-      "liq_threshold": 83.5,
-      "hf": 1.8812002579203746
-    },
-    {
-      "user": "0x48e3b65e49bc47cd56f49fe98b6f8a990827c983",
-      "collateral": 26512.40488062,
-      "debt": 10985.4092713,
-      "liq_threshold": 78.0,
-      "hf": 1.8824674890275064
-    },
-    {
-      "user": "0xc6697aac097dc9fae8190ef4b01dff6152fcd1f9",
-      "collateral": 1159.78349,
-      "debt": 512.9981235,
-      "liq_threshold": 84.0,
-      "hf": 1.8990676319696127
-    },
-    {
-      "user": "0x09600a3bd6f169a5213f2de70884ec8950ac270d",
-      "collateral": 173.41185042,
-      "debt": 71.00431981,
-      "liq_threshold": 78.0,
-      "hf": 1.9049720311319747
-    },
-    {
-      "user": "0x13e9c4cf94ed69de062ea9304a48e37937eed81d",
-      "collateral": 12086.51110547,
-      "debt": 5266.88238375,
-      "liq_threshold": 83.46,
-      "hf": 1.915431285350658
-    },
-    {
-      "user": "0x4a2ae6dc29fb6f29ffb1501af31b3193a5adf3b9",
-      "collateral": 3639.99689689,
-      "debt": 1500.01131047,
-      "liq_threshold": 79.0,
-      "hf": 1.9170505772000386
-    },
-    {
-      "user": "0xa8d354d2828eae9e9fbf4b0044c41c2fd33b937f",
-      "collateral": 19773.11814954,
-      "debt": 8114.90677518,
-      "liq_threshold": 78.75,
-      "hf": 1.919055558213578
-    },
-    {
-      "user": "0x4047eb8eb2f7cab5da11bf8226f7ae2f1b88b2f5",
-      "collateral": 1366.65547529,
-      "debt": 574.19850269,
-      "liq_threshold": 80.65,
-      "hf": 1.9195682681636426
-    },
-    {
-      "user": "0x65dfc8a61a7bda894618630d8136a3c7498034f5",
-      "collateral": 78125.09496448,
-      "debt": 32096.64424063,
-      "liq_threshold": 78.92,
-      "hf": 1.9211290303363093
-    },
-    {
-      "user": "0xe6b3d7217ce8e6492364e6543ccd1b5e89db3e45",
-      "collateral": 14327.45290252,
-      "debt": 6231.08907406,
-      "liq_threshold": 84.0,
-      "hf": 1.9314537627489086
-    },
-    {
-      "user": "0x84d5fcdd8a64a1e961b310a39c4345e52eaf7ae1",
-      "collateral": 30000.87232067,
-      "debt": 12051.52628017,
-      "liq_threshold": 78.0,
-      "hf": 1.941719236726629
-    },
-    {
-      "user": "0x23fdd13de80bea3752ffb09e883d7fa237ec82e6",
-      "collateral": 2822.12535419,
-      "debt": 1138.71096967,
-      "liq_threshold": 78.56,
-      "hf": 1.947225037068348
-    },
-    {
-      "user": "0x96526cfccf28c560b9008af89904d0a4ce979c36",
-      "collateral": 17533.71159645,
-      "debt": 7318.70045482,
-      "liq_threshold": 81.32,
-      "hf": 1.9482968486689203
-    },
-    {
-      "user": "0x51c1ce246708b2a198f7e7e9dc3d154ee4cd9572",
-      "collateral": 3470.72784911,
-      "debt": 1388.78736913,
-      "liq_threshold": 78.0,
-      "hf": 1.9493032428727326
-    },
-    {
-      "user": "0x6796d511cc01aaa8a3fbfdadf1f260b64aac21d9",
-      "collateral": 20741.53832541,
-      "debt": 8313.92872485,
-      "liq_threshold": 78.13,
-      "hf": 1.949371140658222
-    },
-    {
-      "user": "0x5cb506ea627eef89e6524629927ff7dad4053859",
-      "collateral": 1596.90635528,
-      "debt": 687.90353057,
-      "liq_threshold": 84.0,
-      "hf": 1.949984669105723
-    },
-    {
-      "user": "0xcdab8d4485bcc58dcfbae7d300c7333292ba0b75",
-      "collateral": 3436.26346796,
-      "debt": 1391.74133909,
-      "liq_threshold": 79.32,
-      "hf": 1.9585780860174105
-    },
-    {
-      "user": "0x258b660a0d11fcea4a165d219f42dec6e995ae9d",
-      "collateral": 1300.35483603,
-      "debt": 556.55063605,
-      "liq_threshold": 83.95,
-      "hf": 1.9616682710266755
-    },
-    {
-      "user": "0x58aed1a810634171a944c59383587b9b8bdf3821",
-      "collateral": 14057.41161003,
-      "debt": 5743.23847351,
-      "liq_threshold": 80.5,
-      "hf": 1.9705011479016195
-    },
-    {
-      "user": "0x6ea8976847dd9b9a3ee786833fcc0cb68401f3a7",
-      "collateral": 16330.74879529,
-      "debt": 6455.50784164,
-      "liq_threshold": 78.0,
-      "hf": 1.973196280261997
-    },
-    {
-      "user": "0x1418f12decf9ea9b526099369c4ac894d39d26e2",
-      "collateral": 7388.64865618,
-      "debt": 2985.11828177,
-      "liq_threshold": 79.72,
-      "hf": 1.9732889762342276
-    },
-    {
-      "user": "0x1a87f12ac07e9746e9b053b8d7ef1d45270d693f",
-      "collateral": 507.09880671,
-      "debt": 200.02646683,
-      "liq_threshold": 77.93,
-      "hf": 1.9757676513337634
-    },
-    {
-      "user": "0x847e9bf21c9ef646ebe8725b78941b570f23af0f",
-      "collateral": 20543.39622377,
-      "debt": 8691.48250088,
-      "liq_threshold": 84.0,
-      "hf": 1.985444120288985
-    },
-    {
-      "user": "0xd9d1ea8f4973ef112270cbfbc079891b6a2a18c8",
-      "collateral": 354.26806177,
-      "debt": 143.41912129,
-      "liq_threshold": 81.15,
-      "hf": 2.0046353765552345
-    },
-    {
-      "user": "0x4cad4e85e819e6c34628d194fb4030ddf617e5e5",
-      "collateral": 22591.39699208,
-      "debt": 9015.99018425,
-      "liq_threshold": 80.54,
-      "hf": 2.018277344629087
-    },
-    {
-      "user": "0x576b69a7c0011573e19a354a5cf6308e926f7a6e",
-      "collateral": 340422.30675756,
-      "debt": 141605.43717414,
-      "liq_threshold": 84.0,
-      "hf": 2.0193768218426253
-    },
-    {
-      "user": "0xa51bb1db6813eb52e3c4037964e690307a198863",
-      "collateral": 980.11643726,
-      "debt": 380.90375353,
-      "liq_threshold": 78.72,
-      "hf": 2.0257300546785717
-    },
-    {
-      "user": "0xe54191c7820ce902964e98cb4f839f63c029df5c",
-      "collateral": 2716.35976796,
-      "debt": 1102.14266523,
-      "liq_threshold": 82.33,
-      "hf": 2.0293352978997987
-    },
-    {
-      "user": "0xa8809de68a16a41919d0c75ab4eb80dbe8589dc3",
-      "collateral": 5753.44635163,
-      "debt": 2208.55873906,
-      "liq_threshold": 78.0,
-      "hf": 2.031953271109935
-    },
-    {
-      "user": "0x40ff7383703c6f60e2d7633578440c1f81b24788",
-      "collateral": 3397.53940468,
-      "debt": 1403.26968084,
-      "liq_threshold": 84.0,
-      "hf": 2.0337737919505465
-    },
-    {
-      "user": "0x13c5132db71dc2e21008cfb8f9b2264c908dafe8",
-      "collateral": 1926.59687326,
-      "debt": 794.17766505,
-      "liq_threshold": 84.0,
-      "hf": 2.0377573492154455
-    },
-    {
-      "user": "0x69e2b192fb6d62604bbfd9db3fba77c4c146ddfd",
-      "collateral": 104897.7888911,
-      "debt": 40119.50613422,
-      "liq_threshold": 78.0,
-      "hf": 2.0394138218284112
-    },
-    {
-      "user": "0x4f782fde233bb54fe4979f2fe75cefd81f3ce154",
-      "collateral": 9102.07537817,
-      "debt": 3539.82709294,
-      "liq_threshold": 79.62,
-      "hf": 2.0474976212694496
-    },
-    {
-      "user": "0x7d350ab4e0e20c1ad9ed71670146000746ef19fc",
-      "collateral": 7157.36901346,
-      "debt": 2845.86898199,
-      "liq_threshold": 81.64,
-      "hf": 2.053260790155846
-    },
-    {
-      "user": "0x110f97ce2979e5a729034522f95324abf193f9f1",
-      "collateral": 10566.70291149,
-      "debt": 4060.01435127,
-      "liq_threshold": 78.96,
-      "hf": 2.055101717675658
-    },
-    {
-      "user": "0x57561e4e94ed65e69a12fbd26bd40f6c52511d25",
-      "collateral": 3069.28995563,
-      "debt": 1251.42430089,
-      "liq_threshold": 84.0,
-      "hf": 2.060215356930186
-    },
-    {
-      "user": "0x8192589b8079b8dc2a9269720b923972e3eeb0b5",
-      "collateral": 1649.26397703,
-      "debt": 632.93237156,
-      "liq_threshold": 79.39,
-      "hf": 2.0688882034397045
-    },
-    {
-      "user": "0x85b6aff51129d27cb82a09166653c2627b306667",
-      "collateral": 1592.33854352,
-      "debt": 600.0644613,
-      "liq_threshold": 78.0,
-      "hf": 2.0698177346727666
-    },
-    {
-      "user": "0x7af37a6e77ea85b1acb021dee6fd8127162f2d85",
-      "collateral": 26016.49591566,
-      "debt": 9918.24165718,
-      "liq_threshold": 79.39,
-      "hf": 2.0826118593860077
-    },
-    {
-      "user": "0x6b86e32cf7e1d780b3cd775520e427ba38f5a0b7",
-      "collateral": 3643.41696794,
-      "debt": 1368.56515569,
-      "liq_threshold": 78.41,
-      "hf": 2.087602926335322
-    },
-    {
-      "user": "0x6bc7177b055d0d2f09a3844dec61ca4b15042bb3",
-      "collateral": 3131.62608378,
-      "debt": 1202.897799,
-      "liq_threshold": 80.39,
-      "hf": 2.0930108005948727
-    },
-    {
-      "user": "0xc8b2306a9408333f5c87d7cefc80a611f6fbabe3",
-      "collateral": 131873.18114189,
-      "debt": 48946.75002022,
-      "liq_threshold": 78.0,
-      "hf": 2.1014895013087096
-    },
-    {
-      "user": "0xf5cae515c99e3145992752f981a4f012e7a46059",
-      "collateral": 193028.6601091,
-      "debt": 77066.22447667,
-      "liq_threshold": 84.0,
-      "hf": 2.1039576752683575
-    },
-    {
-      "user": "0x57fdaeba980544920bb89395540823f52bddf9c6",
-      "collateral": 3067.42747289,
-      "debt": 1207.05300488,
-      "liq_threshold": 84.0,
-      "hf": 2.134652800507098
-    },
-    {
-      "user": "0x22cae16ea6bcad0f3fa59defe13beedf5ad0e6d0",
-      "collateral": 12914.05036327,
-      "debt": 4704.62361349,
-      "liq_threshold": 77.99,
-      "hf": 2.141076284094222
-    },
-    {
-      "user": "0x0387edd0c1240449cc2ba1401255b7bc19b661d5",
-      "collateral": 191.90326768,
-      "debt": 75.00877458,
-      "liq_threshold": 84.0,
-      "hf": 2.149065169425942
-    },
-    {
-      "user": "0xfca88d5d0c03cfa090595dc73e2dbede32875fe6",
-      "collateral": 1680.05047441,
-      "debt": 619.7814079,
-      "liq_threshold": 79.47,
-      "hf": 2.154388531775769
-    },
-    {
-      "user": "0x3cec2aa40836e9136cf4d6958e154b9bc897dfdb",
-      "collateral": 89715.07252334,
-      "debt": 33446.48494955,
-      "liq_threshold": 81.51,
-      "hf": 2.1865469096386327
-    },
-    {
-      "user": "0xb2685c82ea6a3609b6b9b483e5877d7a9012f409",
-      "collateral": 2322.4562935,
-      "debt": 826.24849529,
-      "liq_threshold": 78.0,
-      "hf": 2.192458950614109
-    },
-    {
-      "user": "0x8f3864588c5a20436941159005afd17bf4e679e4",
-      "collateral": 6620.76349965,
-      "debt": 2346.88230778,
-      "liq_threshold": 78.0,
-      "hf": 2.2004492993140325
-    },
-    {
-      "user": "0xd45884ed9e7e75a4f8f2ba2fbdc3d17e194fddca",
-      "collateral": 14079.54055079,
-      "debt": 5307.6501282,
-      "liq_threshold": 83.06,
-      "hf": 2.2033744191202698
-    },
-    {
-      "user": "0x147f138fc56629622c77f0d6c126925d55e79ff2",
-      "collateral": 1131.88066927,
-      "debt": 400.43831481,
-      "liq_threshold": 78.0,
-      "hf": 2.2047513671350423
-    },
-    {
-      "user": "0x22bb3ea8468ce1749dda162d92d4d85f70f28e29",
-      "collateral": 1749.37701205,
-      "debt": 616.46409069,
-      "liq_threshold": 78.0,
-      "hf": 2.2134526406424055
-    },
-    {
-      "user": "0x78a14a6451ecd200fce3b08772fc9ecfb1d4f88d",
-      "collateral": 82120.34259693,
-      "debt": 28566.41353734,
-      "liq_threshold": 78.0,
-      "hf": 2.242278931580918
-    },
-    {
-      "user": "0xc5f35ebce3ea365dbffc6a5a27819b660d24716d",
-      "collateral": 3161.09302187,
-      "debt": 1103.03738551,
-      "liq_threshold": 80.03,
-      "hf": 2.293768561457396
-    },
-    {
-      "user": "0x78a91f0da383999cb67b16e22a785e4ebd775b60",
-      "collateral": 1272.83119264,
-      "debt": 465.99641739,
-      "liq_threshold": 84.0,
-      "hf": 2.2943914629343327
-    },
-    {
-      "user": "0x99eaa48c12dde279fe50ccd20d39a73f7dbac7e3",
-      "collateral": 3668.48462051,
-      "debt": 1244.9658873,
-      "liq_threshold": 78.0,
-      "hf": 2.2983906894055184
-    },
-    {
-      "user": "0x566d52689cc3fb49d69c95e8a6f6cd736cbf3a14",
-      "collateral": 1453.65909761,
-      "debt": 492.03512587,
-      "liq_threshold": 78.0,
-      "hf": 2.3044169745624505
-    },
-    {
-      "user": "0xd38aee643954879abcd51774fe538276a791c45f",
-      "collateral": 119.64348341,
-      "debt": 39.99713376,
-      "liq_threshold": 78.0,
-      "hf": 2.333215115357306
-    },
-    {
-      "user": "0xbd791c255683fe037cfd2ed6dbf07bc6833c0fb2",
-      "collateral": 1145.86961773,
-      "debt": 390.00087664,
-      "liq_threshold": 80.28,
-      "hf": 2.358989468862492
-    },
-    {
-      "user": "0xa8c798fd9d2dd140ca11af3db2040f103b478892",
-      "collateral": 3787.78749822,
-      "debt": 1250.10978269,
-      "liq_threshold": 78.0,
-      "hf": 2.363371833035439
-    },
-    {
-      "user": "0x628bc8e850160d5b537cfd286724025bba3ebcec",
-      "collateral": 15.2026515,
-      "debt": 5.00053412,
-      "liq_threshold": 78.0,
-      "hf": 2.3713603158056245
-    },
-    {
-      "user": "0x169450577569f31195134f4ab30dfb13382e0719",
-      "collateral": 7016.70315782,
-      "debt": 2307.17294984,
-      "liq_threshold": 78.0,
-      "hf": 2.3721795383736395
-    },
-    {
-      "user": "0x310b222776e08cc15256693200efd81d9a2ae210",
-      "collateral": 11205.69052003,
-      "debt": 3680.38344864,
-      "liq_threshold": 78.0,
-      "hf": 2.3748717294262436
-    },
-    {
-      "user": "0xd6b85439c3de0622d166b4baeaacf587719cef32",
-      "collateral": 149.32110704,
-      "debt": 49.0052177,
-      "liq_threshold": 78.0,
-      "hf": 2.376695155283434
-    },
-    {
-      "user": "0x90ca141fa3cd3408dc924f7d2f7d7d0e17eb7d22",
-      "collateral": 4594.34044767,
-      "debt": 1525.66752057,
-      "liq_threshold": 79.32,
-      "hf": 2.388628139167885
-    },
-    {
-      "user": "0x8e908a3db162ec1e00cecb06e1a747a44c00b60f",
-      "collateral": 58046.69597812,
-      "debt": 20268.28707322,
-      "liq_threshold": 84.0,
-      "hf": 2.4056904486045685
-    },
-    {
-      "user": "0x9000b2192d3e96ddad64a5f50ff2dfe579373901",
-      "collateral": 2876.8573215,
-      "debt": 1000.03664377,
-      "liq_threshold": 84.0,
-      "hf": 2.4164716014304255
-    },
-    {
-      "user": "0x451b6700e89724729aebba74beb998b3fe156095",
-      "collateral": 2836.86079065,
-      "debt": 982.57024607,
-      "liq_threshold": 84.0,
-      "hf": 2.4252343012391946
-    },
-    {
-      "user": "0x35f11d72d09fce228a4d59622c3265eecc7c0309",
-      "collateral": 1868190.89345519,
-      "debt": 628328.11998572,
+      "user": "0xcf79b82bcf7b0acc2dd294f458d71708a340c7ae",
+      "collateral": 141335.49071351,
+      "debt": 46046.26657575,
       "liq_threshold": 81.68,
-      "hf": 2.428763638193498
+      "hf": 2.50722092791881
     },
     {
-      "user": "0xc19bf9a410900a7e9c63f064746c005bf0fc595e",
-      "collateral": 2220.72188074,
-      "debt": 705.9707883,
+      "user": "0xf98dcce96bce410d337d81e4ecd57ba65ec7bbab",
+      "collateral": 62718.60105024,
+      "debt": 20762.3093739,
+      "liq_threshold": 82.99,
+      "hf": 2.5072566799981844
+    },
+    {
+      "user": "0xa39c29530d4101c84c0345c3ae91518143b2396a",
+      "collateral": 120.03824244,
+      "debt": 37.74389452,
+      "liq_threshold": 80.59,
+      "hf": 2.563187379363734
+    },
+    {
+      "user": "0x1f911af1cc8d9eb4062ed08b90fd238d2956f9b3",
+      "collateral": 944.34379125,
+      "debt": 250.05233388,
       "liq_threshold": 78.0,
-      "hf": 2.4535902840233708
+      "hf": 2.9457359815265245
     },
     {
-      "user": "0x349a0b39eaf147567067539f292a2f71da686c1d",
-      "collateral": 20.67638165,
-      "debt": 6.99548414,
-      "liq_threshold": 84.0,
-      "hf": 2.4827674880555155
-    },
-    {
-      "user": "0x94a3c2c3ddbfafaee2209548d8135a6e5972783e",
-      "collateral": 18308.19531714,
-      "debt": 5893.43301314,
-      "liq_threshold": 81.02,
-      "hf": 2.517006032248121
-    },
-    {
-      "user": "0x0e4b8556d7b6e50124160d4dda646d5435323385",
-      "collateral": 9.57507436,
-      "debt": 3.00031927,
-      "liq_threshold": 79.0,
-      "hf": 2.5211679417037507
-    },
-    {
-      "user": "0x26076a1a88327ab9815b3973b912f0b34d8eba27",
-      "collateral": 532.93042979,
-      "debt": 163.01784578,
-      "liq_threshold": 78.0,
-      "hf": 2.549940058692634
-    },
-    {
-      "user": "0x4fc6bf456664932ba486b7552c924a31fe289c55",
-      "collateral": 9654.24222081,
-      "debt": 3001.2427406,
-      "liq_threshold": 79.5,
-      "hf": 2.5574459657091024
-    },
-    {
-      "user": "0x14b81a1b2511162878eb99a32549459793819b9b",
-      "collateral": 2594.16515264,
-      "debt": 799.46363811,
-      "liq_threshold": 79.11,
-      "hf": 2.5670700013300944
-    },
-    {
-      "user": "0x4a16ffa1e36da886af3c7636d314dcf7701c8c5f",
-      "collateral": 1684.48124485,
-      "debt": 497.51896549,
-      "liq_threshold": 76.17,
-      "hf": 2.579038370457639
-    },
-    {
-      "user": "0xdc2968f9835412dff4c635f722d07dd2144fdd0c",
-      "collateral": 127.39976589,
-      "debt": 38.35266367,
-      "liq_threshold": 78.0,
-      "hf": 2.591001716314428
-    },
-    {
-      "user": "0xd675176b40d8cdcdaaf6e2672d10e9db20aec509",
-      "collateral": 4985.59582724,
-      "debt": 1500.04787602,
-      "liq_threshold": 78.0,
-      "hf": 2.5924270867707633
-    },
-    {
-      "user": "0x679f51afaf83736050101e2506bc2b3c69c0eb6b",
-      "collateral": 9262.88409152,
-      "debt": 3000.25264096,
-      "liq_threshold": 84.0,
-      "hf": 2.5933891468510284
-    },
-    {
-      "user": "0x62c0e669df01517972c4dc8563a12bfe9e85cfac",
-      "collateral": 28001.00005347,
-      "debt": 8999.69273637,
-      "liq_threshold": 84.0,
-      "hf": 2.613515898144081
-    },
-    {
-      "user": "0x2ba21e6d8055374b6a279c65c04fa3ee390fef60",
-      "collateral": 8818.15544809,
-      "debt": 2627.09523576,
-      "liq_threshold": 78.0,
-      "hf": 2.618162126703563
-    },
-    {
-      "user": "0xa1c015c57470e25b7b4787583b2753f3d5a622b0",
-      "collateral": 18958.26458489,
-      "debt": 6003.28295031,
-      "liq_threshold": 82.93,
-      "hf": 2.6189757852765743
-    },
-    {
-      "user": "0x7d38bb731c70ec494de07ed2ef0c5782746f2f3d",
-      "collateral": 7084.57788659,
-      "debt": 2109.45725662,
-      "liq_threshold": 78.0,
-      "hf": 2.619617313504852
-    },
-    {
-      "user": "0x05807ad96240b0bd88061377c594a3df66b3c513",
-      "collateral": 14953.13475438,
-      "debt": 4437.72540191,
-      "liq_threshold": 78.0,
-      "hf": 2.6282484949150855
-    },
-    {
-      "user": "0x5aae36e9d131a71bc28011098bed7aebf7421d99",
-      "collateral": 1126.25602813,
-      "debt": 330.1762422,
-      "liq_threshold": 78.0,
-      "hf": 2.6606387429900913
-    },
-    {
-      "user": "0x3357c689c98cb7be9ae57ef4be2806d88df806f0",
-      "collateral": 13896.7347057,
-      "debt": 4068.16129717,
-      "liq_threshold": 78.0,
-      "hf": 2.6644600050608664
-    },
-    {
-      "user": "0xf56125d40d0179c0c584bdf2b9e15b48657f18e8",
-      "collateral": 1921.16361322,
-      "debt": 603.11014306,
-      "liq_threshold": 84.0,
-      "hf": 2.675759069341758
-    },
-    {
-      "user": "0xb61dfba25c714f4e808210846916ad469ac256e6",
-      "collateral": 4519.65319641,
-      "debt": 1415.65500122,
-      "liq_threshold": 83.99,
-      "hf": 2.6817273808935034
-    },
-    {
-      "user": "0x3581a8582a4949ba434769250ce8416840223037",
-      "collateral": 958.96605256,
-      "debt": 299.9323498,
-      "liq_threshold": 84.0,
-      "hf": 2.6857105766935185
-    },
-    {
-      "user": "0xe926a7049cfdce001f46442cdd6f16c655bd535e",
-      "collateral": 5212.78981862,
-      "debt": 1531.68533002,
-      "liq_threshold": 81.5,
-      "hf": 2.773961942465507
-    },
-    {
-      "user": "0x7860b424c2c2591e8a7057b4a0da66550033f4bf",
-      "collateral": 1936.08908226,
-      "debt": 544.39391688,
-      "liq_threshold": 78.0,
-      "hf": 2.7740013937291663
-    },
-    {
-      "user": "0x3b800505ab475164e5ad290a4eb113bfe40f1bfd",
-      "collateral": 3595.70288337,
-      "debt": 1003.56553079,
-      "liq_threshold": 78.0,
-      "hf": 2.7946837181831063
-    },
-    {
-      "user": "0x660cf14c1ed4c36346a9c5a3afdfd85a93470146",
-      "collateral": 1820.92992298,
-      "debt": 500.05950738,
-      "liq_threshold": 78.0,
-      "hf": 2.8403126407215398
-    },
-    {
-      "user": "0xd042d5b5237df1451331aa00ffab95a7fb3598ab",
-      "collateral": 48376.62079526,
-      "debt": 13953.22482131,
-      "liq_threshold": 83.22,
-      "hf": 2.885607090533001
-    },
-    {
-      "user": "0xf5b2123003dc60c87cc75beb189cf1424b5560a1",
-      "collateral": 6748.09368555,
-      "debt": 1852.59600559,
-      "liq_threshold": 79.36,
-      "hf": 2.890876390034417
-    },
-    {
-      "user": "0xf3fc627789d8b9811ab2b1efae04223a6964bdcd",
-      "collateral": 649.75270993,
-      "debt": 175.22282751,
-      "liq_threshold": 78.0,
-      "hf": 2.8923578106081895
-    },
-    {
-      "user": "0xe8e7a3548c912b5bc0f4f8acaf8e7efebae40391",
-      "collateral": 649.75270993,
-      "debt": 175.22282152,
-      "liq_threshold": 78.0,
-      "hf": 2.8923579094835707
-    },
-    {
-      "user": "0xa92501d076308062b38e1e037efb47093cf62492",
-      "collateral": 649.75270993,
-      "debt": 175.22281352,
-      "liq_threshold": 78.0,
-      "hf": 2.8923580415375123
-    },
-    {
-      "user": "0x9f74ddc00be5435d234842040ba1a6f63ae82442",
-      "collateral": 1302.89781329,
-      "debt": 349.96114306,
-      "liq_threshold": 78.46,
-      "hf": 2.9211858946801095
-    },
-    {
-      "user": "0x4b1f0d892d12040e7b45af2682b9a85c134f8241",
-      "collateral": 173.75473514,
-      "debt": 40.00551874,
-      "liq_threshold": 67.52,
-      "hf": 2.9325832826283706
-    },
-    {
-      "user": "0x1a1e7c4ffaaa4e8adc2f290506e124eabffd8845",
-      "collateral": 190.73372153,
-      "debt": 49.99922686,
-      "liq_threshold": 78.0,
-      "hf": 2.9754920653067076
+      "user": "0x7c0ce0abc10e8b0907e4ae8d9835029f0112080e",
+      "collateral": 1846.0007094,
+      "debt": 495.17571421,
+      "liq_threshold": 80.26,
+      "hf": 2.9922071351920874
     }
   ]
 }

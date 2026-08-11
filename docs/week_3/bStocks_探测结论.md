@@ -1,0 +1,392 @@
+# Binance Stock / bStock / TradFi Perp / BSC 四层市场:两天证伪
+
+> 开工 2026-08-11　|　起因:[清算线收口](16天原型.md#这条线到此为止)后换方向
+> 源文档:[`Binance_Equity_bStocks_TradFi_Arbitrage_Observer_v0.1.md`](../../Binance_Equity_bStocks_TradFi_Arbitrage_Observer_v0.1.md)
+> 脚本:[`equity_probe.py`](../../equity_probe.py) / [`h2_probe.py`](../../h2_probe.py) / `probe_a.py`
+
+## 一句话结论
+
+> **不是"有肉但够不着",是"连肉都没有"。**
+> 三条套利假设(bStock↔Perp、Stock↔bStock、CEX↔DEX)在**扣费之前**就已经不成立。
+> 唯一活着的东西是个意外发现:**bStock 现货 maker 费率 = 0** ——
+> 但那指向做市,不是套利。
+
+对照清算线:那条线的结论是"**有 $25 万/年,但 92.3% 被 SVR 回收**";
+这条线的结论是"**毛价差本身就小于手续费**"。**后者更干脆。**
+
+---
+
+## 0. 为什么没按原文档的 Day 1 开始
+
+原文档把 `eligibility_check` 放在 **§50**,把 7 天的采集器骨架(§35,约 40 个文件)放在最前面。
+
+改成先做两件最便宜、最可能一票否决的事:
+
+```
+Gate 0   资格 + 接口是否真实存在        (原文档 §50 → 提到第 0 位)
+Probe A  链上池子称重                    (原文档 Day 6 → 提到第 1 位)
+```
+
+理由:**原文档 §49「当前官方能力核对」是把一份 LLM 写的接口清单当成已确认事实。**
+按清算线学到的规矩(别信文档,自己问),这一节必须先验证再使用。
+
+结果证明这个顺序是对的 —— **两天出结论,而不是七天出骨架。**
+
+---
+
+## 1. Gate 0:接口是真的,但门有两道
+
+### 1.1 第一道门:出口 IP
+
+```
+出口 IP 在美国(San Jose)     → /fapi/* 和 /sapi/v1/equity/* 全部 451
+                                "Service unavailable from a restricted location"
+出口 IP 在新加坡              → /fapi/* 全通
+```
+
+**美国是无条件封禁,和 bStocks 的地区资格是两回事。** 这一条 15 分钟就能测完,
+但它能一票否决整个项目。
+
+### 1.2 第二道门:API key
+
+```
+[400] /sapi/v1/equity/market/exchangeInfo       -2014 API-key format invalid
+[400] /sapi/v1/equity/market/tokenized-assets   -2014
+[400] /sapi/v1/equity/market/quote?symbol=NVDA  -2014
+```
+
+带一个**格式合法但不存在**的 key 再打,错误码变成 `-2008 Invalid Api-Key ID` ——
+**说明这几个接口只校验 `X-MBX-APIKEY` 头,不需要 HMAC 签名。**
+所以一个**纯只读 key** 就够,不必开任何交易权限。
+
+> **可迁移的一条:用假 key 探错误码的变化,能在没有真 key 的情况下
+> 判断接口的鉴权级别。** `-2014`(格式错) → `-2008`(ID 不存在) 这个跃迁
+> 说明服务端已经进到"查这个 key 存不存在"那一步,即 MARKET_DATA 级。
+
+### 1.3 意外:bStock 根本不需要 equity 接口
+
+```
+/api/v3/exchangeInfo  →  NVDABUSDT / QQQBUSDT / SPYBUSDT ... 共 14 个
+```
+
+**bStock 就在普通现货上,行情完全公开。**
+所以 H1(bStock↔Perp)和 H3(CEX↔DEX)**用公开数据就能测完**,
+只有 H2(Direct Stock)那条腿被 key 卡住。
+
+### 1.4 盘子比原文档以为的大得多
+
+`/fapi/v1/exchangeInfo` 858 个 symbol,其中 **157 个 `TRADIFI_PERPETUAL`**:
+
+```
+EQUITY      133   美股
+HK_EQUITY    11   腾讯/美团/快手/泡泡玛特/CSOP 杠杆 ETF  ← 原文档不知道存在
+KR_EQUITY     3   三星/SK海力士/现代               ← 原文档不知道存在
+COMMODITY     8   XAU/XAG/XPT/XPD/CL/BZ/NATGAS/COPPER
+PREMARKET     2   OPENAIUSDT / ANTHROPICUSDT (Pre-IPO)
+```
+
+`/fapi/v1/tradingSchedule` 覆盖 4 个市场,当时 `EQUITY=OVERNIGHT`、`HK/KR=REGULAR`。
+
+三层 universe 的实际规模:
+
+```
+Direct Stock   7,924 个   ← 绝大多数没有 bStock 也没有永续
+bStock            67 个   ← 其中只有 14 个上了现货交易对
+TradFi Perp      157 个
+```
+
+**三条腿的交集其实很小**,原文档设想的"动态取交集"是对的,
+但没料到分母差两个数量级。
+
+---
+
+## 2. Probe A:H3(CEX↔DEX)结案 —— 结构性不成立
+
+### 2.1 池子是真的
+
+DexScreener 定位 + 链上核实,全部是 **PancakeSwap V3**:
+
+| 池子 | TVL | 24h 量 | fee 档 | $25k 冲击 |
+|---|---:|---:|---:|---:|
+| QQQB/USDT | $1.89M | $11.1M | **0.01%** | 3.3 bp |
+| NVDAB/USDT | $1.32M | $5.29M | 0.25% | 1.5 bp |
+| SPYB/USDT | $689k | $6.64M | **0.01%** | 3.5 bp |
+| AAPLB/USDT | $314k | $338k | 0.25% | 37.8 bp |
+| TSLAB/USDT | $288k | $245k | 0.25% | — |
+| CRCLB/USDT | $156k | $323k | 0.25% | — |
+| MSTRB/USDT | $36k | $2.8k | 0.25% | — |
+| COINB | ~$0 | — | — | 无流动性 |
+
+**深度不差** —— QQQB 吃 $25,000 只有 3.3bp 冲击。这不是玩具池。
+
+报价用 **QuoterV2 `quoteExactInputSingle` 逐档模拟**,不是读 `sqrtPriceX96`
+推出来的瞬时中价(原文档 §10.1 明确禁止,这条是对的)。
+
+### 2.2 但三方对齐后,十二个方向全负
+
+CEX 现货 / TradFi 永续 / 链上 effective price 同一轮抓取,notional $1,000:
+
+```
+sym    CEX→DEX   DEX→CEX     bS→Perp   Perp→bS   pool fee
+QQQ       -1.2      -1.9        11.7     -12.7    0.01%
+SPY       -0.9      -1.5         3.1      -3.4    0.01%
+NVDA     -37.8     -18.3         0.0      -6.4    0.25%
+AAPL     -39.8     -16.1         3.9      -7.1    0.25%
+TSLA     -36.8     -19.5         6.3      -8.1    0.25%
+CRCL     -59.9      -5.1         8.9     -13.4    0.25%
+```
+
+**CEX↔DEX 六个标的、两个方向,十二个组合全部为负 —— 而且是扣任何手续费之前。**
+
+### 2.3 原因是结构性的,不是"今天恰好没有"
+
+费率档把池子劈成两类,**两类死法不同**:
+
+```
+0.25% 档 (NVDAB/AAPLB/TSLAB/CRCLB)
+  单边 25bp 池子费 > 任何观察到的价差
+  → 结构上不可能,不用再看
+
+0.01% 档 (QQQB/SPYB)
+  DEX 价格被钉在 CEX ±2bp 以内
+  → 不是"还没人做",是已经有人做得很紧
+```
+
+**TVL $1.9M + 日均量 $11M + 恰好选 0.01% 费率档 —— 这是专业 CEX↔DEX 做市商的配置,
+不是散户 LP 随手建的池子。**
+
+> **这个结论不依赖样本窗口,所以比 H1/H2 都硬。**
+> 0.25% 那档是算术问题;0.01% 那档是"位置已经被占了"。
+
+---
+
+## 3. H1(bStock ↔ TradFi Perp):量级定住了
+
+公开数据 logger,3 秒一轮,18.4 分钟,**1,484 个 (标的×时刻) 观测**:
+
+```
+全样本最大毛价差       CRCL  +13.4 bp
+毛价差 > 15bp 的占比    0.00%
+毛价差 > 30bp 的占比    0.00%
+```
+
+对上实测成本(见 §5):bStock taker 10bp + 永续 taker,**单边开仓就已经吃掉全部**。
+
+### 一个比"数值小"更要紧的观察
+
+QQQ 的 `+11.7bp` 是个**常数**:
+
+```
+中位 11.7   p95 12.4   max 12.6
+```
+
+**中位 ≈ 最大,意味着它不是波动,是水平。**
+持续不收敛的 basis 不是套利,是 carry —— 你没法靠往返吃掉它。
+
+### 限定
+
+- **18 分钟、OVERNIGHT 时段、平静盘。这是定量级,不是判死刑。**
+  样本没覆盖任何一次开盘跳空或高波动。
+- **venue skew 中位 1,678ms / p90 4,669ms** —— 顺序打两个 REST 造成的,
+  不是市场本身的。真要测 RTH 必须换 WebSocket。
+
+---
+
+## 4. H2(Direct Stock ↔ bStock):唯一需要 key 的一条
+
+### 4.1 先踩了一个自己造的坑
+
+第一版探针:**开头抓一次 bStock 现货全量快照,然后顺序遍历 66 个股票。**
+整个循环跑了 **145 秒** —— 表格最后几行的现货数据已经陈旧两分半。
+
+```
+sym     ...  買股→賣bS   買bS→賣股   age_ms
+AAOI    ...      11.3      -39.8      3886
+...
+WDC     ...       1.8      -27.9    145163   ← 现货数据陈旧 145 秒
+```
+
+**算出来的全是原文档 §12 说的"幽灵套利"。**
+
+是我自己加的 `age_ms` 列把它抓出来的。
+
+> **可迁移的一条:staleness 列不是装饰,是判据。**
+> 而且 —— **知道该防的坑,和没在自己代码里防住,是两件事。**
+> 这次和清算线那次「加了免责声明然后照样把它当结论用」是同一个病根。
+
+改成**逐标的成对抓取**(股票 quote → 立刻抓该 bStock 单symbol bookTicker),
+skew 从 145 秒降到:
+
+```
+n=66   中位 828ms   p90 2,335ms   max 5,965ms
+```
+
+### 4.2 结果(只取 skew ≤ 1500ms 的 56 个)
+
+```
+毛价差为正         22 / 56
+其中 > 15bp         1 / 56
+```
+
+那唯一一个是 **KORU +28.9bp** —— Direxion 3 倍做多韩国 ETF,
+股票腿 spread 11.6bp,冷门标的。**宽 spread 上算出来的价差是噪声,不是机会。**
+
+流动标的里最好的:
+
+```
+SPY   +12.7 bp    (股 spread 5.8bp / bS spread 0.5bp)
+TSM   +10.9 bp
+QCOM  +10.4 bp
+```
+
+对上 bStock taker 10bp + **未知的股票佣金** —— 佣金只要超过 ~2bp 就归零。
+
+### 4.3 multiplier 不全是 1(这条差点造成假 alpha)
+
+`/sapi/v1/equity/market/tokenized-assets` 返回 67 个,**4 个的 multiplier ≠ 1**:
+
+```
+IBM   1.0050058     不归一化 → 凭空 50.1 bp 假价差
+NOK   1.00234942    →  23.5 bp
+AAPL  1.00060391    →   6.0 bp
+MU    1.00010751    →   1.1 bp
+```
+
+**IBM 那 50bp 比全天测到的任何真实价差都大。**
+不做 `bstock_price / multiplier` 归一化,会得到一个稳定复现、
+看起来极漂亮、但完全不存在的套利。原文档 §21 那条警告是真的。
+
+> 另外:**该接口不返回链上合约地址**(字段只有 `assetCode` / `assetName` /
+> `underlyingEquitySymbol` / `multiplier` / `multiplierValid`)。
+> 所以 Probe A 用的 BSC 地址来自 DexScreener,**至今没有官方来源可对账** ——
+> 这一条按原文档 §46「不得根据 ticker 猜地址」的标准,属于**未核实**,
+> 不是"核实失败"。两者不能混。
+
+---
+
+## 5. 实测成本表(这是本次最有价值的产出)
+
+| 项 | 值 | 状态 |
+|---|---:|---|
+| bStock 现货 **maker** | **0.00 bp** | ✅ 实测 |
+| bStock 现货 taker | **10.00 bp** | ✅ 实测 |
+| 普通币对(BTCUSDT)maker/taker | 10 / 10 bp | ✅ 对照组 |
+| PancakeSwap 池子费 | 1 或 25 bp / 边 | ✅ 链上读 `fee()` |
+| BSC gas | ~$0.1–0.3 / 笔 | ✅ |
+| TradFi 永续 commission | — | 🔴 未取(见 §6.2) |
+| Direct Stock 佣金 | — | 🔴 **API 无此字段** |
+
+**`bStock maker = 0` 是本次唯一的正面发现。** 14 个 bStock 交易对全部是 0/10,
+而 BTCUSDT 是 10/10 —— **这是个针对 bStock 的专门补贴,不是账户等级。**
+
+> ⚠️ 促销费率可能有期限,需要定期复查。
+
+---
+
+## 6. 两个操作层面的教训
+
+### 6.1 时钟
+
+签名接口全部 `-1021 Timestamp for this request was 1000ms ahead`。
+
+```
+本机时钟比服务器快 4,807 ~ 5,348 ms
+```
+
+必须用 `/api/v3/time` 算偏移再签名,**不能用本地时钟**。
+原文档 §37 说的就是这个,但它把这条写成"建议开 NTP" —— 实际是**硬性前置条件**。
+
+### 6.2 REST 轮询会被 IP ban,而且封禁会续期
+
+```
+第一次撞  418  banned until  ...159879   (剩 6.7 分钟)
+又撞了一次     banned until  ...914580   (剩 50.5 分钟)
+```
+
+**每撞一次 418,封禁时间往后续。** 所以限流必须**立刻放弃**,不能退避重试 ——
+退避重试只会让封禁越来越长。
+
+币安在错误信息里直接写了:*"Please use the websocket for live updates to avoid bans."*
+**原文档 §7.1「行情禁止使用 REST 轮询作为主数据源」现在有实证了。**
+
+代码里的处理:
+
+```python
+except urllib.error.HTTPError as e:
+    if e.code in (418, 429):
+        raise RuntimeError(last)   # 限流绝不重试
+    ...
+time.sleep(min(1.0 * 2 ** i, 8))   # 只对连接层错误退避
+```
+
+---
+
+## 7. 裁决表
+
+| 假设 | 原文档优先级 | 裁决 | 依据 |
+|---|---|---|---|
+| **H3** CEX bStock ↔ BSC DEX | ★★★★☆ | 🔴 **结案,结构性不成立** | 12/12 方向扣费前为负;0.25% 档算术上不可能,0.01% 档已被钉死 |
+| **H1** bStock ↔ TradFi Perp | ★★★★★ | 🔴 **作为吃盘口套利关闭** | 1,484 观测上限 13.4bp < 单边成本;QQQ 的 11.7bp 是水平不是波动 |
+| **H2** Direct Stock ↔ bStock | ★★★★☆ | 🟡 **大概率关闭** | 最好流动标的 12.7bp;卡在未知的股票佣金上 |
+| — | — | 🟢 **maker=0 → 做市** | 见 §8,**是新方向,不是本文档的东西** |
+
+**原文档给 H1 打 ★★★★★ 的理由是"都在 Binance、数据好拿、不用跨链" ——
+那是最容易测,不是最可能有 edge。**
+
+> **可迁移的一条:"好测"和"有肉"要分开排序。**
+> 把容易测的排在最前面是对的(便宜),但不能把它同时当成最可能成立的。
+> 这次两个排序恰好相反。
+
+---
+
+## 8. 唯一活着的东西:maker = 0
+
+三条假设全是"**穿两边盘口**"的算法。bStock maker 免费意味着**挂单一侧零成本**,
+那条路是:
+
+```
+在 bStock 挂被动双边报价
+用 TradFi Perp(或 Direct Stock)对冲库存
+```
+
+**这是做市,不是套利。** 成本结构成立(0bp + 对冲腿),但:
+
+- 本文测的 13.4bp 是"穿两边盘口"算的,**做市吃不到那个数**
+- 成交与否不由你决定
+- 风险从"抢得到抢不到"换成了**逆向选择 + 库存**
+
+**这是一次真实的机制转换,和 SVR 那次同类** —— 不是同一件事的变体,
+是"你要做的根本不是原来那件事"。
+
+**没测过的东西:成交率、逆向选择、队列位置。一个都没有。**
+在测出这三个之前,不应该认为 maker=0 是可用的 edge。
+
+---
+
+## 9. 复现
+
+```bash
+# Gate 0 + 费率 + multiplier(需要只读 API key 放在 .env 的 API_KEY / KEY)
+python3 equity_probe.py
+python3 equity_probe.py fees
+
+# H2 成对抓取
+python3 h2_probe.py            # 产出 h2_snapshot.json
+
+# Probe A 链上 effective price(不需要 key)
+python3 probe_a.py             # 产出 probe_a_result.json
+```
+
+**前置条件**:出口 IP 不在受限地区;`.env` 权限 600;key 只勾读取权限、
+禁止提现、不开交易。
+
+---
+
+## 10. 遗留
+
+- [ ] TradFi 永续 commission(fapi 封禁解除后一条命令)
+- [ ] Direct Stock 佣金(API 无字段,需查费率页或实盘一笔)
+- [ ] bStock 的官方链上合约地址来源(tokenized-assets 不返回)
+- [ ] **maker=0 那条线的三个前置测量**:成交率 / 逆向选择 / 队列位置
+- [ ] 本次样本全部落在 OVERNIGHT 平静时段,**没覆盖任何一次高波动**
+      —— 按清算线那次 39 倍的教训,这一条必须写明,不能省略

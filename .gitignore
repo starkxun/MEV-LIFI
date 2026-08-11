@@ -11,3 +11,16 @@ shadow/svr_feed*.jsonl
 out/
 cache/
 forge-lib/
+
+# --- 以下为新增 ---
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+data/
+*.db
+*.sqlite
+shadow/*.jsonl
+lib/forge-std/
+broadcast/
