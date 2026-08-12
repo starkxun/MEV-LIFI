@@ -248,6 +248,342 @@ def cmd_compare(args):
     return 0
 
 
+# ══════════════════════════════════════════════════════════════════
+#   跨所资金费差 —— taoli.tools 排名页上真正有意思的结构
+# ══════════════════════════════════════════════════════════════════
+#
+# 排名页的 `1Y` 列是「下次资金费 × 一年次数」的**单点外推**,
+# 实测:COTI 下次 +0.6898%(8H 间隔)→ 0.6898 × 1095 = +755.3%,完全对上。
+# 它回答"接下来这一次付多少",不回答"通常付多少"。
+#
+# 但同一个币在不同所的费率差是真实结构:高的做空、低的做多,
+# 两条腿都是永续(手续费比现货+永续便宜一半),天然 delta 中性。
+# 这个命令就是查:**那个价差是常态,还是今天碰巧。**
+
+VENUES = {
+    "Binance": {
+        "url": lambda c: f"https://fapi.binance.com/fapi/v1/fundingRate?symbol={c}USDT&limit=1000",
+        "rows": lambda d: d if isinstance(d, list) else [],
+        "rate": lambda x: float(x["fundingRate"]),
+        "ts":   lambda x: int(x["fundingTime"]),
+    },
+    "Bybit": {
+        "url": lambda c: f"https://api.bybit.com/v5/market/funding/history?category=linear&symbol={c}USDT&limit=200",
+        "rows": lambda d: d.get("result", {}).get("list", []),
+        "rate": lambda x: float(x["fundingRate"]),
+        "ts":   lambda x: int(x["fundingRateTimestamp"]),
+    },
+    "Bitget": {
+        "url": lambda c: f"https://api.bitget.com/api/v2/mix/market/history-fund-rate?symbol={c}USDT&productType=USDT-FUTURES&pageSize=100",
+        "rows": lambda d: d.get("data", []) or [],
+        "rate": lambda x: float(x["fundingRate"]),
+        "ts":   lambda x: int(x["fundingTime"]),
+    },
+    "KuCoin": {
+        "url": lambda c: f"https://api-futures.kucoin.com/api/v1/contract/funding-rates?symbol={c}USDTM&from={int(time.time()*1000)-90*86400000}&to={int(time.time()*1000)}",
+        "rows": lambda d: d.get("data", []) or [],
+        "rate": lambda x: float(x["fundingRate"]),
+        "ts":   lambda x: int(x["timepoint"]),
+    },
+    "OKX": {
+        "url": lambda c: f"https://www.okx.com/api/v5/public/funding-rate-history?instId={c}-USDT-SWAP&limit=100",
+        "rows": lambda d: d.get("data", []) or [],
+        "rate": lambda x: float(x.get("realizedRate") or x.get("fundingRate")),
+        "ts":   lambda x: int(x["fundingTime"]),
+    },
+}
+
+
+def venue_stats(name, coin):
+    v = VENUES[name]
+    try:
+        raw = get(v["url"](coin))
+    except Exception as e:
+        return {"venue": name, "err": str(e)[:60]}
+    try:
+        rows = v["rows"](raw)
+    except Exception:
+        return {"venue": name, "err": "解析失败"}
+    if not rows or len(rows) < 10:
+        return {"venue": name, "err": f"只有 {len(rows) if rows else 0} 条"}
+    pts = sorted(((v["ts"](x), v["rate"](x)) for x in rows), key=lambda t: t[0])
+    return {"venue": name, "pts": pts}
+
+
+def annualise(pts):
+    """
+    年化,**不依赖结算间隔**。
+
+    ⚠️ 早期版本用「均值 × (8760/中位间隔)」,在**合约中途改过间隔**时会算错。
+       实测 SKHYNIX 在币安从 8H 改成了 4H:0/8/16 点各 71 期,
+       4/12/20 点只有 29 期 —— 中位间隔算出 4h,于是早期那批 8H 的点
+       被整整放大了一倍。
+
+    正确做法:**把窗口内收到的费率直接加总,除以窗口天数,再乘 365。**
+    这个算法对间隔变化、缺失结算、不规则结算全都免疫。
+    """
+    if len(pts) < 2:
+        return 0.0
+    days = (pts[-1][0] - pts[0][0]) / 86400000
+    if days <= 0:
+        return 0.0
+    return sum(r for _, r in pts) / days * 365 * 100
+
+
+def summarise(name, pts):
+    """把一段 (时间戳, 费率) 点列算成年化等指标。"""
+    ts = [t for t, _ in pts]
+    fr = [r for _, r in pts]
+    gaps = [(ts[i + 1] - ts[i]) / 3.6e6 for i in range(len(ts) - 1)]
+    iv = statistics.median(gaps) if gaps else 8.0
+    half = len(pts) // 2
+    return {
+        "venue": name, "n": len(fr), "days": (ts[-1] - ts[0]) / 86400000, "iv": iv,
+        "ann": annualise(pts),
+        "pos": sum(1 for x in fr if x > 0) / len(fr) * 100,
+        "a_recent": annualise(pts[half:]),
+        "a_old": annualise(pts[:half]),
+    }
+
+
+def cmd_cross(args):
+    coin = args.coin.upper()
+    print(f"=== {coin} 跨所资金费(各所拉满可得历史)===\n")
+    raw = []
+    for name in VENUES:
+        r = venue_stats(name, coin)
+        if "err" in r:
+            print(f"  {name:<9} —— {r['err']}")
+            continue
+        raw.append(r)
+    if len(raw) < 2:
+        print("\n  可比较的所少于 2 个,无法算跨所价差。")
+        return 1
+
+    print("  各所原始可得历史:")
+    for r in raw:
+        d = summarise(r["venue"], r["pts"])
+        print(f"    {d['venue']:<9} {d['n']:>4} 期 / {d['days']:>5.0f} 天 / "
+              f"{d['iv']:>4.1f}h  年化 {d['ann']:>+8.2f}%")
+
+    # ★ 对齐到公共时间窗 —— 否则拿 83 天均值减 16 天均值,
+    #   算出来的不是价差,是两段不同时期的差
+    t0 = max(r["pts"][0][0] for r in raw)
+    t1 = min(r["pts"][-1][0] for r in raw)
+    win_days = (t1 - t0) / 86400000
+    print(f"\n  ★ 对齐到公共窗口:{win_days:.0f} 天(取各所都覆盖到的那一段)")
+    if win_days < 7:
+        print(f"  🔴 公共窗口只有 {win_days:.0f} 天 —— 太短,不足以判断。")
+
+    rows = []
+    for r in raw:
+        seg = [p for p in r["pts"] if t0 <= p[0] <= t1]
+        if len(seg) < 10:
+            print(f"    {r['venue']:<9} 窗口内只有 {len(seg)} 期,剔除")
+            continue
+        rows.append(summarise(r["venue"], seg))
+    print()
+    for r in rows:
+        print(f"    {r['venue']:<9} {r['n']:>4} 期  年化 {r['ann']:>+8.2f}%  "
+              f"同号 {r['pos']:>3.0f}%  近半 {r['a_recent']:>+7.1f}  远半 {r['a_old']:>+7.1f}")
+    if len(rows) < 2:
+        print("\n  公共窗口内可比较的所少于 2 个。")
+        return 1
+
+    hi = max(rows, key=lambda r: r["ann"])
+    lo = min(rows, key=lambda r: r["ann"])
+    spread = hi["ann"] - lo["ann"]
+    print(f"\n{'='*70}")
+    print(f"=== 跨所价差 ===")
+    print(f"  做空 {hi['venue']}(收 {hi['ann']:+.2f}%)")
+    print(f"  做多 {lo['venue']}(付 {lo['ann']:+.2f}%)")
+    print(f"  **净年化 {spread:+.2f}%**")
+
+    # 稳定性:用近半 / 远半分别算价差,方向要一致
+    s_recent = hi["a_recent"] - lo["a_recent"]
+    s_old = hi["a_old"] - lo["a_old"]
+    print(f"\n  近半价差 {s_recent:+.2f}%   远半价差 {s_old:+.2f}%")
+    if s_recent * s_old <= 0:
+        print(f"  🔴 **两半价差反号 —— 方向不稳定,不要做**")
+    else:
+        ratio = max(abs(s_recent), abs(s_old)) / max(min(abs(s_recent), abs(s_old)), 1e-9)
+        if ratio > 3:
+            print(f"  🔴 两半相差 {ratio:.1f} 倍 —— 价差集中在其中一段,**不是常态**")
+        elif ratio > 1.8:
+            print(f"  ⚠️ 两半相差 {ratio:.1f} 倍 —— 偏不稳,再观察几天")
+        else:
+            print(f"  ✅ 两半方向一致,量级接近({ratio:.1f} 倍)")
+
+    # 成本:两条腿都是永续
+    perp_rt = FEES["perp_maker"] * 4
+    perp_rt_t = FEES["perp_taker"] * 4
+    print(f"\n  两条腿都是永续,往返 4 笔手续费:")
+    print(f"    全 maker {perp_rt} bps   全 taker {perp_rt_t} bps")
+    if spread != 0:
+        d = perp_rt / (abs(spread) / 100 / 365 * 1e4)
+        print(f"    按净年化 {spread:+.2f}% 算,回本 {d:.1f} 天")
+    print(f"\n  ⚠️ 各所样本长度不同(见上表 `天`),短的那个所主导了不确定性。")
+    print(f"     另外这只算了资金费,**没算两个所各自的爆仓/ADL 风险**。")
+    return 0
+
+
+def volume_profile(coin, days=40):
+    """
+    从 1 小时 K 线统计「成交量按 UTC 小时的分布」。
+
+    为什么要这个:SKHYNIX 这类代币化股票,标的有交易时段,
+    但**我不知道它跟的是哪个市场的时段**(韩国交易所?某个 ADR?)。
+
+    **猜错市场时间会让整个分析作废,所以不猜** ——
+    改为让数据自己说:标的开市时,永续的成交量一定放大。
+    **成交量的形状,就是开市时间。**
+    """
+    url = (f"https://fapi.binance.com/fapi/v1/klines?symbol={coin}USDT"
+           f"&interval=1h&limit={min(days*24, 1000)}")
+    try:
+        kl = get(url)
+    except Exception as e:
+        return None, str(e)[:60]
+    if not isinstance(kl, list) or not kl:
+        return None, "没有 K 线数据"
+    from datetime import datetime, timezone
+    byhour = {}
+    for k in kl:
+        # [开盘时间, 开, 高, 低, 收, 成交量, 收盘时间, 成交额, ...]
+        h = datetime.fromtimestamp(k[0] / 1000, tz=timezone.utc).hour
+        rng = (float(k[2]) - float(k[3])) / float(k[4]) * 100 if float(k[4]) else 0
+        byhour.setdefault(h, {"vol": [], "rng": []})
+        byhour[h]["vol"].append(float(k[7]))     # 成交额(USDT)
+        byhour[h]["rng"].append(rng)             # 该小时振幅 %
+    return byhour, None
+
+
+def cmd_session(args):
+    """用成交量剖面找出标的的交易时段,再和资金费剖面叠起来看。"""
+    coin = args.coin.upper()
+    print(f"=== {coin} 交易时段探测(不靠猜,用成交量形状)===\n")
+    byhour, err = volume_profile(coin, args.days)
+    if err:
+        print(f"  拉 K 线失败:{err}"); return 1
+
+    vols = {h: statistics.mean(v["vol"]) for h, v in byhour.items()}
+    rngs = {h: statistics.mean(v["rng"]) for h, v in byhour.items()}
+    vmax = max(vols.values()) or 1
+    med = statistics.median(vols.values())
+
+    # 资金费剖面(同一个所)
+    fr_slot = {}
+    r = venue_stats("Binance", coin)
+    if "err" not in r:
+        from datetime import datetime, timezone
+        tmp = {}
+        for t, rate in r["pts"]:
+            tmp.setdefault(datetime.fromtimestamp(t / 1000, tz=timezone.utc).hour,
+                           []).append(rate)
+        fr_slot = {h: statistics.mean(v) * 365 * 100 for h, v in tmp.items()}
+
+    print(f"  {'UTC':>4}{'平均成交额':>14}{'振幅%':>8}{'资金费年化%':>12}   成交量分布")
+    print("  " + "-" * 74)
+    for h in range(24):
+        if h not in vols:
+            continue
+        v = vols[h]
+        bar = "█" * max(1, int(v / vmax * 30))
+        hot = " ← 开市" if v > med * 1.8 else ""
+        f = f"{fr_slot[h]:>+12.2f}" if h in fr_slot else f"{'—':>12}"
+        print(f"  {h:>2}:00{v:>14,.0f}{rngs[h]:>8.2f}{f}   {bar}{hot}")
+
+    busy = sorted([h for h, v in vols.items() if v > med * 1.8])
+    print(f"\n  === 判读 ===")
+    if busy:
+        print(f"  成交量显著放大的时段(UTC):{busy}")
+        print(f"  → 这几个小时就是**标的开市**的时段(北京时间 +8)")
+        print(f"  → 对应北京时间:{[(h+8) % 24 for h in busy]}")
+    else:
+        print(f"  没有明显的时段差异 —— 可能不是股票类标的,或样本不够")
+    if fr_slot:
+        best = max(fr_slot, key=lambda h: fr_slot[h])
+        print(f"\n  资金费最高的结算点:UTC {best}:00  ({fr_slot[best]:+.2f}%)")
+        print(f"  该时点{'在' if best in busy else '**不在**'}开市时段内")
+        if best not in busy:
+            print(f"  ⚠️ 高资金费出现在**休市后**,而不是开市中 ——")
+            print(f"     说明它更可能是「标的不动、永续乱跑」造成的,")
+            print(f"     而不是真实的多空失衡。**这种费率的持续性要打折看。**")
+    print(f"\n  ⚠️ 成交额单位是 USDT,来自币安 1 小时 K 线,{args.days} 天样本。")
+    return 0
+
+
+def cmd_hours(args):
+    """
+    按 UTC 小时 / 工作日-周末 拆解资金费。
+
+    动机:SKHYNIX 这类**代币化股票**永续,标的有交易时段。
+    币安页面直接挂了警告:「基础资产在其主要市场的非交易时段内,
+    资金费率的波动可能会较大」;Bybit 更写明周末可能只允许减仓。
+
+    所以要问:**这个 carry 的收益,是不是主要来自标的休市的时段?**
+    如果是,那它的性质完全不同 —— 休市时段恰恰流动性最差、限制最多。
+
+    **不写死市场时间**,只把数据按小时摊开,让形状自己说话。
+    """
+    from datetime import datetime, timezone
+    coin = args.coin.upper()
+    names = [args.venue] if args.venue else list(VENUES)
+    for name in names:
+        if name not in VENUES:
+            print(f"未知交易所 {name},可选:{list(VENUES)}"); continue
+        r = venue_stats(name, coin)
+        if "err" in r:
+            print(f"\n=== {name} ===\n  拉不到数据:{r['err']}")
+            continue
+        pts = r["pts"]
+        ts = [t for t, _ in pts]
+        gaps = [(ts[i + 1] - ts[i]) / 3.6e6 for i in range(len(ts) - 1)]
+        iv = statistics.median(gaps) if gaps else 8.0
+        if iv <= 0:
+            iv = 8.0
+        ann = 8760 / iv
+        print(f"\n{'='*66}")
+        print(f"=== {name}  {coin}  ({len(pts)} 期 / {iv:.0f}h 间隔 / "
+              f"{(ts[-1]-ts[0])/86400000:.0f} 天)===")
+
+        byhour, byday = {}, {"工作日": [], "周末": []}
+        for t, rate in pts:
+            d = datetime.fromtimestamp(t / 1000, tz=timezone.utc)
+            byhour.setdefault(d.hour, []).append(rate)
+            byday["周末" if d.weekday() >= 5 else "工作日"].append((t, rate))
+
+        # 每个 UTC 小时槽每天最多触发一次 → 该槽单独年化 = 均值 × 365
+        print(f"\n  按 UTC 小时(该槽单独年化,假设每日发生一次):")
+        print(f"  {'UTC时':>6}{'期数':>6}{'年化%':>10}   分布")
+        slot = {h: statistics.mean(vs) * 365 * 100 for h, vs in byhour.items()}
+        hi = max(abs(x) for x in slot.values()) or 1
+        for h in sorted(byhour):
+            a = slot[h]
+            bar = "█" * max(1, int(abs(a) / hi * 34))
+            print(f"  {h:>4}:00{len(byhour[h]):>6}{a:>+10.2f}   {bar}")
+
+        wd = byday["工作日"]; we = byday["周末"]
+        if len(wd) > 1 and len(we) > 1:
+            # 工作日/周末各自的点不连续,用「总和 ÷ 实际覆盖天数」
+            awd = sum(r for _, r in wd) / (len({datetime.fromtimestamp(t/1000, tz=timezone.utc).date() for t, _ in wd}) or 1) * 365 * 100
+            awe = sum(r for _, r in we) / (len({datetime.fromtimestamp(t/1000, tz=timezone.utc).date() for t, _ in we}) or 1) * 365 * 100
+            print(f"\n  工作日  {len(wd):>4} 期   年化 {awd:>+8.2f}%")
+            print(f"  周末    {len(we):>4} 期   年化 {awe:>+8.2f}%")
+            if awd != 0:
+                ratio = awe / awd
+                print(f"  周末 / 工作日 = {ratio:.2f} 倍", end="")
+                if ratio > 1.5:
+                    print("   🔴 **收益主要来自周末** —— 而周末可能只允许减仓")
+                elif ratio < 0.67:
+                    print("   ✅ 收益主要来自工作日(标的开市),这是好事")
+                else:
+                    print("   ✅ 两者接近,没有明显的时段依赖")
+    print(f"\n  ⚠️ 间隔 {iv:.0f}h 意味着一天只有 {24/iv:.0f} 个采样点,")
+    print(f"     小时分辨率有限 —— 看趋势,别抠单个小时的数。")
+    return 0
+
+
 def main():
     p = argparse.ArgumentParser(description="资金费 carry 探针(只读公开行情)")
     sub = p.add_subparsers(dest="cmd")
@@ -278,6 +614,20 @@ def main():
     c.add_argument("--min-consistency", type=float, default=70)
     c.add_argument("--max-payback", type=float, default=30)
     c.set_defaults(func=cmd_compare)
+
+    x = sub.add_parser("cross", help="★ 跨所资金费差(排名页上真正有意思的结构)")
+    x.add_argument("coin", help="币种,如 ARC / SKHYNIX / LINK")
+    x.set_defaults(func=cmd_cross)
+
+    hr = sub.add_parser("hours", help="★ 按小时/周末拆解(代币化股票必看)")
+    hr.add_argument("coin")
+    hr.add_argument("--venue", help="只看某个所,默认全部")
+    hr.set_defaults(func=cmd_hours)
+
+    se = sub.add_parser("session", help="★ 用成交量形状探测标的交易时段")
+    se.add_argument("coin")
+    se.add_argument("--days", type=int, default=40)
+    se.set_defaults(func=cmd_session)
 
     args = p.parse_args()
     if not getattr(args, "func", None):
