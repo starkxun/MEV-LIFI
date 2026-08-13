@@ -20,6 +20,11 @@ carry_watch.py —— 跨所资金费 carry 的实时记录器
     python3 carry_watch.py --coin SKHYNIX --interval 10 --alert-days 2
     python3 carry_watch.py --coin SKHYNIX --info      # 只看合约规格(最小下单量等)
     python3 carry_watch.py --coin SKHYNIX --interval 30 --alert-days 3 --min-carry 15
+
+   挂服务器跑：
+   tmux new -s scan -d 'python3 carry_watch.py --scan --interval 60 \
+  --min-turnover 30000000 --record-above 20 \
+  >> logs/scan_$(date +%F).log 2>&1' 
 """
 
 import argparse
@@ -41,12 +46,25 @@ FEES = {
 }
 
 
+class Blocked(Exception):
+    """地域封锁(HTTP 451 / 403)—— 重试没有意义,必须换机器。"""
+
+
 def get(url, n=3, timeout=15):
     last = None
     for i in range(n):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "research/1.0"})
             return json.loads(urllib.request.urlopen(req, timeout=timeout).read())
+        except urllib.error.HTTPError as e:
+            # 451 Unavailable For Legal Reasons / 403 —— 交易所按服务器 IP 所在地
+            # 做合规封锁。**重试多少次都没用**,只能换一台在允许地区的机器。
+            if e.code in (451, 403):
+                host = url.split("/")[2]
+                raise Blocked(f"{host} 返回 HTTP {e.code} —— 该地区被封锁")
+            last = e
+            if i < n - 1:
+                time.sleep(1.0 * (i + 1))
         except Exception as e:
             last = e
             if i < n - 1:
@@ -237,6 +255,376 @@ def evaluate(a, b, iv_a, iv_b, maker=True):
     return {"ann": {a["venue"]: ann_a, b["venue"]: ann_b}, "dirs": out}
 
 
+# ══════════════════════════════════════════════════════════════════
+#   持仓跟踪 + 平仓提醒
+# ══════════════════════════════════════════════════════════════════
+def parse_leg(s):
+    """'Bybit:143.50' → ('Bybit', 143.50)"""
+    v, px = s.split(":")
+    v = v.strip()
+    if v not in SNAP:
+        raise ValueError(f"未知交易所 {v},可选 {list(SNAP)}")
+    return v, float(px)
+
+
+def track_pnl(snaps, short_v, short_px, long_v, long_px, qty):
+    """
+    浮动盈亏 = 数量 × (开仓价差 − 当前价差)
+
+    推导:
+        空腿盈亏 = qty × (开仓价 − 标记价)
+        多腿盈亏 = qty × (标记价 − 开仓价)
+        相加 → qty × [(空开 − 多开) − (空标 − 多标)]
+             = qty × (开仓价差 − 当前价差)
+
+    **所以整个仓位的盈亏只由基差变化决定,和价格本身无关。**
+    这就是对冲的数学本质。
+    """
+    entry_sp = short_px - long_px
+    now_sp = snaps[short_v]["mark"] - snaps[long_v]["mark"]
+    return qty * (entry_sp - now_sp), entry_sp, now_sp
+
+
+def alert(msg, path):
+    line = f"[{datetime.now(timezone.utc).isoformat(timespec='seconds')}] {msg}"
+    print(f"\a🚨🚨🚨 {msg}", flush=True)
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(line + "\n")
+
+
+# ══════════════════════════════════════════════════════════════════
+#   多币种铺开扫描 —— 回答「机会窗口一天几次、每次多久」
+# ══════════════════════════════════════════════════════════════════
+#
+# 效率关键:**用批量端点,不要一个币一个请求。**
+#   Binance /fapi/v1/premiumIndex        (不带 symbol)→ 全部资金费+标记价
+#   Binance /fapi/v1/ticker/bookTicker   (不带 symbol)→ 全部盘口
+#   Bybit   /v5/market/tickers           (不带 symbol)→ 全部,含成交额
+# 三个请求覆盖全市场,60 秒一轮完全不会触发限流。
+
+def preflight():
+    """
+    开跑前逐个测端点,把「地区封锁」和「网络抖动」分开。
+
+    ⚠️ 实测:美国 IP 的服务器访问币安会拿到 **HTTP 451**
+       (Unavailable For Legal Reasons)。这是按**服务器所在地**的
+       合规封锁,重试无效,只能换一台在允许地区的机器。
+       症状是日志里一直刷「抓取失败 HTTP Error 451」。
+    """
+    tests = [
+        ("Binance 资金费", "https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT"),
+        ("Binance 盘口", "https://fapi.binance.com/fapi/v1/ticker/bookTicker?symbol=BTCUSDT"),
+        ("Bybit 行情", "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT"),
+    ]
+    print("=== 端点自检 ===")
+    blocked, failed = [], []
+    for name, url in tests:
+        try:
+            get(url, n=1, timeout=12)
+            print(f"  {name:<16} ✅")
+        except Blocked as e:
+            print(f"  {name:<16} 🔴 {e}")
+            blocked.append(name)
+        except Exception as e:
+            print(f"  {name:<16} ⚠️ {str(e)[:60]}")
+            failed.append(name)
+    if blocked:
+        print(f"\n🔴 **{len(blocked)} 个端点被地区封锁,这台机器跑不了。**")
+        print(f"   HTTP 451 是按【服务器 IP 所在地】的合规封锁,和你人在哪无关。")
+        print(f"   换一台在允许地区的机器再跑 —— 重试、改 UA、加延迟都没用。")
+        return False
+    if failed:
+        print(f"\n⚠️ {len(failed)} 个端点这次没通,但不是封锁,可能只是抖动。继续。")
+    print()
+    return True
+
+
+def bulk_snapshot(min_turnover):
+    """一轮抓全市场。返回 {symbol: {...}}。"""
+    bn_pi = get("https://fapi.binance.com/fapi/v1/premiumIndex")
+    bn_bt = get("https://fapi.binance.com/fapi/v1/ticker/bookTicker")
+    by = get("https://api.bybit.com/v5/market/tickers?category=linear")
+    BT = {x["symbol"]: x for x in bn_bt}
+    BN = {x["symbol"]: x for x in bn_pi if x["symbol"] in BT}
+    BY = {x["symbol"]: x for x in by["result"]["list"]}
+    out = {}
+    for sym in set(BN) & set(BY):
+        if not sym.endswith("USDT"):
+            continue
+        y = BY[sym]
+        try:
+            turn = float(y.get("turnover24h") or 0)
+            if turn < min_turnover:
+                continue
+            out[sym] = {
+                # ⚠️ **原始 per-settlement 费率必须落盘**,年化只是展示字段。
+                #    年化 = rate × (8760/间隔),是派生量;反推会丢失间隔信息。
+                "bn_rate": float(BN[sym]["lastFundingRate"]),
+                "bn_mark": float(BN[sym]["markPrice"]),
+                "bn_next": int(BN[sym]["nextFundingTime"]),
+                "bn_bid": float(BT[sym]["bidPrice"]), "bn_ask": float(BT[sym]["askPrice"]),
+                "bn_bq": float(BT[sym]["bidQty"]), "bn_aq": float(BT[sym]["askQty"]),
+                "by_rate": float(y["fundingRate"]),
+                "by_mark": float(y["markPrice"]),
+                "by_next": int(y["nextFundingTime"]),
+                "by_bid": float(y["bid1Price"]), "by_ask": float(y["ask1Price"]),
+                "by_bq": float(y.get("bid1Size") or 0), "by_aq": float(y.get("ask1Size") or 0),
+                "turnover": turn,
+            }
+        except Exception:
+            continue
+    return out
+
+
+def load_intervals():
+    """各币的结算间隔。Binance 只列非 8h 的,查不到就是 8h。"""
+    bn = {}
+    try:
+        for x in get("https://fapi.binance.com/fapi/v1/fundingInfo"):
+            bn[x["symbol"]] = float(x["fundingIntervalHours"])
+    except Exception:
+        pass
+    by = {}
+    try:
+        d = get("https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000")
+        for x in d["result"]["list"]:
+            by[x["symbol"]] = float(x.get("fundingInterval", 480)) / 60.0
+    except Exception:
+        pass
+    return bn, by
+
+
+def cmd_scan(args):
+    """
+    铺开扫描:**记录所有达到流动性门槛的币**,而不是只记高 carry 的。
+
+    ⚠️ 早期版本用 `if abs(net) < record_above: continue` 过滤后才落盘,
+       这会造成**选择性偏差** —— 数据库里只有"看起来有机会"的时刻,
+       事后无法回答:
+         · 正常状态是什么样
+         · 机会出现的概率是多少
+         · 低 carry 怎么演变成高 carry
+       现在全部落盘,高 carry 只是多打一个 is_candidate 标记。
+
+    ⚠️ 落盘的是**原始 per-settlement 费率 + 结算时点**,不是年化。
+       年化是派生量,分析阶段再算 —— 因为资金费是**离散结算**的,
+       "持有 N 分钟 × 年化"这种连续累计的算法是错的。
+    """
+    if not preflight():
+        return 2
+    bn_iv, by_iv = load_intervals()
+    out = ROOT / (args.out or f"shadow/scan_{datetime.now(timezone.utc):%Y%m%d}.jsonl")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    print(f"=== 铺开扫描(settlement-centric)===")
+    print(f"  流动性门槛  Bybit 24h 成交额 > ${args.min_turnover/1e6:,.0f}M")
+    print(f"  落盘范围    **全部达标币种**(避免选择性偏差)")
+    print(f"  候选标记    |净年化| > {args.record_above}% 记 is_candidate")
+    print(f"  采样间隔    {args.interval}s(每轮 3 个批量请求)")
+    print(f"  落盘        {out}\n")
+    n = 0
+    try:
+        while True:
+            n += 1
+            try:
+                snap = bulk_snapshot(args.min_turnover)
+            except Blocked as e:
+                print(f"\n🔴 [{datetime.now():%H:%M:%S}] {e}")
+                print(f"   这是地区封锁,继续跑只会刷屏。**退出,换机器。**")
+                return 2
+            except Exception as e:
+                print(f"[{datetime.now():%H:%M:%S}] 抓取失败 {str(e)[:60]}", flush=True)
+                time.sleep(args.interval)
+                continue
+            rows = []
+            for sym, d in snap.items():
+                iv_b = bn_iv.get(sym, 8.0)
+                iv_y = by_iv.get(sym, 8.0)
+                ba = d["bn_rate"] * (8760 / iv_b) * 100
+                ya = d["by_rate"] * (8760 / iv_y) * 100
+                net_ann = ba - ya
+                # ★ 下一次结算的净 funding(bps)—— 比年化更接近真实经济意义
+                #   注意:两边间隔可能不同,所以"下一次"未必同时发生
+                net_next_bps = (d["bn_rate"] - d["by_rate"]) * 1e4
+                basis = (d["bn_mark"] - d["by_mark"]) / d["by_mark"] * 1e4
+                e_short_bn = (d["bn_bid"] - d["by_ask"]) / d["by_ask"] * 1e4
+                e_short_by = (d["by_bid"] - d["bn_ask"]) / d["bn_ask"] * 1e4
+                rows.append({
+                    "s": sym,
+                    "br": d["bn_rate"], "yr": d["by_rate"],      # 原始费率
+                    "bi": iv_b, "yi": iv_y,                       # 结算间隔(小时)
+                    "bn": d["bn_next"], "yn": d["by_next"],       # 下次结算时点(ms)
+                    "bm": d["bn_mark"], "ym": d["by_mark"],       # 标记价
+                    "bb": d["bn_bid"], "ba_": d["bn_ask"],
+                    "yb": d["by_bid"], "ya_": d["by_ask"],
+                    "bbq": d["bn_bq"], "baq": d["bn_aq"],         # 盘口量(双边流动性)
+                    "ybq": d["by_bq"], "yaq": d["by_aq"],
+                    "t": round(d["turnover"] / 1e6, 1),
+                    "net_ann": round(net_ann, 2),
+                    "net_next_bps": round(net_next_bps, 3),
+                    "basis": round(basis, 2),
+                    "e_sbn": round(e_short_bn, 2), "e_sby": round(e_short_by, 2),
+                    "cand": abs(net_ann) >= args.record_above,
+                })
+            rows.sort(key=lambda r: -abs(r["net_ann"]))
+            rec = {"ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                   "n": len(rows), "rows": rows}
+            with open(out, "a", encoding="utf-8") as f:
+                f.write(json.dumps(rec, ensure_ascii=False, separators=(",", ":")) + "\n")
+            cand = [r for r in rows if r["cand"]]
+            big = sum(1 for r in rows if abs(r["net_ann"]) >= 20)
+            print(f"[{datetime.now():%H:%M:%S}] 全量 {len(rows)}  候选 {len(cand)}  ≥20%: {big}   "
+                  + "  ".join(f"{r['s'][:-4]}{r['net_ann']:+.0f}%/{r['net_next_bps']:+.1f}bps"
+                              for r in rows[:3]), flush=True)
+            if args.rounds and n >= args.rounds:
+                break
+            time.sleep(args.interval)
+    except KeyboardInterrupt:
+        print("\n已停止")
+    print(f"\n采样 {n} 轮,记录在 {out}")
+    return 0
+
+
+def _pct(xs, q):
+    if not xs:
+        return 0.0
+    xs = sorted(xs)
+    i = min(int(q / 100 * len(xs)), len(xs) - 1)
+    return xs[i]
+
+
+def cmd_scan_report(args):
+    """
+    settlement-centric 报告。
+
+    ⚠️ **早期版本用 `年化 × 窗口分钟数` 估算能收多少资金费 —— 那是错的。**
+       资金费按结算时点**离散**发生:
+         · 高 carry 持续 5 小时但没跨结算点 → 实收 0
+         · 只持续 10 分钟但跨了结算点     → 实收完整一期
+       所以窗口时长**不能**换算成收益。
+
+    现在的做法:从 next_funding_ms 的跳变检测真实结算事件,
+    每次结算取**结算前最后一个快照的费率**(结算后的 rate 已经是下一期预测)。
+    """
+    import glob
+    from collections import defaultdict
+    files = sorted(glob.glob(str(ROOT / (args.pattern or "shadow/scan_*.jsonl"))))
+    snaps = []
+    for f in files:
+        for l in open(f, encoding="utf-8"):
+            try:
+                d = json.loads(l)
+            except Exception:
+                continue
+            if "rows" in d:                      # 新格式
+                snaps.append(d)
+    if len(snaps) < 10:
+        print(f"新格式快照只有 {len(snaps)} 轮,先跑一段时间再来"); return 1
+    snaps.sort(key=lambda r: r["ts"])
+    t0 = datetime.fromisoformat(snaps[0]["ts"]); t1 = datetime.fromisoformat(snaps[-1]["ts"])
+    hours = (t1 - t0).total_seconds() / 3600
+    step = hours * 3600 / max(len(snaps) - 1, 1)
+    syms = sorted({r["s"] for d in snaps for r in d["rows"]})
+    print(f"=== settlement-centric 报告 ===")
+    print(f"  {len(snaps)} 轮 / {len(syms)} 个 symbol / {hours:.1f} 小时"
+          f"({t0:%m-%d %H:%M} → {t1:%m-%d %H:%M} UTC),间隔约 {step:.0f}s\n")
+
+    # 按 symbol 重排时间序列
+    series = defaultdict(list)
+    for d in snaps:
+        for r in d["rows"]:
+            series[r["s"]].append((d["ts"], r))
+
+    # ── ① 真实结算事件 ──────────────────────────────────
+    events = defaultdict(list)      # sym -> [(idx, venue, settled_rate)]
+    for sym, seq in series.items():
+        for i in range(1, len(seq)):
+            prev, cur = seq[i - 1][1], seq[i][1]
+            for venue, nk, rk in (("Binance", "bn", "br"), ("Bybit", "yn", "yr")):
+                if cur.get(nk, 0) > prev.get(nk, 0):
+                    # ★ 用【结算前】最后一个快照的费率,不是结算后的新预测
+                    events[sym].append((i, venue, prev[rk]))
+    tot_ev = sum(len(v) for v in events.values())
+    print(f"=== ① 结算事件 ===")
+    print(f"  检测到 {tot_ev} 次(covering {len(events)} 个 symbol)")
+    if tot_ev == 0:
+        print(f"  🔴 采样时长 {hours:.1f}h 还没跨过任何结算点(间隔 4~8h),")
+        print(f"     **至少要跑满 8 小时**才能开始统计。\n")
+
+    # ── ② 窗口统计(只描述信号,不换算收益)────────────────
+    print(f"\n=== ② 窗口统计(duration ≠ funding earned)===")
+    for thr in (10, 20, 40):
+        wins, cur = [], {}
+        for i, d in enumerate(snaps):
+            hit = {r["s"]: r["net_ann"] for r in d["rows"] if abs(r["net_ann"]) >= thr}
+            for s_ in hit:
+                cur.setdefault(s_, i)
+            for s_ in list(cur):
+                if s_ not in hit:
+                    wins.append((s_, cur[s_], i - 1)); del cur[s_]
+        for s_, b in cur.items():
+            wins.append((s_, b, len(snaps) - 1))
+        if not wins:
+            print(f"  ≥{thr}%   无窗口"); continue
+        durs = sorted((e - b + 1) * step / 60 for _, b, e in wins)
+        print(f"  ≥{thr}%   {len(wins)} 个窗口 / {len({w[0] for w in wins})} 个币   "
+              f"{len(wins)/max(hours/24,1e-9):.1f} 个/天")
+        print(f"          时长 中位 {_pct(durs,50):.0f}分  p75 {_pct(durs,75):.0f}分  "
+              f"p90 {_pct(durs,90):.0f}分  最长 {max(durs):.0f}分")
+
+    # ── ③ 结算捕获统计(核心)─────────────────────────────
+    print(f"\n=== ③ 结算捕获(这才是能不能覆盖成本的依据)===")
+    if tot_ev == 0:
+        print(f"  数据不足,跳过。")
+    else:
+        for thr in (10, 20, 40):
+            wins, cur = [], {}
+            for i, d in enumerate(snaps):
+                hit = {r["s"]: r["net_ann"] for r in d["rows"] if abs(r["net_ann"]) >= thr}
+                for s_ in hit:
+                    cur.setdefault(s_, (i, hit[s_]))
+                for s_ in list(cur):
+                    if s_ not in hit:
+                        wins.append((s_, cur[s_][0], i - 1, cur[s_][1])); del cur[s_]
+            for s_, (b, sgn) in cur.items():
+                wins.append((s_, b, len(snaps) - 1, sgn))
+            if not wins:
+                continue
+            caps, ncross = [], []
+            for s_, b, e, sgn in wins:
+                short_bn = sgn > 0          # net_ann>0 → 空 Binance、多 Bybit
+                got = 0.0; k = 0
+                for idx, venue, rate in events.get(s_, []):
+                    if not (b < idx <= e):
+                        continue
+                    k += 1
+                    if venue == "Binance":
+                        got += rate * 1e4 * (1 if short_bn else -1)
+                    else:
+                        got += rate * 1e4 * (-1 if short_bn else 1)
+                caps.append(got); ncross.append(k)
+            c1 = sum(1 for k in ncross if k >= 1); c2 = sum(1 for k in ncross if k >= 2)
+            print(f"\n  ≥{thr}%  {len(wins)} 个窗口")
+            print(f"        跨过 ≥1 次结算  {c1}/{len(wins)} = {c1/len(wins)*100:.0f}%")
+            print(f"        跨过 ≥2 次结算  {c2}/{len(wins)} = {c2/len(wins)*100:.0f}%")
+            print(f"        平均跨过 {sum(ncross)/len(ncross):.2f} 次")
+            nz = [c for c, k in zip(caps, ncross) if k > 0]
+            if nz:
+                print(f"        实收净 funding(跨过结算的窗口,bps):")
+                print(f"          中位 {_pct(nz,50):+.2f}   p75 {_pct(nz,75):+.2f}   "
+                      f"p90 {_pct(nz,90):+.2f}   最大 {max(nz):+.2f}")
+                print(f"        vs 假设往返手续费 {args.fee_roundtrip} bps  "
+                      + ("✅ 中位能覆盖" if _pct(nz,50) > args.fee_roundtrip else "🔴 中位覆盖不了"))
+
+    print(f"\n{'='*66}")
+    print(f"⚠️ 口径声明")
+    print(f"   · 手续费按 {args.fee_roundtrip} bps 往返(assumed,非实测)")
+    print(f"   · 未计入:滑点、单腿失败、平仓价差、基差变化")
+    print(f"   · 「实收 funding」是从结算前快照的费率推的,标记为 estimated;")
+    print(f"     交易所官方历史 funding 可以回填确认,本版未做")
+    print(f"   · **本报告只回答「资金费够不够付手续费」,不构成 GO/NO-GO**")
+    return 0
+
+
 def main():
     p = argparse.ArgumentParser(description="跨所 carry 实时记录器(只读,无下单能力)")
     p.add_argument("--coin", default="SKHYNIX")
@@ -250,7 +638,32 @@ def main():
     p.add_argument("--out", default=None, help="JSONL 落盘路径")
     p.add_argument("--rounds", type=int, default=0, help="跑几轮后退出,0=一直跑")
     p.add_argument("--info", action="store_true", help="只打印合约规格然后退出")
+    p.add_argument("--scan", action="store_true",
+                   help="★ 铺开扫描全市场(而不是单个币)")
+    p.add_argument("--scan-report", action="store_true", help="分析扫描结果")
+    p.add_argument("--pattern", help="--scan-report 的文件匹配")
+    p.add_argument("--fee-roundtrip", type=float, default=8.0,
+                   help="假设的往返手续费 bps(仅用于对照,非实测)")
+    p.add_argument("--min-turnover", type=float, default=30e6, help="流动性门槛(USDT)")
+    p.add_argument("--record-above", type=float, default=20.0,
+                   help="标记 is_candidate 的门槛(%%)。**不再用于过滤落盘**")
+    # ── 持仓跟踪 ──
+    g = p.add_argument_group("持仓跟踪(填了就进入跟踪模式,会发平仓提醒)")
+    g.add_argument("--short", metavar="所:开仓价", help="做空腿,如 Bybit:143.50")
+    g.add_argument("--long", metavar="所:开仓价", help="做多腿,如 Binance:143.47")
+    g.add_argument("--qty", type=float, help="每条腿的数量")
+    g.add_argument("--carry-floor", type=float, default=0.0,
+                   help="净年化连续低于此值就提醒平仓(默认 0)")
+    g.add_argument("--carry-strikes", type=int, default=5,
+                   help="连续几次低于 floor 才提醒(默认 5,防抖)")
+    g.add_argument("--target", type=float, default=None,
+                   help="累计资金费达到此金额(USDT)就提醒")
     args = p.parse_args()
+
+    if args.scan_report:
+        return cmd_scan_report(args)
+    if args.scan:
+        return cmd_scan(args)
 
     coin = args.coin.upper()
     vs = [v.strip() for v in args.venues.split(",")]
@@ -326,6 +739,26 @@ def main():
     print(f"每 {args.interval}s 采样一次,按 {'吃单' if args.taker else '挂单'} 费率计算")
     print(f"回本 < {args.alert_days} 天就标 ★\n")
 
+    # ── 跟踪模式初始化 ──
+    track = None
+    if args.short and args.long and args.qty:
+        sv, spx = parse_leg(args.short)
+        lv, lpx = parse_leg(args.long)
+        if {sv, lv} != set(vs):
+            print(f"🔴 --short/--long 的交易所({sv}/{lv})和 --venues({vs})对不上")
+            return 1
+        notional = args.qty * (spx + lpx) / 2
+        track = {"sv": sv, "spx": spx, "lv": lv, "lpx": lpx, "qty": args.qty,
+                 "notional": notional, "funding": 0.0, "strikes": 0,
+                 "last_next": {}, "alerted": set()}
+        print(f"\n=== 持仓跟踪 ===")
+        print(f"  空 {sv} @ {spx}   多 {lv} @ {lpx}   数量 {args.qty}")
+        print(f"  名义 ${notional:.2f}   开仓价差 {(spx-lpx)/((spx+lpx)/2)*1e4:+.2f} bps")
+        print(f"  提醒:净年化连续 {args.carry_strikes} 次 < {args.carry_floor}%"
+              + (f",或累计资金费 ≥ ${args.target}" if args.target else ""))
+        print(f"  提醒会写进 shadow/alerts.log 并响铃\n")
+
+    ALERTS = ROOT / "shadow" / "alerts.log"
     n, best = 0, None
     try:
         while True:
@@ -390,6 +823,43 @@ def main():
                   f"基差 {cur_basis:>+6.1f}bps"
                   + (f"({bv['z']:>+4.1f}σ)" if bv else "")
                   + timing, flush=True)
+
+            # ── 持仓跟踪 ──
+            if track:
+                snaps = {a["venue"]: a, b["venue"]: b}
+                pnl, esp, nsp = track_pnl(snaps, track["sv"], track["spx"],
+                                          track["lv"], track["lpx"], track["qty"])
+                # 结算时刻跨过去了就累计一次资金费
+                for v in (track["sv"], track["lv"]):
+                    nx = snaps[v]["next_ms"]
+                    prev = track["last_next"].get(v)
+                    if prev and nx > prev:          # 结算点往后跳 = 刚结算过
+                        rate = snaps[v]["rate"]
+                        got = track["notional"] * rate * (1 if v == track["sv"] else -1)
+                        track["funding"] += got
+                        print(f"    💰 {v} 结算 {rate*100:+.4f}% → {got:+.5f} USDT"
+                              f"(累计 {track['funding']:+.5f})", flush=True)
+                    track["last_next"][v] = nx
+                total = pnl + track["funding"]
+                print(f"    持仓  基差盈亏 {pnl:+.5f}  资金费 {track['funding']:+.5f}"
+                      f"  合计 {total:+.5f} USDT   (价差 {esp:.3f}→{nsp:.3f})", flush=True)
+
+                # 提醒 1:carry 转负
+                cur = next((x for x in ev["dirs"] if x["short"] == track["sv"]), None)
+                if cur and cur["net_ann"] < args.carry_floor:
+                    track["strikes"] += 1
+                    if track["strikes"] == args.carry_strikes and "carry" not in track["alerted"]:
+                        alert(f"净年化 {cur['net_ann']:+.1f}% 连续 {args.carry_strikes} 次 "
+                              f"低于 {args.carry_floor}% —— **收入没了,建议平仓**", ALERTS)
+                        track["alerted"].add("carry")
+                else:
+                    track["strikes"] = 0
+                # 提醒 2:达标
+                if args.target and track["funding"] >= args.target \
+                        and "target" not in track["alerted"]:
+                    alert(f"累计资金费 {track['funding']:+.5f} 已达标 ${args.target} "
+                          f"—— **目的达到,可以平仓**", ALERTS)
+                    track["alerted"].add("target")
 
             if args.rounds and n >= args.rounds:
                 break
