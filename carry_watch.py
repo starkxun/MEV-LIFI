@@ -19,6 +19,7 @@ carry_watch.py —— 跨所资金费 carry 的实时记录器
     python3 carry_watch.py --coin SKHYNIX
     python3 carry_watch.py --coin SKHYNIX --interval 10 --alert-days 2
     python3 carry_watch.py --coin SKHYNIX --info      # 只看合约规格(最小下单量等)
+    python3 carry_watch.py --coin SKHYNIX --interval 30 --alert-days 3 --min-carry 15
 """
 
 import argparse
