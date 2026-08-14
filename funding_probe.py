@@ -11,6 +11,13 @@ funding_probe.py —— 资金费 carry 探针(只读公开行情,不需要 API 
     python3 funding_probe.py history BTC_USDC_PERP # 单个币的长窗口稳定性
     python3 funding_probe.py screen                # ★ 主命令:长窗口筛选
 
+    自己根据交易所筛选：
+    python3 funding_probe.py pair-screen --venues Binance,Bybit
+    挑一个看实时状态：
+    python3 carry_watch.py --coin SOXL --interval 15 --rounds 5
+    确认合约规格和最小下单量：
+    python3 carry_watch.py --coin SOXL --info
+
 ⚠️ 为什么有 `rates` 又有 `screen`:
    `rates` 用短窗口,快但**会骗人** —— 实测 4 天窗口把 BILL 年化算成 +126%,
    长窗口真值是 +13.57%(高估 9.3 倍);而且 5 个"符号 100% 稳定"的候选里,
@@ -196,6 +203,148 @@ def cmd_screen(args):
     print(f"   有待定项就不出「总收益」这个数。")
     if args.out:
         json.dump(rows, open(args.out, "w"), ensure_ascii=False, indent=1)
+        print(f"\n已存 {args.out}")
+    return 0
+
+
+def venue_universe(name):
+    """某个所的 USDT 永续清单 + 24h 成交额。"""
+    if name == "Binance":
+        d = get("https://fapi.binance.com/fapi/v1/ticker/24hr")
+        return {x["symbol"]: float(x["quoteVolume"]) for x in d
+                if x["symbol"].endswith("USDT")}
+    if name == "Bybit":
+        d = get("https://api.bybit.com/v5/market/tickers?category=linear")
+        return {x["symbol"]: float(x.get("turnover24h") or 0)
+                for x in d["result"]["list"] if x["symbol"].endswith("USDT")}
+    if name == "Bitget":
+        d = get("https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES")
+        return {x["symbol"]: float(x.get("usdtVolume") or 0) for x in d.get("data", [])}
+    if name == "OKX":
+        d = get("https://www.okx.com/api/v5/market/tickers?instType=SWAP")
+        return {x["instId"].replace("-USDT-SWAP", "USDT"): float(x.get("volCcy24h") or 0)
+                for x in d.get("data", []) if x["instId"].endswith("-USDT-SWAP")}
+    raise ValueError(name)
+
+
+def cmd_pairscreen(args):
+    """
+    按【你实际能交易的两个所】筛长窗口稳定的跨所 carry。
+
+    ⚠️ 和 `screen` 的区别:
+       `screen` 扫的是 **Backpack** 的绝对费率(单所口径),
+       筛出来的 `XXX_USDC_PERP` 在币安/Bybit 上根本不存在。
+       这条命令扫的是**两个所都有的币**,算的是跨所价差。
+    """
+    a, b = [v.strip() for v in args.venues.split(",")]
+    print(f"拉 {a} / {b} 的合约清单 …")
+    # ★ 同时抓当前实时费率 —— 「历史稳定」和「现在有没有机会」必须并排看
+    live = {}
+    try:
+        bnp = get("https://fapi.binance.com/fapi/v1/premiumIndex")
+        byt = get("https://api.bybit.com/v5/market/tickers?category=linear")
+        ivh = {}
+        for x in (get("https://fapi.binance.com/fapi/v1/fundingInfo") or []):
+            ivh[x["symbol"]] = float(x["fundingIntervalHours"])
+        BNP = {x["symbol"]: x for x in bnp}
+        BYT = {x["symbol"]: x for x in byt["result"]["list"]}
+        for sym in set(BNP) & set(BYT):
+            ba = float(BNP[sym]["lastFundingRate"]) * (8760 / ivh.get(sym, 8.0)) * 100
+            ya = float(BYT[sym]["fundingRate"]) * (8760 / 8) * 100
+            live[sym] = ba - ya if a == "Binance" else ya - ba
+    except Exception as e:
+        print(f"  ⚠️ 实时费率拉取失败({str(e)[:40]}),只出历史")
+    ua, ub = venue_universe(a), venue_universe(b)
+    common = {s for s in set(ua) & set(ub)
+              if min(ua[s], ub[s]) >= args.min_turnover}
+    common = sorted(common, key=lambda s: -min(ua[s], ub[s]))[:args.top]
+    print(f"  {a} {len(ua)} 个 / {b} {len(ub)} 个 → "
+          f"**两所都有且双边成交额 ≥ ${args.min_turnover/1e6:.0f}M 的 {len(common)} 个**\n")
+
+    def hist(venue, sym):
+        v = VENUES[venue]
+        coin = sym[:-4]
+        try:
+            raw = get(v["url"](coin))
+            rows = v["rows"](raw)
+        except Exception:
+            return None
+        if not rows or len(rows) < 30:
+            return None
+        return sorted(((v["ts"](x), v["rate"](x)) for x in rows), key=lambda t: t[0])
+
+    out = []
+    for i, sym in enumerate(common):
+        pa, pb = hist(a, sym), hist(b, sym)
+        if not pa or not pb:
+            continue
+        t0, t1 = max(pa[0][0], pb[0][0]), min(pa[-1][0], pb[-1][0])
+        sa = [p for p in pa if t0 <= p[0] <= t1]
+        sb = [p for p in pb if t0 <= p[0] <= t1]
+        if len(sa) < 20 or len(sb) < 20:
+            continue
+        days = (t1 - t0) / 86400000
+        ha, hb = len(sa) // 2, len(sb) // 2
+        net = annualise(sa) - annualise(sb)
+        n_new = annualise(sa[ha:]) - annualise(sb[hb:])
+        n_old = annualise(sa[:ha]) - annualise(sb[:hb])
+        flip = n_new * n_old < 0
+        ratio = max(abs(n_new), abs(n_old)) / max(min(abs(n_new), abs(n_old)), 1e-9)
+        out.append({"s": sym, "days": days, "net": net, "nn": n_new, "no": n_old,
+                    "flip": flip, "ratio": ratio,
+                    "turn": min(ua[sym], ub[sym])})
+        if (i + 1) % 10 == 0:
+            print(f"  …{i+1}/{len(common)}", flush=True)
+    out.sort(key=lambda r: -abs(r["net"]))
+
+    print(f"\n{'币种':<15}{'天':>5}{'历史净':>9}{'倍':>6}{'★当前净':>10}{'双边额':>9}  历史判定")
+    print("-" * 72)
+    for r in out[:args.show]:
+        v = "🔴反号" if r["flip"] else ("🔴不稳" if r["ratio"] > 3 else
+                                       "⚠️偏" if r["ratio"] > 1.8 else "✅稳")
+        cur = live.get(r["s"])
+        r["live"] = cur
+        cs = f"{cur:>+10.2f}" if cur is not None else f"{'—':>10}"
+        print(f"{r['s']:<15}{r['days']:>5.0f}{r['net']:>+9.2f}{r['ratio']:>6.1f}"
+              f"{cs}{r['turn']/1e6:>8,.0f}M  {v}")
+
+    ok = [r for r in out if not r["flip"] and r["ratio"] <= 1.8
+          and abs(r["net"]) >= args.min_net]
+    print(f"\n=== 通过(不反号 + 两半≤1.8倍 + |净|≥{args.min_net}%)===")
+    if not ok:
+        print("  一个都没有。")
+    for r in ok:
+        short = a if r["net"] > 0 else b
+        long_ = b if r["net"] > 0 else a
+        print(f"  {r['s']:<15} 净 {r['net']:+7.2f}%   做空 {short} / 做多 {long_}   "
+              f"{r['days']:.0f} 天样本   双边额 ${r['turn']/1e6:,.0f}M")
+    print(f"\n  {len(ok)}/{len(out)} 通过")
+
+    # ★★ 筛选目标 vs 使用目标 的自检
+    if live:
+        import statistics as _st
+        pv = [abs(live[r["s"]]) for r in ok if r["s"] in live]
+        fv = [abs(live[r["s"]]) for r in out if r not in ok and r["s"] in live]
+        if pv and fv:
+            mp, mf = _st.median(pv), _st.median(fv)
+            print(f"\n{'='*72}")
+            print(f"=== ⚠️ 筛选器自检:稳定性筛选是不是把机会筛掉了 ===")
+            print(f"  通过的 {len(pv)} 个   当前 |净| 中位 {mp:>7.2f}%   最大 {max(pv):>7.2f}%")
+            print(f"  淘汰的 {len(fv)} 个   当前 |净| 中位 {mf:>7.2f}%   最大 {max(fv):>7.2f}%")
+            if mf > mp * 2:
+                print(f"\n  🔴 **淘汰组的当前机会是通过组的 {mf/max(mp,0.01):.0f} 倍**")
+                print(f"     说明「两半比值 ≤ {1.8}」这个判据正在**系统性筛掉机会**:")
+                print(f"       两半比值小 = 这个价差一直没怎么变")
+                print(f"       一直没变的价差 = 一直是那个小数,现在也小")
+                print(f"     **而机会恰恰来自「变了」。**")
+                print(f"\n     → 这个筛选适合回答「历史上哪个方向稳」,")
+                print(f"       **不适合回答「现在该做哪个」**。两者负相关。")
+            else:
+                print(f"\n  ✅ 两组当前机会量级接近,筛选没有明显反向选择。")
+    print(f"\n⚠️ 通过 ≠ 可以下单。这只说明【历史上】这个方向稳定,")
+    print(f"   当前瞬时值可能完全不同 —— 看上面「当前净」那一列。")
+    if args.out:
+        json.dump(out, open(args.out, "w"), ensure_ascii=False, indent=1)
         print(f"\n已存 {args.out}")
     return 0
 
@@ -614,6 +763,18 @@ def main():
     c.add_argument("--min-consistency", type=float, default=70)
     c.add_argument("--max-payback", type=float, default=30)
     c.set_defaults(func=cmd_compare)
+
+    ps = sub.add_parser("pair-screen",
+                        help="★ 按【你能交易的两个所】筛长窗口稳定的跨所 carry")
+    ps.add_argument("--venues", default="Binance,Bybit",
+                    help="两个交易所,逗号分隔(默认 Binance,Bybit)")
+    ps.add_argument("--top", type=int, default=30, help="按流动性取前 N 个分析")
+    ps.add_argument("--show", type=int, default=25)
+    ps.add_argument("--min-turnover", type=float, default=30e6,
+                    help="**双边**都要达到的 24h 成交额")
+    ps.add_argument("--min-net", type=float, default=3.0, help="通过所需的最小净年化 %%")
+    ps.add_argument("--out", default="shadow/pair_screen.json")
+    ps.set_defaults(func=cmd_pairscreen)
 
     x = sub.add_parser("cross", help="★ 跨所资金费差(排名页上真正有意思的结构)")
     x.add_argument("coin", help="币种,如 ARC / SKHYNIX / LINK")

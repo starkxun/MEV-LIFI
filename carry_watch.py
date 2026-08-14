@@ -376,6 +376,31 @@ def bulk_snapshot(min_turnover):
     return out
 
 
+def load_spot_symbols():
+    """
+    两所的现货可交易清单 —— 判断「现货+永续」这条腿能不能做。
+
+    ⚠️ 我们前两周只测了【跨所价差】= |rate_A − rate_B|,
+       漏掉了【单所绝对费率】= rate_A 本身。
+       两个所同向高费率时(实测 SNDK 两边都 -47%),
+       跨所差几乎为零,但**现货买入 + 永续做空能吃满 47%**。
+       实测:≥20% 的币,跨所口径 5 个,绝对值口径 8 个。
+    """
+    bn, by = set(), set()
+    try:
+        d = get("https://api.binance.com/api/v3/exchangeInfo")
+        bn = {x["symbol"] for x in d["symbols"]
+              if x.get("status") == "TRADING" and x["symbol"].endswith("USDT")}
+    except Exception:
+        pass
+    try:
+        d = get("https://api.bybit.com/v5/market/tickers?category=spot")
+        by = {x["symbol"] for x in d["result"]["list"] if x["symbol"].endswith("USDT")}
+    except Exception:
+        pass
+    return bn, by
+
+
 def load_intervals():
     """各币的结算间隔。Binance 只列非 8h 的,查不到就是 8h。"""
     bn = {}
@@ -413,6 +438,7 @@ def cmd_scan(args):
     if not preflight():
         return 2
     bn_iv, by_iv = load_intervals()
+    bn_spot, by_spot = load_spot_symbols()
     out = ROOT / (args.out or f"shadow/scan_{datetime.now(timezone.utc):%Y%m%d}.jsonl")
     out.parent.mkdir(parents=True, exist_ok=True)
     print(f"=== 铺开扫描(settlement-centric)===")
@@ -420,6 +446,8 @@ def cmd_scan(args):
     print(f"  落盘范围    **全部达标币种**(避免选择性偏差)")
     print(f"  候选标记    |净年化| > {args.record_above}% 记 is_candidate")
     print(f"  采样间隔    {args.interval}s(每轮 3 个批量请求)")
+    print(f"  现货清单    币安 {len(bn_spot)} 个 / Bybit {len(by_spot)} 个"
+          f"(用于判断现货+永续能不能做)")
     print(f"  落盘        {out}\n")
     n = 0
     try:
@@ -442,6 +470,12 @@ def cmd_scan(args):
                 ba = d["bn_rate"] * (8760 / iv_b) * 100
                 ya = d["by_rate"] * (8760 / iv_y) * 100
                 net_ann = ba - ya
+                # ★ 单所绝对费率 —— 现货+永续吃的是这个,不是跨所差
+                if abs(ba) >= abs(ya):
+                    abs_ann, abs_v = ba, "Binance"
+                else:
+                    abs_ann, abs_v = ya, "Bybit"
+                has_spot = (sym in bn_spot) if abs_v == "Binance" else (sym in by_spot)
                 # ★ 下一次结算的净 funding(bps)—— 比年化更接近真实经济意义
                 #   注意:两边间隔可能不同,所以"下一次"未必同时发生
                 net_next_bps = (d["bn_rate"] - d["by_rate"]) * 1e4
@@ -460,6 +494,10 @@ def cmd_scan(args):
                     "ybq": d["by_bq"], "yaq": d["by_aq"],
                     "t": round(d["turnover"] / 1e6, 1),
                     "net_ann": round(net_ann, 2),
+                    "abs_ann": round(abs_ann, 2),      # 单所绝对费率(带符号)
+                    "abs_v": abs_v,                    # 哪个所
+                    "spot": has_spot,                  # 该所有没有现货,能不能做现货+永续
+                    "sbn": sym in bn_spot, "sby": sym in by_spot,
                     "net_next_bps": round(net_next_bps, 3),
                     "basis": round(basis, 2),
                     "e_sbn": round(e_short_bn, 2), "e_sby": round(e_short_by, 2),
@@ -472,9 +510,12 @@ def cmd_scan(args):
                 f.write(json.dumps(rec, ensure_ascii=False, separators=(",", ":")) + "\n")
             cand = [r for r in rows if r["cand"]]
             big = sum(1 for r in rows if abs(r["net_ann"]) >= 20)
-            print(f"[{datetime.now():%H:%M:%S}] 全量 {len(rows)}  候选 {len(cand)}  ≥20%: {big}   "
-                  + "  ".join(f"{r['s'][:-4]}{r['net_ann']:+.0f}%/{r['net_next_bps']:+.1f}bps"
-                              for r in rows[:3]), flush=True)
+            bigabs = sum(1 for r in rows if abs(r["abs_ann"]) >= 20 and r["spot"])
+            top = sorted(rows, key=lambda r: -abs(r["abs_ann"]))[:3]
+            print(f"[{datetime.now():%H:%M:%S}] 全量 {len(rows)}  "
+                  f"跨所≥20%: {big}  单所≥20%且有现货: {bigabs}   "
+                  + "  ".join(f"{r['s'][:-4]}{r['abs_ann']:+.0f}%@{r['abs_v'][:3]}"
+                              + ("" if r["spot"] else "(无现货)") for r in top), flush=True)
             if args.rounds and n >= args.rounds:
                 break
             time.sleep(args.interval)
