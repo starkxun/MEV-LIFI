@@ -281,24 +281,41 @@ def history_check(coin, vs, iv_a, cur_net, tol_ms=300_000):
 
     ref = wins.get("30天") or wins["全部"]
     warn = []
-    if ref["days"] < 14:
-        warn.append(f"⚠️ 可比历史只有 {ref['days']:.0f} 天 —— 样本本身就不够")
-    if cur_net is not None and ref["mean"] != 0:
-        if cur_net * ref["mean"] < 0:
-            warn.append(f"🔴 **当前净 {cur_net:+.1f}% 与 {ref['days']:.0f} 天均值 "
-                        f"{ref['mean']:+.1f}% 符号相反** —— 你看到的很可能是短期假象")
-        elif abs(cur_net) > abs(ref["mean"]) * 3:
-            warn.append(f"🔴 **当前净 {cur_net:+.1f}% 是长期均值 {ref['mean']:+.1f}% 的 "
-                        f"{abs(cur_net/ref['mean']):.1f} 倍** —— 均值回归会吃掉它")
+    if ref["days"] < 7:
+        warn.append(f"🔴 可比历史只有 {ref['days']:.0f} 天 —— **短窗口正是我们栽过四次的地方**"
+                    f"(1 小时结算的币受 Bybit 200 期上限所限,最多只有 8 天)")
+    elif ref["days"] < 14:
+        warn.append(f"⚠️ 可比历史只有 {ref['days']:.0f} 天 —— 样本偏薄")
+
+    # ★ 关键:历史必须按【你将要开的方向】来读,不是按它自己的符号。
+    #   净值是有向的:当前净 > 0 → 你空 vs[0];净 < 0 → 你空 vs[1]。
+    #   把历史均值乘上这个方向,才是「按这个方向做,长期赚不赚」。
+    d = (1 if cur_net > 0 else -1) if cur_net else 0
+    hist_dir = ref["mean"] * d
+    t_dir = ref["t"] * d
+    if d:
+        warn.append(f"ℹ️ 按当前方向(空 {vs[0] if d > 0 else vs[1]})读历史:"
+                    f"{ref['days']:.0f} 天均值 {hist_dir:+.1f}% ± {ref['se']:.1f} (t={t_dir:+.1f})")
+        if t_dir <= -2:
+            warn.append(f"🔴 **按这个方向,长期显著为负** —— VELVET 就是这样:"
+                        f"此刻好看,长期确定亏")
+        elif abs(t_dir) < 2:
+            warn.append(f"🔴 按这个方向,长期收益**和 0 没有统计区别**,不构成 carry")
+    elif abs(ref["t"]) < 2:
+        warn.append(f"🔴 长期净年化 {ref['mean']:+.1f}% ± {ref['se']:.1f} "
+                    f"(t={ref['t']:.1f})—— 和 0 没有统计区别")
+
+    # 「多数期数为负」【不能】单独当红旗。
+    # COTI 实测:61% 的结算期是亏的,但总额 +276.5 bps ——
+    # 赢的那些平均 +42.1,输的那些平均 −11.0,赢面是输面的 3.8 倍。
+    # 正偏态分布本来就长这样。**只有当均值也立不住时,高负比才是坏消息。**
     if ref["neg"] >= 25:
-        warn.append(f"🔴 {ref['neg']:.0f}% 的结算期净值为**负**(你在付钱)")
-    t = ref["t"]
-    if t <= -2:
-        warn.append(f"🔴 长期净年化 {ref['mean']:+.1f}% ± {ref['se']:.1f} "
-                    f"(t={t:.1f})—— **显著为负**,这个方向长期是亏的")
-    elif abs(t) < 2:
-        warn.append(f"🔴 长期净年化 {ref['mean']:+.1f}% ± {ref['se']:.1f} "
-                    f"(t={t:.1f})—— **和 0 没有统计区别**,不构成 carry")
+        tag = "🔴" if abs(t_dir if d else ref["t"]) < 2 else "ℹ️"
+        extra = ("(但均值显著,说明是**正偏态**:少数几期赚回全部 —— "
+                 "这不是缺陷,是这类收益的常态)" if tag == "ℹ️" else "(且均值立不住)")
+        warn.append(f"{tag} {ref['neg']:.0f}% 的结算期为负 {extra}")
+    # (旧的无方向 t 检查已删 —— 被上面「按开仓方向读历史」取代。
+    #  无方向的 t 会把「反着做能赚」误报成「能赚」。)
     if "1天" in wins and "7天" in wins and wins["1天"]["mean"] * wins["7天"]["mean"] < 0:
         warn.append("🔴 1 天和 7 天窗口**符号相反** —— 历史自身不自洽")
     return wins, warn
@@ -735,7 +752,7 @@ def cmd_scan_report(args):
                 wins.append((s_, b, len(snaps) - 1, sgn))
             if not wins:
                 continue
-            caps, ncross = [], []
+            caps, ncross, fees_w = [], [], []
             for s_, b, e, sgn in wins:
                 short_bn = sgn > 0          # net_ann>0 → 空 Binance、多 Bybit
                 got = 0.0; k = 0
@@ -747,23 +764,42 @@ def cmd_scan_report(args):
                         got += rate * 1e4 * (1 if short_bn else -1)
                     else:
                         got += rate * 1e4 * (-1 if short_bn else 1)
-                caps.append(got); ncross.append(k)
+                # ★ 每个窗口用**它自己那个币**的往返手续费,不用全局值。
+                #   报告混了代币化股票(吃单 13.5)和加密(21.0),
+                #   一个全局数字会同时高估一半、低估另一半。
+                _cls = FEEMOD.asset_class(s_.replace("USDT", ""), auto=False)
+                _f, _, _ = FEEMOD.roundtrip("Binance", "Bybit", _cls,
+                                            maker=args.maker_cost)
+                caps.append(got); ncross.append(k); fees_w.append(_f)
             c1 = sum(1 for k in ncross if k >= 1); c2 = sum(1 for k in ncross if k >= 2)
             print(f"\n  ≥{thr}%  {len(wins)} 个窗口")
             print(f"        跨过 ≥1 次结算  {c1}/{len(wins)} = {c1/len(wins)*100:.0f}%")
             print(f"        跨过 ≥2 次结算  {c2}/{len(wins)} = {c2/len(wins)*100:.0f}%")
             print(f"        平均跨过 {sum(ncross)/len(ncross):.2f} 次")
             nz = [c for c, k in zip(caps, ncross) if k > 0]
+            fz = [f for f, k in zip(fees_w, ncross) if k > 0]
             if nz:
                 print(f"        实收净 funding(跨过结算的窗口,bps):")
                 print(f"          中位 {_pct(nz,50):+.2f}   p75 {_pct(nz,75):+.2f}   "
                       f"p90 {_pct(nz,90):+.2f}   最大 {max(nz):+.2f}")
-                print(f"        vs 假设往返手续费 {args.fee_roundtrip} bps  "
-                      + ("✅ 中位能覆盖" if _pct(nz,50) > args.fee_roundtrip else "🔴 中位覆盖不了"))
+                # 逐窗口和【该币自己的】手续费比,再统计覆盖率
+                cov = [1 for c, f in zip(nz, fz) if c > f]
+                mode = "挂单" if args.maker_cost else "吃单"
+                if args.fee_roundtrip is not None:
+                    cov = [1 for c in nz if c > args.fee_roundtrip]
+                    print(f"        vs 手动指定 {args.fee_roundtrip} bps:"
+                          f"覆盖 {len(cov)}/{len(nz)} = {len(cov)/len(nz)*100:.0f}%")
+                else:
+                    print(f"        vs 各币自己的{mode}往返(中位 {_pct(fz,50):.1f} bps):"
+                          f"**覆盖 {len(cov)}/{len(nz)} = {len(cov)/len(nz)*100:.0f}%**")
 
     print(f"\n{'='*66}")
     print(f"⚠️ 口径声明")
-    print(f"   · 手续费按 {args.fee_roundtrip} bps 往返(assumed,非实测)")
+    if args.fee_roundtrip is not None:
+        print(f"   · 手续费按命令行指定的 {args.fee_roundtrip} bps 往返")
+    else:
+        print(f"   · 手续费**按币逐个查** lib/fees.py(代币化股票/加密不同),"
+              f"当前口径:{'挂单' if args.maker_cost else '吃单'}")
     print(f"   · 未计入:滑点、单腿失败、平仓价差、基差变化")
     print(f"   · 「实收 funding」是从结算前快照的费率推的,标记为 estimated;")
     print(f"     交易所官方历史 funding 可以回填确认,本版未做")
@@ -784,6 +820,8 @@ def main():
     p.add_argument("--out", default=None, help="JSONL 落盘路径")
     p.add_argument("--rounds", type=int, default=0, help="跑几轮后退出,0=一直跑")
     p.add_argument("--info", action="store_true", help="只打印合约规格然后退出")
+    p.add_argument("--maker-cost", action="store_true",
+                   help="--scan-report 里按挂单费率算成本(默认吃单)")
     p.add_argument("--force", action="store_true",
                    help="资金费历史体检不通过时仍然继续(默认拒绝)")
     p.add_argument("--scan", action="store_true",

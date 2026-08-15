@@ -18,6 +18,13 @@ funding_probe.py —— 资金费 carry 探针(只读公开行情,不需要 API 
     确认合约规格和最小下单量：
     python3 carry_watch.py --coin SOXL --info
 
+    重新修订后：
+    python3 funding_probe.py cg-screen                      # 默认 30 天窗口
+    python3 funding_probe.py cg-screen --range 7d           # 换短窗口
+    python3 funding_probe.py cg-screen --min-depth 50       # 放宽深度
+    python3 funding_probe.py cg-screen --out shadow/x.json  # 落盘
+
+
 ⚠️ 为什么有 `rates` 又有 `screen`:
    `rates` 用短窗口,快但**会骗人** —— 实测 4 天窗口把 BILL 年化算成 +126%,
    长窗口真值是 +13.57%(高估 9.3 倍);而且 5 个"符号 100% 稳定"的候选里,
@@ -26,6 +33,7 @@ funding_probe.py —— 资金费 carry 探针(只读公开行情,不需要 API 
 """
 
 import argparse
+import os
 import gzip
 import http.client
 import json
@@ -270,6 +278,217 @@ def venue_universe(name):
         return {x["instId"].replace("-USDT-SWAP", "USDT"): float(x.get("volCcy24h") or 0)
                 for x in d.get("data", []) if x["instId"].endswith("-USDT-SWAP")}
     raise ValueError(name)
+
+
+# ══════════════════════════════════════════════════════════════════
+#   cg-screen —— 借 Coinglass 拿全市场广度,用我们自己的闸门做判决
+# ══════════════════════════════════════════════════════════════════
+"""
+为什么要这条命令
+────────────────
+我们自己的扫描器一次只盯 2 个所、几十个币 —— 覆盖率 6%,
+而我们已经证明「找机会的瓶颈是覆盖率」。
+
+Coinglass 一次给 22 个所 × 1848 个币,**还带 30 天累计费率**
+(就是我们手写的历史体检)。2026-08-15 用 8H 结算的大币对过账:
+BTC/ETH/SOL/DOGE/XRP/LINK/AVAX/LTC × 两个所,16/16 吻合,偏差 ±5%。
+
+但它给不了三样东西,而这三样恰恰是每次杀死候选的东西:
+
+    盘口价差、买一深度、最小下单量
+
+所以分工是:**Coinglass 给广度,我们给判决。**
+
+三道闸门(2026-08-15 实测:606 → 18 → 2)
+────────────────────────────────────────
+  ① 当前净年化与 30 天累计【同号】
+       76% 的币是反号的 —— VELVET 那类陷阱是【多数】,不是边角
+  ② |30 天净年化| ≥ min-net
+  ③ 微观结构:回本天数、成交额、买一深度
+"""
+CG_HOSTS = [
+    ("https://vip.coinglass.site", "X-API-Key"),        # 转售网关
+    ("https://open-api-v4.coinglass.com", "CG-API-KEY"),  # 官方
+]
+
+
+def cg_key():
+    """
+    从环境变量或 .env 取 key。
+
+    ⚠️ 必须按【变量名优先级】取,不能按文件行序 —— .env 里可能同时留着
+       旧的失效 key 和新 key,按行序会先命中排在前面的那个旧的,
+       然后一路 401/400 下去,报错信息还指向别的 host。(2026-08-15 踩过)
+    """
+    names = ("COIN_GLASS_KEY", "COINGLASS_KEY", "COIN_GLASS")
+    found = {}
+    for n in names:
+        v = os.environ.get(n)
+        if v:
+            found[n] = v.strip()
+    env = Path(__file__).parent / ".env"
+    if env.exists():
+        for line in env.read_text(errors="ignore").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            if k in names and k not in found:
+                found[k] = v.strip().strip('"').strip("'")
+    for n in names:                       # 按优先级,不按出现顺序
+        if found.get(n):
+            return found[n]
+    return None
+
+
+def cg_get(path, key):
+    """挨个试 host+header 组合,第一个 code==0 的算数。"""
+    last = None
+    for base, hdr in CG_HOSTS:
+        try:
+            req = urllib.request.Request(
+                base + path, headers={hdr: key, "accept": "application/json"})
+            d = json.loads(urllib.request.urlopen(req, timeout=60).read())
+            if str(d.get("code")) == "0":
+                return d.get("data") or []
+            last = f"{base.split('//')[1]}: code={d.get('code')} {d.get('msg')}"
+        except Exception as e:
+            last = f"{base.split('//')[1]}: {str(e)[:50]}"
+    raise RuntimeError(last or "全部 host 失败")
+
+
+def _ann(m):
+    """★ 按各所自己的结算间隔归一化。单期费率之间【不可】直接比较 ——
+       这是我们最早栽的那个坑(8H 的 0.0273% 其实低于 4H 的 0.0148%)。"""
+    if not m or m.get("funding_rate") is None or not m.get("funding_rate_interval"):
+        return None
+    return m["funding_rate"] * (8760 / m["funding_rate_interval"])
+
+
+def cmd_cgscreen(args):
+    key = cg_key()
+    if not key:
+        print("🔴 .env 里没找到 COIN_GLASS_KEY / COIN_GLASS")
+        return 1
+    a, b = [v.strip() for v in args.venues.split(",")]
+    A, B = a.upper(), b.upper()
+
+    print(f"拉 Coinglass 全市场({args.range} 累计 + 当前)…")
+    now = {r["symbol"]: {m["exchange"].upper(): m
+                         for m in (r.get("stablecoin_margin_list") or [])}
+           for r in cg_get("/api/futures/funding-rate/exchange-list", key)}
+    accd = {r["symbol"]: {m["exchange"].upper(): m.get("funding_rate")
+                          for m in (r.get("stablecoin_margin_list") or [])}
+            for r in cg_get(f"/api/futures/funding-rate/accumulated-exchange-list"
+                            f"?range={args.range}", key)}
+    days = float(args.range.rstrip("dh")) or 30
+    print(f"  当前 {len(now)} 币 / 累计 {len(accd)} 币")
+
+    rows = []
+    for s, vs in now.items():
+        aa, ab = _ann(vs.get(A)), _ann(vs.get(B))
+        ha, hb = (accd.get(s) or {}).get(A), (accd.get(s) or {}).get(B)
+        if None in (aa, ab, ha, hb):
+            continue
+        rows.append({"s": s, "cur": aa - ab, "hist": (ha - hb) * 365 / days,
+                     "a": aa, "b": ab})
+    if not rows:
+        print(f"🔴 {A}/{B} 没有共同币种")
+        return 1
+
+    agree = [r for r in rows if r["cur"] * r["hist"] > 0]
+    print(f"\n=== ① 同号闸门 ===")
+    print(f"  {a} ∩ {b} 且两边有 {args.range} 历史:{len(rows)} 个币")
+    print(f"  同号 {len(agree):>4}/{len(rows)} = {len(agree)/len(rows)*100:.0f}%")
+    print(f"  反号 {len(rows)-len(agree):>4}/{len(rows)} = "
+          f"{(1-len(agree)/len(rows))*100:.0f}%   ← 只看实时就会踩的坑")
+    hs = sorted(abs(r["hist"]) for r in rows)
+    print(f"  |{args.range}净年化| 中位 {hs[len(hs)//2]:.2f}%  "
+          f"p90 {hs[int(len(hs)*.9)]:.2f}%  最大 {hs[-1]:.2f}%")
+
+    ok1 = [r for r in agree if abs(r["hist"]) >= args.min_net]
+    print(f"\n=== ② |{args.range}净年化| ≥ {args.min_net}% ===")
+    print(f"  → {len(ok1)}/{len(rows)} = {len(ok1)/len(rows)*100:.1f}%")
+    ok1.sort(key=lambda r: -abs(r["hist"]))
+    ok1 = ok1[:args.max_probe]
+
+    print(f"\n=== ③ 微观结构闸门(逐个拉盘口,{len(ok1)} 个)===")
+    print(f"  {'币':<11}{'净%':>9}{'价差':>7}{'费':>6}{'总成本':>8}{'回本天':>8}"
+          f"{'24h额':>9}{'深度':>9}  判定")
+    print("  " + "-" * 76)
+    out = []
+    for r in ok1:
+        c = r["s"]
+        try:
+            snap_a, snap_b = SNAP_BOOK[a](c), SNAP_BOOK[b](c)
+        except Exception as e:
+            print(f"  {c:<11} 盘口拉取失败 {str(e)[:34]}")
+            continue
+        px = snap_b["px"]
+        spread = snap_a["spread_bps"] + snap_b["spread_bps"]
+        cls = FEEMOD.asset_class(c, auto=False)
+        fee = FEEMOD.roundtrip(a, b, cls, maker=args.maker)[0]
+        total = spread + fee
+        day = abs(r["hist"]) / 365 * 100
+        pb = total / day if day else float("inf")
+        turn = min(snap_a["turnover"], snap_b["turnover"]) / 1e6
+        dep = min(snap_a["bid_depth"], snap_b["bid_depth"])
+        good = (pb <= args.max_payback and turn >= args.min_turnover / 1e6
+                and dep >= args.min_depth)
+        print(f"  {c:<11}{r['hist']:>+9.1f}{spread:>7.1f}{fee:>6.1f}{total:>8.1f}"
+              f"{pb:>8.1f}{turn:>8.1f}M{dep:>9,.0f}  {'✅' if good else ''}")
+        r.update({"spread": spread, "fee": fee, "total": total, "payback": pb,
+                  "turnover_m": turn, "depth": dep, "cls": cls, "pass": good,
+                  "px": px})
+        out.append(r)
+        time.sleep(0.15)
+
+    fin = [r for r in out if r["pass"]]
+    print(f"\n{'='*70}")
+    print(f"  {len(rows)} → {len(ok1)} → **{len(fin)}**"
+          f"   (通过率 {len(fin)/len(rows)*100:.2f}%)")
+    for r in sorted(fin, key=lambda x: x["payback"]):
+        d = f"空{a}/多{b}" if r["hist"] > 0 else f"空{b}/多{a}"
+        print(f"     ★ {r['s']:<10} {args.range}净 {r['hist']:+7.1f}%  "
+              f"成本 {r['total']:5.1f} bps  回本 {r['payback']:4.1f} 天  {d}")
+    if not fin:
+        print("     一个都没有 —— 今天不做,是个完整的结论")
+    print(f"\n  ⚠️ 通过 ≠ 该做。开仓前仍要跑:")
+    print(f"     python3 carry_watch.py --coin <币>   (逐期 t 检验 + 自相关修正)")
+    if args.out:
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.out).write_text(json.dumps(
+            {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+             "range": args.range, "venues": [a, b],
+             "n_total": len(rows), "n_agree": len(agree),
+             "n_stage2": len(ok1), "n_pass": len(fin), "rows": out},
+            ensure_ascii=False, indent=1))
+        print(f"\n  落盘 {args.out}")
+    return 0
+
+
+def _book_binance(c):
+    t = get(f"https://fapi.binance.com/fapi/v1/ticker/bookTicker?symbol={c}USDT")
+    d = get(f"https://fapi.binance.com/fapi/v1/ticker/24hr?symbol={c}USDT")
+    bid, ask = float(t["bidPrice"]), float(t["askPrice"])
+    px = (bid + ask) / 2
+    return {"px": px, "spread_bps": (ask - bid) / px * 1e4,
+            "turnover": float(d["quoteVolume"]),
+            "bid_depth": float(t["bidQty"]) * px}
+
+
+def _book_bybit(c):
+    d = get(f"https://api.bybit.com/v5/market/tickers?category=linear&symbol={c}USDT")
+    t = d["result"]["list"][0]
+    bid, ask = float(t["bid1Price"]), float(t["ask1Price"])
+    px = (bid + ask) / 2
+    return {"px": px, "spread_bps": (ask - bid) / px * 1e4,
+            "turnover": float(t["turnover24h"]),
+            "bid_depth": float(t.get("bid1Size") or 0) * px}
+
+
+SNAP_BOOK = {"Binance": _book_binance, "Bybit": _book_bybit}
 
 
 def cmd_pairscreen(args):
@@ -852,6 +1071,22 @@ def main():
     ps.add_argument("--min-turnover", type=float, default=30e6,
                     help="**双边**都要达到的 24h 成交额")
     ps.add_argument("--min-net", type=float, default=3.0, help="通过所需的最小净年化 %%")
+    cg = sub.add_parser("cg-screen",
+                        help="★ 借 Coinglass 全市场广度 + 我们的微观结构闸门")
+    cg.add_argument("--venues", default="Binance,Bybit")
+    cg.add_argument("--range", default="30d", help="累计窗口:7d/30d(默认 30d)")
+    cg.add_argument("--min-net", type=float, default=20.0,
+                    help="|累计净年化| 门槛 %%(默认 20)")
+    cg.add_argument("--max-payback", type=float, default=5.0, help="回本天数上限")
+    cg.add_argument("--min-turnover", type=float, default=5e6, help="24h 成交额下限")
+    cg.add_argument("--min-depth", type=float, default=100.0, help="买一深度下限 USDT")
+    cg.add_argument("--max-probe", type=int, default=25, help="最多拉几个币的盘口")
+    cg.add_argument("--maker", action="store_true", default=True,
+                    help="按挂单费率算(默认开)")
+    cg.add_argument("--taker", dest="maker", action="store_false", help="改按吃单")
+    cg.add_argument("--out", default=None)
+    cg.set_defaults(func=cmd_cgscreen)
+
     ps.add_argument("--maker", action="store_true",
                     help="按挂单费率算成本(默认吃单)。⚠️ maker 那一列大多是"
                          "公示费率没实测,只有 Bybit 代币化股票的 0 bps 是真的")

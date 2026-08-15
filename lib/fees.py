@@ -57,7 +57,9 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-CACHE = ROOT / "shadow" / "asset_class.json"
+# ⚠️ 不能放 shadow/ —— 那是数据产出目录,会被服务器同步整个覆盖。
+# 2026-08-15 就是这么丢的:同步完所有股票被判成 crypto,手续费全按 21 bps 算。
+CACHE = ROOT / "lib" / "asset_class.json"
 
 # ── 费率表(bps,单腿单边)──────────────────────────────────────────
 # 核对日期 2026-08-15。**费率会变,活动会过期,定期重查。**
