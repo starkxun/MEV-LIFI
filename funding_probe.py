@@ -26,31 +26,72 @@ funding_probe.py —— 资金费 carry 探针(只读公开行情,不需要 API 
 """
 
 import argparse
+import gzip
+import http.client
 import json
+import random
 import statistics
 import sys
 import time
+import urllib.error
 import urllib.request
+from pathlib import Path
 from datetime import datetime
 
 API = "https://api.backpack.exchange/api/v1"
 
-# Backpack Tier 1(默认档)费率,单位 bps。来源:官方 VIP Program 文档
+# Backpack Tier 1(默认档)费率,单位 bps。来源:官方 VIP Program 文档。
+# ⚠️ **这一组只对 Backpack 有效**,是「照抄公示」不是实测。
+#    币安/Bybit 的费率见 lib/fees.py —— 那边是从真实账单反推的,
+#    而且**代币化股票和加密不一样**,不能混用。
 FEES = {
     "spot_maker": 8, "spot_taker": 10,
     "perp_maker": 2, "perp_taker": 5,
 }
 
+sys.path.insert(0, str(Path(__file__).parent))
+from lib import fees as FEEMOD  # noqa: E402
 
-def get(url, n=3):
+
+# 同一次运行里重复拉的大接口(Bybit tickers 单次 600KB,live 和 universe 都要)
+_CACHE = {}
+
+# 连接被对端 RST(Errno 104)几乎只发生在这些 500KB+ 的全市场接口上。
+# 三个应对:开 gzip 把包压到 ~1/8、每次重试都换新连接、退避拉长并加抖动。
+_RETRIABLE = (OSError, http.client.HTTPException, json.JSONDecodeError)
+
+
+def get(url, n=5, cache=False):
+    if cache and url in _CACHE:
+        return _CACHE[url]
+    last = None
     for i in range(n):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "research/1.0"})
-            return json.loads(urllib.request.urlopen(req, timeout=25).read())
-        except Exception:
-            if i == n - 1:
-                raise
-            time.sleep(1.5 * (i + 1))
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "research/1.0",
+                "Accept-Encoding": "gzip",
+                "Connection": "close",
+            })
+            with urllib.request.urlopen(req, timeout=30) as r:
+                raw = r.read()
+                if r.headers.get("Content-Encoding") == "gzip":
+                    raw = gzip.decompress(raw)
+            d = json.loads(raw)
+            if cache:
+                _CACHE[url] = d
+            return d
+        except urllib.error.HTTPError as e:
+            # 4xx 是「这个币在这个所没有」之类的确定性错误,重试没意义;
+            # 只有 429/418(限频)和 5xx 值得等一会儿再来。
+            last = e
+            if e.code not in (429, 418) and e.code < 500:
+                break
+        except _RETRIABLE as e:
+            last = e
+        if i == n - 1:
+            break
+        time.sleep(min(8.0, 2 ** i) * (0.7 + random.random() * 0.6))
+    raise RuntimeError(f"{url.split('?')[0]} 失败: {type(last).__name__}: {last}") from last
 
 
 def interval_hours():
@@ -80,7 +121,8 @@ def pull_history(sym, max_pages=12, per=1000):
 def cmd_floor(args):
     """手续费地板 —— 一切判断的起点。"""
     iv = interval_hours()
-    print("=== Backpack Tier 1 费率(官方文档,bps)===")
+    print("=== Backpack Tier 1 费率(官方文档,bps,**未实测**)===")
+    print("    ⚠️ 只适用于 Backpack 单所现货+永续。币安/Bybit 跨所请看 lib/fees.py")
     for k, v in FEES.items():
         print(f"  {k:<12} {v}")
     mm = (FEES["spot_maker"] + FEES["perp_maker"]) * 2
@@ -207,6 +249,9 @@ def cmd_screen(args):
     return 0
 
 
+BYBIT_TICKERS = "https://api.bybit.com/v5/market/tickers?category=linear"
+
+
 def venue_universe(name):
     """某个所的 USDT 永续清单 + 24h 成交额。"""
     if name == "Binance":
@@ -214,7 +259,7 @@ def venue_universe(name):
         return {x["symbol"]: float(x["quoteVolume"]) for x in d
                 if x["symbol"].endswith("USDT")}
     if name == "Bybit":
-        d = get("https://api.bybit.com/v5/market/tickers?category=linear")
+        d = get(BYBIT_TICKERS, cache=True)
         return {x["symbol"]: float(x.get("turnover24h") or 0)
                 for x in d["result"]["list"] if x["symbol"].endswith("USDT")}
     if name == "Bitget":
@@ -239,21 +284,37 @@ def cmd_pairscreen(args):
     a, b = [v.strip() for v in args.venues.split(",")]
     print(f"拉 {a} / {b} 的合约清单 …")
     # ★ 同时抓当前实时费率 —— 「历史稳定」和「现在有没有机会」必须并排看
+    # 每个接口单独 try —— 之前四个挤在一个 try 里,任何一个抖一下整列「当前净」就没了。
     live = {}
-    try:
-        bnp = get("https://fapi.binance.com/fapi/v1/premiumIndex")
-        byt = get("https://api.bybit.com/v5/market/tickers?category=linear")
-        ivh = {}
-        for x in (get("https://fapi.binance.com/fapi/v1/fundingInfo") or []):
-            ivh[x["symbol"]] = float(x["fundingIntervalHours"])
-        BNP = {x["symbol"]: x for x in bnp}
-        BYT = {x["symbol"]: x for x in byt["result"]["list"]}
-        for sym in set(BNP) & set(BYT):
-            ba = float(BNP[sym]["lastFundingRate"]) * (8760 / ivh.get(sym, 8.0)) * 100
-            ya = float(BYT[sym]["fundingRate"]) * (8760 / 8) * 100
-            live[sym] = ba - ya if a == "Binance" else ya - ba
-    except Exception as e:
-        print(f"  ⚠️ 实时费率拉取失败({str(e)[:40]}),只出历史")
+    BNP = BYT = {}
+    if {a, b} != {"Binance", "Bybit"}:
+        # 实时段只实现了这两个所的口径,别拿别的所的符号方向硬套
+        print(f"  ⚠️ 实时费率暂只支持 Binance/Bybit,{a}/{b} 只出历史")
+    else:
+        try:
+            BNP = {x["symbol"]: x
+                   for x in get("https://fapi.binance.com/fapi/v1/premiumIndex")}
+        except Exception as e:
+            print(f"  ⚠️ 币安实时费率拉取失败:{e}")
+        try:
+            BYT = {x["symbol"]: x
+                   for x in get(BYBIT_TICKERS, cache=True)["result"]["list"]}
+        except Exception as e:
+            print(f"  ⚠️ Bybit 实时费率拉取失败:{e}")
+    ivh = {}
+    if BNP and BYT:
+        try:
+            # 这个接口只列出**非 8h** 的币,拿不到就全按 8h,误差有限,不该拖垮整块
+            ivh = {x["symbol"]: float(x["fundingIntervalHours"])
+                   for x in (get("https://fapi.binance.com/fapi/v1/fundingInfo") or [])}
+        except Exception as e:
+            print(f"  ⚠️ 币安结算间隔拉取失败:{e},一律按 8h 年化")
+    for sym in set(BNP) & set(BYT):
+        ba = float(BNP[sym]["lastFundingRate"]) * (8760 / ivh.get(sym, 8.0)) * 100
+        ya = float(BYT[sym]["fundingRate"]) * (8760 / 8) * 100
+        live[sym] = ba - ya if a == "Binance" else ya - ba
+    if not live and BNP and BYT:
+        print("  ⚠️ 实时费率不可用,本次只出历史 —— 「当前净」一列会全是 —")
     ua, ub = venue_universe(a), venue_universe(b)
     common = {s for s in set(ua) & set(ub)
               if min(ua[s], ub[s]) >= args.min_turnover}
@@ -297,16 +358,27 @@ def cmd_pairscreen(args):
             print(f"  …{i+1}/{len(common)}", flush=True)
     out.sort(key=lambda r: -abs(r["net"]))
 
-    print(f"\n{'币种':<15}{'天':>5}{'历史净':>9}{'倍':>6}{'★当前净':>10}{'双边额':>9}  历史判定")
-    print("-" * 72)
+    # ★ 回本天数:以前这张表只报净年化,不报「要多久才够付手续费」,
+    #   于是 +0.86% 和 +15% 看起来只是数字大小之分。加上之后才看得出
+    #   前者需要 570 天回本 —— 根本不是一个量级的东西。
+    for r in out:
+        r["cls"] = FEEMOD.asset_class(r["s"], auto=False)
+        r["fee"], r["fee_ok"], _ = FEEMOD.roundtrip(a, b, r["cls"], maker=args.maker)
+        base = r["live"] if r.get("live") is not None else r["net"]
+        r["pb"] = (r["fee"] / (abs(base) / 100 / 365 * 1e4)) if base else float("inf")
+
+    print(f"\n{'币种':<15}{'类':>7}{'天':>5}{'历史净':>9}{'倍':>6}"
+          f"{'★当前净':>10}{'费bps':>7}{'回本天':>8}{'双边额':>9}  历史判定")
+    print("-" * 92)
     for r in out[:args.show]:
         v = "🔴反号" if r["flip"] else ("🔴不稳" if r["ratio"] > 3 else
                                        "⚠️偏" if r["ratio"] > 1.8 else "✅稳")
         cur = live.get(r["s"])
         r["live"] = cur
         cs = f"{cur:>+10.2f}" if cur is not None else f"{'—':>10}"
-        print(f"{r['s']:<15}{r['days']:>5.0f}{r['net']:>+9.2f}{r['ratio']:>6.1f}"
-              f"{cs}{r['turn']/1e6:>8,.0f}M  {v}")
+        pb = f"{r['pb']:>8.1f}" if r["pb"] < 9999 else f"{'∞':>8}"
+        print(f"{r['s']:<15}{r['cls']:>7}{r['days']:>5.0f}{r['net']:>+9.2f}{r['ratio']:>6.1f}"
+              f"{cs}{r['fee']:>7.1f}{pb}{r['turn']/1e6:>8,.0f}M  {v}")
 
     ok = [r for r in out if not r["flip"] and r["ratio"] <= 1.8
           and abs(r["net"]) >= args.min_net]
@@ -318,6 +390,9 @@ def cmd_pairscreen(args):
         long_ = b if r["net"] > 0 else a
         print(f"  {r['s']:<15} 净 {r['net']:+7.2f}%   做空 {short} / 做多 {long_}   "
               f"{r['days']:.0f} 天样本   双边额 ${r['turn']/1e6:,.0f}M")
+        print(f"  {'':<15} {r['cls']}  往返 {r['fee']:.1f} bps  "
+              f"→ 按当前费率回本 {r['pb']:.1f} 天"
+              + ("" if r['pb'] < 30 else "   🔴 回本期比样本可信度还长"))
     print(f"\n  {len(ok)}/{len(out)} 通过")
 
     # ★★ 筛选目标 vs 使用目标 的自检
@@ -563,14 +638,18 @@ def cmd_cross(args):
         else:
             print(f"  ✅ 两半方向一致,量级接近({ratio:.1f} 倍)")
 
-    # 成本:两条腿都是永续
-    perp_rt = FEES["perp_maker"] * 4
-    perp_rt_t = FEES["perp_taker"] * 4
-    print(f"\n  两条腿都是永续,往返 4 笔手续费:")
-    print(f"    全 maker {perp_rt} bps   全 taker {perp_rt_t} bps")
+    # 成本:两条腿都是永续。**不能用 Backpack 的费率**(以前就是这么错的)——
+    # 币安/Bybit 各自不同,而且代币化股票和加密还要再分。
+    acls = FEEMOD.asset_class(args.coin, auto=False)
+    perp_rt_t, ok_t, det_t = FEEMOD.roundtrip("Binance", "Bybit", acls, maker=False)
+    perp_rt,   ok_m, det_m = FEEMOD.roundtrip("Binance", "Bybit", acls, maker=True)
+    print(f"\n  两条腿都是永续,往返 4 笔手续费({args.coin} → {acls}):")
+    print(f"    吃单 {det_t}   {FEEMOD.fee_note(ok_t)}")
+    print(f"    挂单 {det_m}   {FEEMOD.fee_note(ok_m)}")
     if spread != 0:
-        d = perp_rt / (abs(spread) / 100 / 365 * 1e4)
-        print(f"    按净年化 {spread:+.2f}% 算,回本 {d:.1f} 天")
+        for tag, rt in (("吃单", perp_rt_t), ("挂单", perp_rt)):
+            d = rt / (abs(spread) / 100 / 365 * 1e4)
+            print(f"    按净年化 {spread:+.2f}% 算,{tag}回本 {d:.1f} 天")
     print(f"\n  ⚠️ 各所样本长度不同(见上表 `天`),短的那个所主导了不确定性。")
     print(f"     另外这只算了资金费,**没算两个所各自的爆仓/ADL 风险**。")
     return 0
@@ -773,6 +852,9 @@ def main():
     ps.add_argument("--min-turnover", type=float, default=30e6,
                     help="**双边**都要达到的 24h 成交额")
     ps.add_argument("--min-net", type=float, default=3.0, help="通过所需的最小净年化 %%")
+    ps.add_argument("--maker", action="store_true",
+                    help="按挂单费率算成本(默认吃单)。⚠️ maker 那一列大多是"
+                         "公示费率没实测,只有 Bybit 代币化股票的 0 bps 是真的")
     ps.add_argument("--out", default="shadow/pair_screen.json")
     ps.set_defaults(func=cmd_pairscreen)
 

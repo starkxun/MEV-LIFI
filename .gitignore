@@ -24,3 +24,4 @@ data/
 shadow/*.jsonl
 lib/forge-std/
 broadcast/
+shadow/

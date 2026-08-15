@@ -25,6 +25,12 @@ carry_watch.py —— 跨所资金费 carry 的实时记录器
    tmux new -s scan -d 'python3 carry_watch.py --scan --interval 60 \
   --min-turnover 30000000 --record-above 20 \
   >> logs/scan_$(date +%F).log 2>&1' 
+
+  挂服务器监控某笔交易(开仓价用**成交均价**,不是下单时的盘口价)：
+  tmux new -d -s sndk "python3 carry_watch.py --coin SNDK --venues Binance,Bybit --short Binance:1645.77 --long Bybit:1645.35 --qty 0.01 --carry-floor 0 --carry-strikes 5 --interval 60 --target 0.0222 --out shadow/sndk_track.jsonl"
+
+  手续费不再写死 8 bps:按币种自动查 lib/fees.py(代币化股票 13.5 / 加密 21 bps
+  吃单往返,均为实测)。要手动覆盖用 --fee-roundtrip。看费率表:python3 lib/fees.py
 """
 
 import argparse
@@ -38,12 +44,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 
-# 手续费(bps)。VIP0 默认档,**你升级了要自己改这里**。
-# 一条腿开+平 = 2 笔,两条腿 = 4 笔。
-FEES = {
-    "Binance": {"maker": 2.0, "taker": 5.0},
-    "Bybit":   {"maker": 2.0, "taker": 5.5},
-}
+# 手续费搬到 lib/fees.py 了。原因见那个文件的开头:
+# 代币化股票和加密永续的费率**不一样**,以前这里的两层字典没有这一维,
+# 结果所有回本天数都偏乐观(股票低估 69%、加密低估 163%)。
+sys.path.insert(0, str(ROOT))
+from lib import fees as FEEMOD  # noqa: E402
 
 
 class Blocked(Exception):
@@ -205,6 +210,100 @@ def basis_stats(rows, open_hours):
     return {"开市": st(op), "休市": st(cl), "全部": st([v for _, v in rows])}
 
 
+# ── 资金费历史体检 ────────────────────────────────────────────
+def funding_history(coin, venue, limit=200):
+    """历史已结算资金费 → [(结算时刻ms, 费率)],按时间升序。"""
+    if venue == "Binance":
+        d = get(f"https://fapi.binance.com/fapi/v1/fundingRate"
+                f"?symbol={coin}USDT&limit={min(limit,1000)}")
+        return sorted((int(x["fundingTime"]), float(x["fundingRate"])) for x in d)
+    if venue == "Bybit":
+        d = get(f"https://api.bybit.com/v5/market/funding/history"
+                f"?category=linear&symbol={coin}USDT&limit={min(limit,200)}")
+        return sorted((int(x["fundingRateTimestamp"]), float(x["fundingRate"]))
+                      for x in d["result"]["list"])
+    raise ValueError(venue)
+
+
+def history_check(coin, vs, iv_a, cur_net, tol_ms=300_000):
+    """
+    ★ 开仓前的历史体检。净年化统一按 (vs[0] − vs[1]) 定向。
+
+    **为什么必须有这个:实时监控只报「此刻」。**
+
+    VELVET 那次,此刻净 +13.2%,而 33 天真实均值是 **−10.6%** —— 连符号
+    都是反的;+13% 只是当天拉盘(24h +14.7%)的副产品。光看实时数据,
+    工具没有任何办法区分「结构性价差」和「一天的假象」。
+
+    这和 BILL 那次(4 天窗口 +126% vs 344 天 +13.57%)是同一个错误,
+    区别只在于:那次是人肉发现的,这次要让工具自己拦下来。
+    """
+    try:
+        A = funding_history(coin, vs[0])
+        B = funding_history(coin, vs[1])
+    except Exception as e:
+        return None, [f"⚠️ 资金费历史拉取失败:{str(e)[:60]} —— **体检没做**"]
+    if len(A) < 6 or len(B) < 6:
+        return None, [f"⚠️ 历史期数不足(={len(A)}/{len(B)}),**体检没做**"]
+
+    bt = sorted(B)
+    com = []
+    for t, ra in A:                      # 两所结算时刻可能差几十秒,按 ±5 分钟配对
+        m = [y for y, _ in bt if abs(y - t) <= tol_ms]
+        if m:
+            com.append((t, ra, dict(bt)[m[0]]))
+    if len(com) < 6:
+        return None, ["⚠️ 两所结算时刻对不齐,**体检没做**"]
+
+    per_day = 24.0 / iv_a
+    k = per_day * 365                    # 一年多少期
+    def stat(rows):
+        nets = [(a - b) * k * 100 for _, a, b in rows]
+        n = len(nets)
+        m = statistics.mean(nets)
+        sd = statistics.pstdev(nets) if n > 1 else 0.0
+        # 标准误 & t 值:长期 carry 到底和 0 有没有区别。
+        # 比「sd 是均值的几倍」讲究 —— 那个判据没考虑样本量,
+        # 样本越多它越容易报警,方向是反的。
+        se = sd / (n ** 0.5) if n > 1 else float("inf")
+        return {"n": n, "days": n / per_day, "mean": m, "sd": sd, "se": se,
+                "t": (m / se) if se else 0.0,
+                "neg": sum(1 for x in nets if x < 0) / n * 100,
+                "a": statistics.mean([a for _, a, _ in rows]) * k * 100,
+                "b": statistics.mean([b for _, _, b in rows]) * k * 100}
+
+    wins = {}
+    for tag, d in (("1天", 1), ("7天", 7), ("30天", 30)):
+        n = int(round(per_day * d))
+        if n >= 3 and len(com) >= n:
+            wins[tag] = stat(com[-n:])
+    wins["全部"] = stat(com)
+
+    ref = wins.get("30天") or wins["全部"]
+    warn = []
+    if ref["days"] < 14:
+        warn.append(f"⚠️ 可比历史只有 {ref['days']:.0f} 天 —— 样本本身就不够")
+    if cur_net is not None and ref["mean"] != 0:
+        if cur_net * ref["mean"] < 0:
+            warn.append(f"🔴 **当前净 {cur_net:+.1f}% 与 {ref['days']:.0f} 天均值 "
+                        f"{ref['mean']:+.1f}% 符号相反** —— 你看到的很可能是短期假象")
+        elif abs(cur_net) > abs(ref["mean"]) * 3:
+            warn.append(f"🔴 **当前净 {cur_net:+.1f}% 是长期均值 {ref['mean']:+.1f}% 的 "
+                        f"{abs(cur_net/ref['mean']):.1f} 倍** —— 均值回归会吃掉它")
+    if ref["neg"] >= 25:
+        warn.append(f"🔴 {ref['neg']:.0f}% 的结算期净值为**负**(你在付钱)")
+    t = ref["t"]
+    if t <= -2:
+        warn.append(f"🔴 长期净年化 {ref['mean']:+.1f}% ± {ref['se']:.1f} "
+                    f"(t={t:.1f})—— **显著为负**,这个方向长期是亏的")
+    elif abs(t) < 2:
+        warn.append(f"🔴 长期净年化 {ref['mean']:+.1f}% ± {ref['se']:.1f} "
+                    f"(t={t:.1f})—— **和 0 没有统计区别**,不构成 carry")
+    if "1天" in wins and "7天" in wins and wins["1天"]["mean"] * wins["7天"]["mean"] < 0:
+        warn.append("🔴 1 天和 7 天窗口**符号相反** —— 历史自身不自洽")
+    return wins, warn
+
+
 def basis_verdict(cur, st):
     """当前基差在历史分布里的位置 → 是不是好的进场时机。"""
     if not st:
@@ -216,18 +315,23 @@ def basis_verdict(cur, st):
 
 
 # ── 核心计算 ──────────────────────────────────────────────────
-def evaluate(a, b, iv_a, iv_b, maker=True):
+def evaluate(a, b, iv_a, iv_b, maker=True, cls="crypto", fee_override=None):
     """
     a、b 两个所的快照 → 两个开仓方向各自的经济性。
 
     做空一条腿:资金费为正时**收钱**
     做多一条腿:资金费为正时**付钱**
+
+    cls: 'crypto' / 'tradfi' —— 两者费率差最多 2 倍,必须分开算。
+         拿不到分类时按 crypto(保守,只会高估成本)。
     """
     ann_a = a["rate"] * (8760 / iv_a) * 100
     ann_b = b["rate"] * (8760 / iv_b) * 100
-    kind = "maker" if maker else "taker"
     # 一条腿开+平 2 笔,两条腿共 4 笔
-    fee = (FEES[a["venue"]][kind] + FEES[b["venue"]][kind]) * 2
+    if fee_override is not None:
+        fee, fee_measured = fee_override, False
+    else:
+        fee, fee_measured, _ = FEEMOD.roundtrip(a["venue"], b["venue"], cls, maker)
 
     out = []
     for short, long_ in ((a, b), (b, a)):
@@ -252,7 +356,8 @@ def evaluate(a, b, iv_a, iv_b, maker=True):
             "net_ann": net_ann, "entry_bps": entry_bps,
             "fee_bps": fee, "total_cost_bps": cost, "payback_days": payback,
         })
-    return {"ann": {a["venue"]: ann_a, b["venue"]: ann_b}, "dirs": out}
+    return {"ann": {a["venue"]: ann_a, b["venue"]: ann_b}, "dirs": out,
+            "fee_bps": fee, "fee_measured": fee_measured, "cls": cls}
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -679,12 +784,15 @@ def main():
     p.add_argument("--out", default=None, help="JSONL 落盘路径")
     p.add_argument("--rounds", type=int, default=0, help="跑几轮后退出,0=一直跑")
     p.add_argument("--info", action="store_true", help="只打印合约规格然后退出")
+    p.add_argument("--force", action="store_true",
+                   help="资金费历史体检不通过时仍然继续(默认拒绝)")
     p.add_argument("--scan", action="store_true",
                    help="★ 铺开扫描全市场(而不是单个币)")
     p.add_argument("--scan-report", action="store_true", help="分析扫描结果")
     p.add_argument("--pattern", help="--scan-report 的文件匹配")
-    p.add_argument("--fee-roundtrip", type=float, default=8.0,
-                   help="假设的往返手续费 bps(仅用于对照,非实测)")
+    p.add_argument("--fee-roundtrip", type=float, default=None,
+                   help="手动覆盖往返手续费 bps。默认 None = 按币种自动查 "
+                        "lib/fees.py 的实测表(代币化股票 13.5 / 加密 21)")
     p.add_argument("--min-turnover", type=float, default=30e6, help="流动性门槛(USDT)")
     p.add_argument("--record-above", type=float, default=20.0,
                    help="标记 is_candidate 的门槛(%%)。**不再用于过滤落盘**")
@@ -774,10 +882,61 @@ def main():
                       f"标准差 {v['sd']:>5.1f}")
         print(f"  基差 = (Binance − Bybit) / Bybit")
 
+    # ★ 资金费历史体检 —— 实时数据只报此刻,历史才知道此刻是不是假象
+    cur_net = None
+    try:
+        _a, _b = SNAP[vs[0]](coin), SNAP[vs[1]](coin)
+        cur_net = (_a["rate"] * (8760 / iv[vs[0]])
+                   - _b["rate"] * (8760 / iv[vs[1]])) * 100
+    except Exception:
+        pass
+    hw, hwarn = history_check(coin, vs, iv[vs[0]], cur_net)
+    print(f"\n=== 资金费历史体检(净 = {vs[0]} − {vs[1]})===")
+    if hw:
+        print(f"  {'窗口':<8}{'天':>6}{vs[0]:>10}{vs[1]:>10}{'净年化':>10}"
+              f"{'±标准误':>9}{'t':>7}{'净为负':>8}")
+        for tag in ("1天", "7天", "30天", "全部"):
+            w = hw.get(tag)
+            if w:
+                print(f"  {tag:<8}{w['days']:>6.1f}{w['a']:>+10.1f}{w['b']:>+10.1f}"
+                      f"{w['mean']:>+10.1f}{w['se']:>9.1f}{w['t']:>7.1f}{w['neg']:>7.0f}%")
+        if cur_net is not None:
+            print(f"  {'★此刻':<8}{'—':>6}{'—':>10}{'—':>10}{cur_net:>+10.1f}")
+    for w in hwarn:
+        print(f"  {w}")
+    if hw:
+        print(f"  ⚠️ t 值假设各期独立,而资金费是自相关的 —— **真实标准误比这更大,"
+              f"t 更接近 0**。所以这里的 t 是【乐观】的上界。")
+    red = [w for w in hwarn if w.startswith("🔴")]
+    # ★ 只在「还没开仓」时拦。已经有仓位了(--short/--long/--qty 都给了)
+    #   反而更需要监控 —— 这时候拦下来等于让你在有敞口时失去眼睛。
+    holding = bool(args.short and args.long and args.qty)
+    if red and holding:
+        print(f"\n  ⚠️ 体检 {len(red)} 项不通过,但你已有持仓 —— 继续监控。")
+        print(f"     这些红旗现在是**平仓依据**,不是入场依据。")
+    if red and not holding and not args.force:
+        print(f"\n{'='*66}")
+        print(f"🔴 体检未通过({len(red)} 项)。**默认拒绝继续。**")
+        print(f"   实时面板上那个漂亮的净年化,历史说它站不住。")
+        print(f"   VELVET 就是这么来的:此刻 +13.2%,33 天真值 −10.6%。")
+        print(f"\n   确认要看,加 --force 重跑。")
+        print(f"{'='*66}")
+        return 2
+    if not red and hw:
+        print(f"  ✅ 体检通过 —— 当前值和长期历史不矛盾")
+
     out = ROOT / (args.out or f"shadow/carry_{coin}_{datetime.now(timezone.utc):%Y%m%d}.jsonl")
     out.parent.mkdir(parents=True, exist_ok=True)
     print(f"\n落盘 {out}")
+    acls = FEEMOD.asset_class(coin)
+    _rt, _meas, _det = FEEMOD.roundtrip(vs[0], vs[1], acls, maker=args.taker is False)
     print(f"每 {args.interval}s 采样一次,按 {'吃单' if args.taker else '挂单'} 费率计算")
+    print(f"资产类别 {coin} → **{acls}**"
+          + ("(代币化股票/商品,费率和加密不同)" if acls == "tradfi" else ""))
+    if args.fee_roundtrip is not None:
+        print(f"往返手续费 {args.fee_roundtrip} bps ← 命令行手动指定,已覆盖实测表")
+    else:
+        print(f"往返手续费 {_det}   {FEEMOD.fee_note(_meas)}")
     print(f"回本 < {args.alert_days} 天就标 ★\n")
 
     # ── 跟踪模式初始化 ──
@@ -814,7 +973,8 @@ def main():
                     break
                 continue
 
-            ev = evaluate(a, b, iv[vs[0]], iv[vs[1]], maker=not args.taker)
+            ev = evaluate(a, b, iv[vs[0]], iv[vs[1]], maker=not args.taker,
+                          cls=acls, fee_override=args.fee_roundtrip)
 
             # 当前基差 + 它在历史里的位置
             cur_basis = (a["mark"] - b["mark"]) / b["mark"] * 1e4 if a["venue"] == "Binance" \
